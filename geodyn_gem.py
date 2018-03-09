@@ -182,6 +182,13 @@ class GeodynGem:
 
     def run(self):
         """Run method that performs all the real work"""
+        layers = self.iface.legendInterface().layers()
+        layer_list = []
+        for layer in layers:
+            layer_list.append(layer.name())
+            self.dlg.comboBox.addItems(layer_list)
+
+
         # show the dialog
         self.dlg.show()
         # Run the dialog event loop
