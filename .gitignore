@@ -39,9 +39,14 @@ $RECYCLE.BIN/
 .Trashes
 .VolumeIcon.icns
 
+# ignore
+help/
+*.pyc
+
 # Directories potentially created on remote AFP share
 .AppleDB
 .AppleDesktop
 Network Trash Folder
 Temporary Items
 .apdisk
+doc/plugin_builder_help.txt
