@@ -1,0 +1,135 @@
+INFO:root:
+Starting ... (Sat Mar 10 10:14:27 2018)
+
+INFO:root:
+workspace = G:\GISDATA\QGIS\geodyn_gem\data\shapes
+INFO:root:logfile = C:/Users/Bart/.qgis2/python/plugins/GeodynGem\log\GeoDyn_20180310-10.14.log
+INFO:root:py-file: C:/Users/Bart/.qgis2/python/plugins/GeodynGem/py/1_OvernemenGegevensGEM.py
+INFO:root:
+---------------------------------------------------------------------------------------------------------
+------ Veld-info ophalen...		Sat Mar 10 10:14:27 2018
+---------------------------------------------------------------------------------------------------------
+
+
+INFO:root:VULTIJD_U
+{'field_type': u'DOUBLE', 'field_alias': u'Vultijd (uur, (tijdens droogweer))', 'bereken': u'08_ber', 'add_fld': u'st2a', 'mag_niet_0_zijn': ['DWR_TOT'], 'expression': u'[K_BR_ST_M3]/[DWR_TOT]', 'order': 23L}
+INFO:root:AW_25_50_G
+{'field_type': u'DOUBLE', 'field_alias': u'X Afvw. 25 t/m 50 (G) (m3/u)', 'bereken': u'01_spj', 'add_fld': u'st2a', 'mag_niet_0_zijn': ['nan'], 'expression': nan, 'order': 44L}
+INFO:root:PI_VGS_G
+{'field_type': u'DOUBLE', 'field_alias': u'% HWA riool', 'bereken': u'07_ber', 'add_fld': u'st3a', 'mag_niet_0_zijn': ['HA_BEM_G'], 'expression': u'[HA_VGS_G]/[HA_BEM_G]*100', 'order': 57L}
+INFO:root:HA_GEM_G
+{'field_type': u'DOUBLE', 'field_alias': u'Oppervlak Gemengd (G) (ha)', 'bereken': u'06_stat_verh_opp', 'add_fld': u'st3a', 'mag_niet_0_zijn': ['nan'], 'expression': nan, 'order': 49L}
+INFO:root:AW_25_50_O
+{'field_type': u'DOUBLE', 'field_alias': u'X Afvw. 25 t/m 50 (O) (m3/u)', 'bereken': u'03_obm', 'add_fld': u'st2a', 'mag_niet_0_zijn': ['nan'], 'expression': u'onderbem(AW_25_50_G)', 'order': 45L}
+INFO:root:PI_HWA_G
+{'field_type': u'DOUBLE', 'field_alias': u'% VGS (HWA-riool)', 'bereken': u'07_ber', 'add_fld': u'st3a', 'mag_niet_0_zijn': ['HA_BEM_G'], 'expression': u'[HA_HWA_G]/[HA_BEM_G]*100', 'order': 58L}
+INFO:root:X_WON_TOT
+{'field_type': u'LONG', 'field_alias': u'Aantal woningen (T)', 'bereken': u'04_ber', 'add_fld': u'st2a', 'mag_niet_0_zijn': ['nan'], 'expression': u'[X_WON_GEB] + [X_WON_ONBG]', 'order': 32L}
+INFO:root:K_BR_ST_M3
+{'field_type': u'DOUBLE', 'field_alias': u'Berging stelsel (m3)', 'bereken': u'01_kikker', 'add_fld': u'st1b', 'mag_niet_0_zijn': ['nan'], 'expression': nan, 'order': 16L}
+INFO:root:AW_25_50_T
+{'field_type': u'DOUBLE', 'field_alias': u'X Afvw. 25 t/m 50 (T) (m3/u)', 'bereken': u'04_ber', 'add_fld': u'st2a', 'mag_niet_0_zijn': ['nan'], 'expression': u'[AW_25_50_G]+[AW_25_50_O]', 'order': 43L}
+INFO:root:DWA_BAG
+{'field_type': u'DOUBLE', 'field_alias': u'DWA obv woningen (m3/u)', 'bereken': u'05_ber', 'add_fld': u'st2a', 'mag_niet_0_zijn': ['nan'], 'expression': u'[X_WON_TOT] * 2.5 * 0.012', 'order': 35L}
+INFO:root:HA_NAG_G
+{'field_type': u'DOUBLE', 'field_alias': u'Ha Niet aangesloten', 'bereken': u'06_stat_verh_opp', 'add_fld': u'st3a', 'mag_niet_0_zijn': ['nan'], 'expression': nan, 'order': 53L}
+INFO:root:K_BERG_VL
+{'field_type': u'DOUBLE', 'field_alias': u'Verloren berging stelsel (m3)', 'bereken': u'01_kikker', 'add_fld': u'st1b', 'mag_niet_0_zijn': ['nan'], 'expression': nan, 'order': 18L}
+INFO:root:PI_OPW_G
+{'field_type': u'DOUBLE', 'field_alias': u'% Oppervlaktewater', 'bereken': u'07_ber', 'add_fld': u'st3a', 'mag_niet_0_zijn': ['HA_BEM_G'], 'expression': u'[HA_OPW_G]/[HA_BEM_G]*100', 'order': 59L}
+INFO:root:POC_B_M3_T
+{'field_type': u'DOUBLE', 'field_alias': u'POC beschikbaar (T) (m3/h)', 'bereken': u'10_ber', 'add_fld': u'st1b', 'mag_niet_0_zijn': ['nan'], 'expression': u'[POC_B_M3_G] + [POC_B_M3_O]', 'order': 9L}
+INFO:root:ZAK_RESULT
+{'field_type': u'DOUBLE', 'field_alias': u'Zak. drinkwaterv. (G)(m3/u)', 'bereken': u'01_spj', 'add_fld': u'st2a', 'mag_niet_0_zijn': ['nan'], 'expression': nan, 'order': 47L}
+INFO:root:HA_BEM_G
+{'field_type': u'DOUBLE', 'field_alias': u'Ha verhard opp bemalingsgebied', 'bereken': u'06_ber', 'add_fld': u'st3a', 'mag_niet_0_zijn': ['nan'], 'expression': u'[HA_GEM_G]+[HA_VGS_G]+[HA_HWA_G]+[HA_OPW_G]+[HA_NAG_G]+[HA_OBK_G]', 'order': 48L}
+INFO:root:DWR_ONBG
+{'field_type': u'DOUBLE', 'field_alias': u'DWA obv drwater (O) (m3/h)', 'bereken': u'03_obm', 'add_fld': u'st2a', 'mag_niet_0_zijn': ['nan'], 'expression': u'onderbem(DWR_GEBIED)', 'order': 25L}
+INFO:root:POC_O_M3_O
+{'field_type': u'DOUBLE', 'field_alias': u'POC ontwerp (O) (m3/h)', 'bereken': u'09_obm', 'add_fld': u'st2a', 'mag_niet_0_zijn': ['nan'], 'expression': u'onderbem(POC_O_M3_G)', 'order': 29L}
+INFO:root:K_KNP_EIND
+{'field_type': u'TEXT', 'field_alias': u'Eindbemalingsgebied', 'bereken': u'00_graph', 'add_fld': u'st1a', 'mag_niet_0_zijn': ['nan'], 'expression': nan, 'order': 5L}
+INFO:root:PI_GEM_G
+{'field_type': u'DOUBLE', 'field_alias': u'% Gemengd riool', 'bereken': u'07_ber', 'add_fld': u'st3a', 'mag_niet_0_zijn': ['HA_BEM_G'], 'expression': u'[HA_GEM_G]/[HA_BEM_G]*100', 'order': 56L}
+INFO:root:POC_O_M3_G
+{'field_type': u'DOUBLE', 'field_alias': u'POC ontwerp (G) (m3/h)', 'bereken': u'08_ber', 'add_fld': u'st2a', 'mag_niet_0_zijn': ['nan'], 'expression': u'([HA_GEM_G]*10*0.7)+([HA_VGS_G]*10*0.3)', 'order': 28L}
+INFO:root:X_OBEMAL
+{'field_type': u'LONG', 'field_alias': u'Aantal onderbemalingen', 'bereken': u'00_graph', 'add_fld': u'st1a', 'mag_niet_0_zijn': ['nan'], 'expression': nan, 'order': 7L}
+INFO:root:DWA_VE_TOT
+{'field_type': u'DOUBLE', 'field_alias': u"DWA obv ve's (T) (m3/u)", 'bereken': u'04a_ber', 'add_fld': u'st2a', 'mag_niet_0_zijn': ['nan'], 'expression': u'[X_VE_TOT]*0.012', 'order': 39L}
+INFO:root:DWR_GEBIED
+{'field_type': u'DOUBLE', 'field_alias': u'DWA obv drwater (G) (m3/h)', 'bereken': u'02_ber', 'add_fld': u'st2a', 'mag_niet_0_zijn': ['nan'], 'expression': u'[PAR_RESULT]+[ZAK_RESULT]', 'order': 24L}
+INFO:root:OPP_PER_M2
+{'field_type': u'DOUBLE', 'field_alias': u'Oppervlak per perceel (m2)', 'bereken': u'08_ber', 'add_fld': u'st2a', 'mag_niet_0_zijn': ['X_WON_GEB'], 'expression': u'[HA_TOT_G]*10000/[X_WON_GEB]', 'order': 22L}
+INFO:root:X_WON_ONBG
+{'field_type': u'LONG', 'field_alias': u'Aantal woningen (O)', 'bereken': u'03_obm', 'add_fld': u'st2a', 'mag_niet_0_zijn': ['nan'], 'expression': u'onderbem(X_WON_GEB)', 'order': 34L}
+INFO:root:POC_B_M3_G
+{'field_type': u'DOUBLE', 'field_alias': u'POC beschikbaar (B) (m3/h)', 'bereken': u'08_ber', 'add_fld': u'st2a', 'mag_niet_0_zijn': ['nan'], 'expression': u'[K_INST_TOT] - [DWR_TOT]', 'order': 26L}
+INFO:root:PI_BEM_G
+{'field_type': u'DOUBLE', 'field_alias': u'% bemalingsgebied', 'bereken': u'07_ber', 'add_fld': u'st3a', 'mag_niet_0_zijn': ['nan'], 'expression': u'[HA_BEM_G]/[Shape_Area]*10000*100 ', 'order': 55L}
+INFO:root:X_VE_ONBG
+{'field_type': u'DOUBLE', 'field_alias': u"Aantal ve's (O)", 'bereken': u'03_obm', 'add_fld': u'st2a', 'mag_niet_0_zijn': ['nan'], 'expression': u'onderbem(X_VE_GEB)', 'order': 38L}
+INFO:root:PAR_RESULT
+{'field_type': u'DOUBLE', 'field_alias': u'Part. drinkwaterv. (G) (m3/u)', 'bereken': u'01_spj', 'add_fld': u'st2a', 'mag_niet_0_zijn': ['nan'], 'expression': nan, 'order': 46L}
+INFO:root:POC_O_MM_T
+{'field_type': u'DOUBLE', 'field_alias': u'POC ontwerp (T) (mm/h)', 'bereken': u'11_ber', 'add_fld': u'st1b', 'mag_niet_0_zijn': ['HA_TOT_G'], 'expression': u'[POC_O_M3_T]/(10*[HA_TOT_G])', 'order': 14L}
+INFO:root:X_VE_TOT
+{'field_type': u'DOUBLE', 'field_alias': u"Aantal ve's (T)", 'bereken': u'04_ber', 'add_fld': u'st2a', 'mag_niet_0_zijn': ['nan'], 'expression': u'[X_VE_GEB]+[X_VE_ONBG]', 'order': 36L}
+INFO:root:X_WON_GEB
+{'field_type': u'LONG', 'field_alias': u'Aantal woningen (G)', 'bereken': u'01_spj', 'add_fld': u'st2a', 'mag_niet_0_zijn': ['nan'], 'expression': nan, 'order': 33L}
+INFO:root:K_INST_TOT
+{'field_type': u'DOUBLE', 'field_alias': u'Ge\xefnstalleerde capaciteit Rg (m3/h)', 'bereken': u'01_kikker', 'add_fld': u'st1b', 'mag_niet_0_zijn': ['nan'], 'expression': nan, 'order': 8L}
+INFO:root:POC_B_M3_O
+{'field_type': u'DOUBLE', 'field_alias': u'POC beschikbaar (O) (m3/h)', 'bereken': u'09_obm', 'add_fld': u'st2a', 'mag_niet_0_zijn': ['nan'], 'expression': u'onderbem(POC_B_M3_G)', 'order': 27L}
+INFO:root:X_VE_GEB
+{'field_type': u'DOUBLE', 'field_alias': u"Aantal ve's (G)", 'bereken': u'01_spj', 'add_fld': u'st2a', 'mag_niet_0_zijn': ['nan'], 'expression': nan, 'order': 37L}
+INFO:root:K_BEM_GEB
+{'field_type': u'TEXT', 'field_alias': u'Naam Bem Gebied', 'bereken': u'01_kikker', 'add_fld': u'st1a', 'mag_niet_0_zijn': ['nan'], 'expression': nan, 'order': 1L}
+INFO:root:POC_O_M3_T
+{'field_type': u'DOUBLE', 'field_alias': u'POC ontwerp (T) (m3/h)', 'bereken': u'10_ber', 'add_fld': u'st1b', 'mag_niet_0_zijn': ['nan'], 'expression': u'[POC_O_M3_G]+[POC_O_M3_O]', 'order': 13L}
+INFO:root:X_OPPOMP
+{'field_type': u'LONG', 'field_alias': u'Aantal X op pompen', 'bereken': u'00_graph', 'add_fld': u'st1a', 'mag_niet_0_zijn': ['nan'], 'expression': nan, 'order': 6L}
+INFO:root:K_ONTV_VAN
+{'field_type': u'TEXT', 'field_alias': u'Ontvangt van', 'bereken': u'00_graph', 'add_fld': u'st1a', 'mag_niet_0_zijn': ['nan'], 'expression': nan, 'order': 3L}
+INFO:root:PI_NAG_G
+{'field_type': u'DOUBLE', 'field_alias': u'% Niet aangesloten', 'bereken': u'07_ber', 'add_fld': u'st3a', 'mag_niet_0_zijn': ['HA_BEM_G'], 'expression': u'[HA_NAG_G]/[HA_BEM_G]*100', 'order': 60L}
+INFO:root:BERG_ST_MM
+{'field_type': u'DOUBLE', 'field_alias': u'Berging stelsel (mm)', 'bereken': u'08_ber', 'add_fld': u'st2a', 'mag_niet_0_zijn': ['HA_TOT_G'], 'expression': u'[K_BR_ST_M3]/[HA_TOT_G]/10', 'order': 20L}
+INFO:root:CAP_ONTW
+{'field_type': u'DOUBLE', 'field_alias': u'Ontwerp capaciteit Rg (m3/h)', 'bereken': u'11_ber', 'add_fld': u'st1b', 'mag_niet_0_zijn': ['nan'], 'expression': u'[DWR_TOT]+[POC_O_M3_T]', 'order': 12L}
+INFO:root:HA_VGS_G
+{'field_type': u'DOUBLE', 'field_alias': u'Oppervlak VGS (G) (ha)', 'bereken': u'06_stat_verh_opp', 'add_fld': u'st3a', 'mag_niet_0_zijn': ['nan'], 'expression': nan, 'order': 50L}
+INFO:root:AW_15_24_O
+{'field_type': u'DOUBLE', 'field_alias': u'X Afvw. t/m 2024 (O) (m3/u)', 'bereken': u'03_obm', 'add_fld': u'st2a', 'mag_niet_0_zijn': ['nan'], 'expression': u'onderbem(AW_15_24_G)', 'order': 42L}
+INFO:root:K_OSH
+{'field_type': u'DOUBLE', 'field_alias': u'Laagste OSH (NAP)', 'bereken': u'01_kikker', 'add_fld': u'st1b', 'mag_niet_0_zijn': ['nan'], 'expression': nan, 'order': 17L}
+INFO:root:K_KNP_NR
+{'field_type': u'TEXT', 'field_alias': u'Knoopnummer', 'bereken': u'01_kikker', 'add_fld': u'st1a', 'mag_niet_0_zijn': ['nan'], 'expression': nan, 'order': 2L}
+INFO:root:HA_TOT_G
+{'field_type': u'DOUBLE', 'field_alias': u'Totaal Afvoerend oppervlak (G) (ha)', 'bereken': u'07_ber', 'add_fld': u'st1b', 'mag_niet_0_zijn': ['nan'], 'expression': u'[HA_GEM_G]+[HA_VGS_G]', 'order': 15L}
+INFO:root:AW_15_24_G
+{'field_type': u'DOUBLE', 'field_alias': u'X Afvw. t/m 2024 (G) (m3/u)', 'bereken': u'01_spj', 'add_fld': u'st2a', 'mag_niet_0_zijn': ['nan'], 'expression': nan, 'order': 41L}
+INFO:root:AW_15_24_T
+{'field_type': u'DOUBLE', 'field_alias': u'X Afvw. t/m 2024 (T) (m3/u)', 'bereken': u'04_ber', 'add_fld': u'st2a', 'mag_niet_0_zijn': ['nan'], 'expression': u'[AW_15_24_G]+[AW_15_24_O]', 'order': 40L}
+INFO:root:HA_HWA_G
+{'field_type': u'DOUBLE', 'field_alias': u'Ha HWA riool', 'bereken': u'06_stat_verh_opp', 'add_fld': u'st3a', 'mag_niet_0_zijn': ['nan'], 'expression': nan, 'order': 51L}
+INFO:root:DWR_TOT
+{'field_type': u'DOUBLE', 'field_alias': u'DWA obv drwater (T) (m3/h)', 'bereken': u'04_ber', 'add_fld': u'st1b', 'mag_niet_0_zijn': ['nan'], 'expression': u'[DWR_GEBIED]+[DWR_ONBG]', 'order': 11L}
+INFO:root:PI_OBK_G
+{'field_type': u'DOUBLE', 'field_alias': u'% Onbekend', 'bereken': u'07_ber', 'add_fld': u'st3a', 'mag_niet_0_zijn': ['HA_BEM_G'], 'expression': u'[HA_OBK_G]/[HA_BEM_G]*100', 'order': 61L}
+INFO:root:K_LOOST_OP
+{'field_type': u'TEXT', 'field_alias': u'Loost op', 'bereken': u'00_graph', 'add_fld': u'st1a', 'mag_niet_0_zijn': ['nan'], 'expression': nan, 'order': 4L}
+INFO:root:BERG_RV_MM
+{'field_type': u'DOUBLE', 'field_alias': u'Berging randvoorziening (mm)', 'bereken': u'08_ber', 'add_fld': u'st2a', 'mag_niet_0_zijn': ['HA_TOT_G'], 'expression': u'[K_BERG_VL]/[HA_TOT_G]/10', 'order': 21L}
+INFO:root:HA_OBK_G
+{'field_type': u'DOUBLE', 'field_alias': u'Ha Onbekend', 'bereken': u'06_stat_verh_opp', 'add_fld': u'st3a', 'mag_niet_0_zijn': ['nan'], 'expression': nan, 'order': 54L}
+INFO:root:K_BR_RZ_M3
+{'field_type': u'DOUBLE', 'field_alias': u'Berging randvoorziening (m3)', 'bereken': u'01_kikker', 'add_fld': u'st1b', 'mag_niet_0_zijn': ['nan'], 'expression': nan, 'order': 19L}
+INFO:root:HA_OPW_G
+{'field_type': u'DOUBLE', 'field_alias': u'Ha Oppervlaktewater', 'bereken': u'06_stat_verh_opp', 'add_fld': u'st3a', 'mag_niet_0_zijn': ['nan'], 'expression': nan, 'order': 52L}
+INFO:root:POC_B_MM_T
+{'field_type': u'DOUBLE', 'field_alias': u'POC beschikbaar (T) (mm/h)', 'bereken': u'10_ber', 'add_fld': u'st1b', 'mag_niet_0_zijn': ['HA_TOT_G'], 'expression': u'[POC_B_M3_T]/(10*[HA_TOT_G])', 'order': 10L}
+INFO:root:
+Ending ..... (Sat Mar 10 10:14:28 2018)
+INFO:root:(00 secs have passed)
+

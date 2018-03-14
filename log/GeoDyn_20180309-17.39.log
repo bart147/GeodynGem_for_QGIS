@@ -1,0 +1,26 @@
+INFO:root:
+Starting ... (Fri Mar 09 17:39:17 2018)
+
+INFO:root:
+workspace = G:\GISDATA\QGIS\geodyn_gem\data\shapes
+INFO:root:logfile = C:/Users/Bart/.qgis2/python/plugins/GeodynGem\log\GeoDyn_20180309-17.39.log
+INFO:root:py-file: C:/Users/Bart/.qgis2/python/plugins/GeodynGem/py/1_OvernemenGegevensGEM.py
+INFO:root:
+---------------------------------------------------------------------------------------------------------
+------ Veld-info ophalen...		Fri Mar 09 17:39:17 2018
+---------------------------------------------------------------------------------------------------------
+
+
+INFO:root:
+Starting ... (Fri Mar 09 17:39:47 2018)
+
+INFO:root:
+workspace = G:\GISDATA\QGIS\geodyn_gem\data\shapes
+INFO:root:logfile = C:/Users/Bart/.qgis2/python/plugins/GeodynGem\log\GeoDyn_20180309-17.39.log
+INFO:root:py-file: C:/Users/Bart/.qgis2/python/plugins/GeodynGem/py/1_OvernemenGegevensGEM.py
+INFO:root:
+---------------------------------------------------------------------------------------------------------
+------ Veld-info ophalen...		Fri Mar 09 17:39:47 2018
+---------------------------------------------------------------------------------------------------------
+
+

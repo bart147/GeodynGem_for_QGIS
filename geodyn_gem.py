@@ -21,12 +21,18 @@
  ***************************************************************************/
 """
 from PyQt4.QtCore import QSettings, QTranslator, qVersion, QCoreApplication
-from PyQt4.QtGui import QAction, QIcon
+from PyQt4.QtGui import QAction, QIcon, QMessageBox
+from qgis.core import QgsMessageLog
+
 # Initialize Qt resources from file resources.py
 import resources
 # Import the code for the dialog
 from geodyn_gem_dialog import GeodynGemDialog
 import os.path
+
+from app import m1_OvernemenGegevensGEM as m1
+
+from qgis.gui import QgsMessageBar
 
 
 class GeodynGem:
@@ -65,6 +71,9 @@ class GeodynGem:
         # TODO: We are going to let the user set this up in a future iteration
         self.toolbar = self.iface.addToolBar(u'GeodynGem')
         self.toolbar.setObjectName(u'GeodynGem')
+
+        # iface.messageBar().pushMessage("Error", "I'm sorry Dave, I'm afraid I can't do that",
+        #                                level=QgsMessageBar.CRITICAL)
 
     # noinspection PyMethodMayBeStatic
     def tr(self, message):
@@ -188,6 +197,8 @@ class GeodynGem:
             layer_list.append(layer.name())
             self.dlg.comboBox.addItems(layer_list)
 
+        ##m1.main()
+
 
         # show the dialog
         self.dlg.show()
@@ -197,4 +208,13 @@ class GeodynGem:
         if result:
             # Do something useful here - delete the line containing pass and
             # substitute with your code.
+
+            self.iface.messageBar().pushMessage("titel", "Start module 1", QgsMessageBar.INFO, duration=5)
+            m1.main(self.iface)
+
+            self.iface.mainWindow().statusBar().showMessage("dit is de mainWindow")
+            msg = QMessageBox()
+            QMessageBox.information(msg, "titel MessageBox", "tekst in messagebox")
+            QgsMessageLog.logMessage("hello world!", level=QgsMessageLog.INFO)
+
             pass

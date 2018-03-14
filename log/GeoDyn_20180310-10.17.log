@@ -1,0 +1,13 @@
+INFO:root:
+Starting ... (Sat Mar 10 10:17:54 2018)
+
+INFO:root:
+workspace = G:\GISDATA\QGIS\geodyn_gem\data\shapes
+INFO:root:logfile = C:/Users/Bart/.qgis2/python/plugins/GeodynGem\log\GeoDyn_20180310-10.17.log
+INFO:root:py-file: C:/Users/Bart/.qgis2/python/plugins/GeodynGem/py/1_OvernemenGegevensGEM.py
+INFO:root:
+---------------------------------------------------------------------------------------------------------
+------ Veld-info ophalen...		Sat Mar 10 10:17:54 2018
+---------------------------------------------------------------------------------------------------------
+
+
