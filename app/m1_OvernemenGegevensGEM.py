@@ -33,6 +33,7 @@ POLYGON_LIS_OVERLAP     = os.path.join(gdb,"POLYGON_LIS_OVERLAP.shp") # bestand 
 
 # eindresultaat
 POLYGON_LIS             = os.path.join(gdb,"POLYGON_LIS.shp")
+POLYGON_LIS_SUM         = os.path.join(gdb,"POLYGON_LIS_SUM.shp")
 
 def genereer_knooppunten(iface, INP_POLYGON, INP_AFVOERRELATIES):
     '''Genereert knooppunten op basis van afvoerrelaties (lijn-bestand) waarbij 1 knooppunt per bemalingsgebied is toegestaan.
@@ -45,13 +46,15 @@ def genereer_knooppunten(iface, INP_POLYGON, INP_AFVOERRELATIES):
     ##CreatePointsOnLines.Main("hydrovak_split_layer", "PERCENTAGE", "BEGINNING", "NO", "#", 0.5, "NO", "#", "NO", "MiddlePoints") #os.path.join(scratch_gdb,"MiddlePoints"))
 
     # relaties selecteren die naar ander bemalingsgebied afvoeren. (niet volledig binnen 1 polygoon vallen)
-
     # processing.alghelp("qgis:selectbylocation")
 
+    # methode 1 layer maken
+    # sel_afvoerrelaties = QgsVectorLayer(INP_AFVOERRELATIES, "SEL_AFVOERRELATIES", "ogr")
+    # QgsMapLayerRegistry.instance().addMapLayer(sel_afvoerrelaties)
 
+    # methode 2 layer maken
     mapcanvas = iface.mapCanvas()
     layers = mapcanvas.layers()
-    sel_afvoerrelaties = QgsVectorLayer(INP_AFVOERRELATIES, "SEL_AFVOERRELATIES", "ogr")
     for layer in layers:
         print_log("{} == {}".format(layer.source(),INP_AFVOERRELATIES),"i")
         if os.path.basename(layer.source()) == os.path.basename(INP_AFVOERRELATIES):
@@ -74,41 +77,44 @@ def genereer_knooppunten(iface, INP_POLYGON, INP_AFVOERRELATIES):
 #     arcpy.SelectLayerByLocation_management ("SEL_AFVOERRELATIES", "COMPLETELY_WITHIN", INP_POLYGON, "#", "NEW_SELECTION")
 #     arcpy.SelectLayerByAttribute_management ("SEL_AFVOERRELATIES", "SWITCH_SELECTION")
 
-    processing.runalg("grass7:v.to.points", sel_afvoerrelaties, "100000",
-                      0, False, "134943.95,136747.42,530403.39,531629.38", -1, 0.0001, 0, KNOOPPUNTEN)
+
+    # processing.runalg("grass7:v.to.points", sel_afvoerrelaties, "100000",
+    #                   0, False, "134943.95,136747.42,530403.39,531629.38", -1, 0.0001, 0, KNOOPPUNTEN)
 
     # functie voor bepalen begin en eindpunt
     ##line_layer = qgis.utils.iface.activeLayer()
 
-    point_layer = QgsVectorLayer("Point?crs=epsg:28992", "point_layer", "memory")
+    point_layer = QgsVectorLayer("Point?crs=epsg:28992", "KNOOPPUNTEN", "memory")
     pr = point_layer.dataProvider()
     point_layer.dataProvider().addAttributes(
-        [QgsField("mytext", QVariant.String),
-         QgsField("myint", QVariant.Int)])
+        [QgsField("VAN_KNOOPN", QVariant.String),
+         QgsField("BEGIN_EIND", QVariant.Int)])
     point_layer.updateFields()
 
     feat = QgsFeature(point_layer.pendingFields())
 
-    for i, feature in enumerate(sel_afvoerrelaties.getFeatures()):
+    for i, feature in enumerate(sel_afvoerrelaties.selectedFeatures()):  #  .getFeatures()
         geom = feature.geometry().asPolyline()
         start_point = QgsPoint(geom[0])
         end_point = QgsPoint(geom[-1])
         feat.setGeometry(QgsGeometry.fromPoint(start_point))
-        feat.setAttribute("mytext", "begin")
-        feat.setAttribute("myint", 0)
+        feat.setAttribute("VAN_KNOOPN", feature['VAN_KNOOPN'])
+        feat.setAttribute("BEGIN_EIND", 0)
+
         pr.addFeatures([feat])
         ##point_layer.changeAttributeValue(i, 0, "hoi")
         ##i += 1
         feat.setGeometry(QgsGeometry.fromPoint(end_point))
-        feat.setAttribute("mytext", "eind")
-        feat.setAttribute("myint", 1)
+        feat.setAttribute("VAN_KNOOPN", feature['VAN_KNOOPN'])
+        feat.setAttribute("BEGIN_EIND", 1)
         ##point_layer.changeAttributeValue(i, 1, 99)
         pr.addFeatures([feat])
     ##point_layer.updateFields()
 
+
     QgsMapLayerRegistry.instance().addMapLayer(point_layer)
 
-
+    return point_layer
 
 #     # begin-/eindpunten genereren op basis van selectie
 #     polyline = "SEL_AFVOERRELATIES"
@@ -144,27 +150,46 @@ def genereer_knooppunten(iface, INP_POLYGON, INP_AFVOERRELATIES):
 #     return KNOOPPUNTEN, EINDKNOOPPUNTEN
 
 
-
-def koppel_knooppunten_aan_bemalingsgebieden(d_velden, INP_POLYGON, KNOOPPUNTEN, EINDKNOOPPUNTEN):
+def koppel_knooppunten_aan_bemalingsgebieden(iface, d_velden, INP_POLYGON, KNOOPPUNTEN):
     # knooppunten koppelen aan bemalingsgebieden / gebieden voorzien van code. (sp.join)
-    arcpy.MakeFeatureLayer_management(KNOOPPUNTEN,"VAN_KNOOPPUNTEN","BEGIN_EIND = 0") # selectie beginpunten
-    arcpy.SpatialJoin_analysis(INP_POLYGON, "VAN_KNOOPPUNTEN", POLYGON_LIS, "JOIN_ONE_TO_ONE", "KEEP_ALL")
+    ##arcpy.MakeFeatureLayer_management(KNOOPPUNTEN,"VAN_KNOOPPUNTEN","BEGIN_EIND = 0") # selectie beginpunten
+
+    expr = QgsExpression("\"BEGIN_EIND\" = {}".format(0))
+    it = KNOOPPUNTEN.getFeatures(QgsFeatureRequest(expr)) # iterator object
+    KNOOPPUNTEN.setSelectedFeatures([i.id() for i in it])
+    print_log("{} selected".format(KNOOPPUNTEN.selectedFeatureCount()), "i")
+
+    processing.runalg("qgis:joinattributesbylocation", INP_POLYGON, KNOOPPUNTEN, u'intersects', 0, 0, '', 1, POLYGON_LIS)
+    processing.runalg("qgis:joinattributesbylocation", INP_POLYGON, KNOOPPUNTEN, u'intersects', 0, 1, 'sum', 1, POLYGON_LIS_SUM)
+    # arcpy.SpatialJoin_analysis(INP_POLYGON, "VAN_KNOOPPUNTEN", POLYGON_LIS, "JOIN_ONE_TO_ONE", "KEEP_ALL")
+
+    # hier join field doen...
+
+    #
+    #
+    #
+    #
+
+    ##polygon_lis = QgsVectorLayer(POLYGON_LIS, "polygon_lis", "ogr")
+    ##QgsMapLayerRegistry.instance().addMapLayer(polygon_lis)
+    iface.addVectorLayer(POLYGON_LIS, "polygon_lis", "ogr")
+    iface.addVectorLayer(POLYGON_LIS_SUM, "polygon_lis_sum", "ogr")
 
     # controleer spjoin
-    controleer_spjoin(POLYGON_LIS,"Join_Count")
+    ##controleer_spjoin(POLYGON_LIS,"count")
 
-    print_log("Bepaal in welk bemalingsgebied het eindpunt van afvoerrelatie ligt...",'i')
-    # eindpunten voorzien van bemalingsgebied (sp.join)
-    arcpy.MakeFeatureLayer_management(KNOOPPUNTEN,"SEL_EINDKNOOPPUNTEN","BEGIN_EIND = 1") # 0 = beginpunt, 1 = eindpunt
-    arcpy.SpatialJoin_analysis("SEL_EINDKNOOPPUNTEN", POLYGON_LIS, EINDKNOOPPUNTEN, "JOIN_ONE_TO_ONE", "KEEP_ALL")
-
-    # invullen veld LOOST_OP met code bemalingsgebied.
-    add_field_from_dict_label(POLYGON_LIS, "st1a", d_velden)
-    join_field(POLYGON_LIS, EINDKNOOPPUNTEN, "K_LOOST_OP", "VAN_KNOOPN_1", "VAN_KNOOPN", "VAN_KNOOPN")
-
-    # Eindbemalingsgebied /overnamepunt bepalen
-    arcpy.MakeFeatureLayer_management(POLYGON_LIS,"SEL_POLYGON_LIS","Join_Count > 0 ") # selectie beginpunten
-    where_clause = "Join_Count > 0 AND K_LOOST_OP IS NULL"
+    # print_log("Bepaal in welk bemalingsgebied het eindpunt van afvoerrelatie ligt...",'i')
+    # # eindpunten voorzien van bemalingsgebied (sp.join)
+    # arcpy.MakeFeatureLayer_management(KNOOPPUNTEN,"SEL_EINDKNOOPPUNTEN","BEGIN_EIND = 1") # 0 = beginpunt, 1 = eindpunt
+    # arcpy.SpatialJoin_analysis("SEL_EINDKNOOPPUNTEN", POLYGON_LIS, EINDKNOOPPUNTEN, "JOIN_ONE_TO_ONE", "KEEP_ALL")
+    #
+    # # invullen veld LOOST_OP met code bemalingsgebied.
+    # add_field_from_dict_label(POLYGON_LIS, "st1a", d_velden)
+    # join_field(POLYGON_LIS, EINDKNOOPPUNTEN, "K_LOOST_OP", "VAN_KNOOPN_1", "VAN_KNOOPN", "VAN_KNOOPN")
+    #
+    # # Eindbemalingsgebied /overnamepunt bepalen
+    # arcpy.MakeFeatureLayer_management(POLYGON_LIS,"SEL_POLYGON_LIS","Join_Count > 0 ") # selectie beginpunten
+    # where_clause = "Join_Count > 0 AND K_LOOST_OP IS NULL"
 
     return POLYGON_LIS, POLYGON_LIS_OVERLAP
 
@@ -218,17 +243,32 @@ def controleer_spjoin(fc,fld_join_count):
     """Controleer of spjoin geslaagd is (Join_Count moet in principe overal 1 zijn).
        Vult VAN_KNOOPN voor lege polygonen met 'LEEG-<OBJID>'."""
     i_dubbel, i_leeg = 0, 0
-    with arcpy.da.UpdateCursor(fc, (["OID@","VAN_KNOOPN",fld_join_count])) as cursor:
-        for row in cursor:
-            OID, VAN_KNOOPN, JOIN_COUNT = row
-            if JOIN_COUNT >= 2:
-                i_dubbel += 1
-                print_log("polygon '{}' bevat {} objecten!".format(VAN_KNOOPN,JOIN_COUNT), "i")
-            if JOIN_COUNT == 0:
-                i_leeg += 1
-                row[1] = "LEEG-{}".format(OID)
-                cursor.updateRow(row)
-    del cursor, row
+
+    layer = QgsVectorLayer(fc, "layer", "ogr")
+
+    for i, feature in enumerate(layer.getFeatures()):
+        JOIN_COUNT = feature[fld_join_count]
+        VAN_KNOOPN = feature["VAN_KNOOPN"]
+        if JOIN_COUNT >= 2:
+            i_dubbel += 1
+            print_log("polygon '{}' bevat {} objecten!".format(VAN_KNOOPN,JOIN_COUNT), "i")
+        if JOIN_COUNT == 0:
+            i_leeg += 1
+            feature.setAttribute("VAN_KNOOPN", "LEEG-{}".format(i))
+
+    # with arcpy.da.UpdateCursor(fc, (["OID@","VAN_KNOOPN",fld_join_count])) as cursor:
+    #     for row in cursor:
+    #         OID, VAN_KNOOPN, JOIN_COUNT = row
+    #         if JOIN_COUNT >= 2:
+    #             i_dubbel += 1
+    #             print_log("polygon '{}' bevat {} objecten!".format(VAN_KNOOPN,JOIN_COUNT), "i")
+    #         if JOIN_COUNT == 0:
+    #             i_leeg += 1
+    #             row[1] = "LEEG-{}".format(OID)
+    #             cursor.updateRow(row)
+    # del cursor, row
+
+
     if i_dubbel == 1: print_log("\n{} polygoon bevat 2 of meer LIS-objecten".format(i_dubbel),"w")
     if i_dubbel > 1: print_log("\n{} polygonen bevatten 2 of meer LIS-objecten".format(i_dubbel),"w")
     if i_leeg == 1: print_log("{} polygoon is leeg\n".format(i_leeg),"w")
@@ -279,12 +319,11 @@ def main(iface):
     blokje_log("Knooppunten genereren...","i")
     # genereer knooppunten uit afvoerrelaties
     ##KNOOPPUNTEN, EINDKNOOPPUNTEN = genereer_knooppunten(INP_POLYGON, INP_AFVOERRELATIES)
-    genereer_knooppunten(iface, INP_POLYGON, INP_AFVOERRELATIES)
+    point_layer = genereer_knooppunten(iface, INP_POLYGON, INP_AFVOERRELATIES)
 
-    # blokje_log("Knooppunten koppelen aan bemalingsgebieden...","i")
-    # # koppel knooppunten aan bemalingsgebieden
-    # POLYGON_LIS, POLYGON_LIS_OVERLAP = koppel_knooppunten_aan_bemalingsgebieden(d_velden, INP_POLYGON, KNOOPPUNTEN, EINDKNOOPPUNTEN)
-    #
+    blokje_log("Knooppunten koppelen aan bemalingsgebieden...","i")
+    POLYGON_LIS, POLYGON_LIS_OVERLAP = koppel_knooppunten_aan_bemalingsgebieden(iface, d_velden, INP_POLYGON, point_layer)
+
     # # ##########################################################################
     # # 2.) Graph vullen met LIS [LOOST_OP], onderbemaling bepalen en wegschrijven in [ONTV_VAN]
     #
@@ -334,20 +373,16 @@ if __name__ == '__main__':
     from qgis.core import *
     from PyQt4.QtGui import *
 
-    app = QApplication([])
-    QgsApplication.setPrefixPath("/usr", True)
+    QgsApplication.setPrefixPath("C:/OSGeo4W64/apps/qgis", True)
+    app = QApplication([], True)
     QgsApplication.initQgis()
 
     # Prepare processing framework
-    sys.path.append('/home/user/.qgis2/python/plugins')  # Folder where Processing is located
+    sys.path.append('C:/OSGEO4~1/apps/qgis/python/plugins') # Folder where Processing is located '/home/user/.qgis2/python/plugins'
     from processing.core.Processing import Processing
 
     Processing.initialize()
     from processing.tools import *
-
-    # Run the algorithm
-    layerInput = QgsVectorLayer('test.shp', 'test', 'ogr')
-    general.runalg('qgis:explodelines', layerInput, 'temp.shp')
 
     # Exit applications
     QgsApplication.exitQgis()

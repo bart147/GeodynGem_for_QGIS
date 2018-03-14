@@ -176,6 +176,27 @@ def join_field(input_table, join_table, field_to_calc, field_to_copy, joinfield_
        Vul "pk" in bij joinfield_join_table om de primary key te laten bepalen of kies een ander veld"""
     # voorbeeld: join_field(input_table="", join_table="", field_to_calc="", field_to_copy="", joinfield_input_table="", join_field_join_table="")
     try:
+
+        # calculate field code snippet.
+        vl.startEditing()
+
+        # step 1
+        myField = QgsField('TESTVELD', QVariant.Double)
+        vl.dataProvider().addAttributes([myField])
+        vl.updateFields()
+        idx = vl.fieldNameIndex('TESTVELD')
+
+        # step 2
+        e = QgsExpression(' "OBJECTID" + 3 ')
+        e.prepare(vl.pendingFields())
+
+        for f in vl.getFeatures():
+            f[idx] = e.evaluate(f)
+            vl.updateFeature(f)
+
+        vl.commitChanges()
+
+
         print_log("joining field {} from {}...".format(field_to_calc,os.path.basename(join_table)),"i")
         if joinfield_join_table == "pk":
             joinfield_join_table = arcpy.Describe(join_table).OIDFieldName
