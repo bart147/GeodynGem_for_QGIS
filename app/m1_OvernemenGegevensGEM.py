@@ -158,28 +158,52 @@ def koppel_knooppunten_aan_bemalingsgebieden(iface, d_velden, INP_POLYGON, KNOOP
     it = KNOOPPUNTEN.getFeatures(QgsFeatureRequest(expr)) # iterator object
     KNOOPPUNTEN.setSelectedFeatures([i.id() for i in it])
     print_log("{} selected".format(KNOOPPUNTEN.selectedFeatureCount()), "i")
-
     processing.runalg("qgis:joinattributesbylocation", INP_POLYGON, KNOOPPUNTEN, u'intersects', 0, 0, '', 1, POLYGON_LIS)
     processing.runalg("qgis:joinattributesbylocation", INP_POLYGON, KNOOPPUNTEN, u'intersects', 0, 1, 'sum', 1, POLYGON_LIS_SUM)
-    # arcpy.SpatialJoin_analysis(INP_POLYGON, "VAN_KNOOPPUNTEN", POLYGON_LIS, "JOIN_ONE_TO_ONE", "KEEP_ALL")
 
-    # hier join field doen...
+    ## arcpy.SpatialJoin_analysis(INP_POLYGON, "VAN_KNOOPPUNTEN", POLYGON_LIS, "JOIN_ONE_TO_ONE", "KEEP_ALL")
 
-    #
-    #
-    #
-    #
+    polygon_lis_sum = QgsVectorLayer(POLYGON_LIS_SUM, "polygon_lis_sum", "ogr")
+    polygon_lis = QgsVectorLayer(POLYGON_LIS, "polygon_lis", "ogr")
+    polygon_lis.dataProvider().addAttributes([QgsField('count', QVariant.Int)])
+    polygon_lis.updateFields()
 
-    ##polygon_lis = QgsVectorLayer(POLYGON_LIS, "polygon_lis", "ogr")
-    ##QgsMapLayerRegistry.instance().addMapLayer(polygon_lis)
-    iface.addVectorLayer(POLYGON_LIS, "polygon_lis", "ogr")
-    iface.addVectorLayer(POLYGON_LIS_SUM, "polygon_lis_sum", "ogr")
+    QgsMapLayerRegistry.instance().addMapLayer(polygon_lis)
+    QgsMapLayerRegistry.instance().addMapLayer(polygon_lis_sum)
+
+    # join field met summary gegevens
+    join_field(input_table=polygon_lis,
+               join_table=polygon_lis_sum,
+               field_to_calc="count",
+               field_to_copy="count",
+               joinfield_input_table="OBJECTID",
+               joinfield_join_table="OBJECTID")
+
+    QgsMapLayerRegistry.instance().removeMapLayer(polygon_lis_sum)
 
     # controleer spjoin
-    ##controleer_spjoin(POLYGON_LIS,"count")
+    controleer_spjoin(polygon_lis,"count")
 
-    # print_log("Bepaal in welk bemalingsgebied het eindpunt van afvoerrelatie ligt...",'i')
-    # # eindpunten voorzien van bemalingsgebied (sp.join)
+    print_log("Bepaal in welk bemalingsgebied het eindpunt van afvoerrelatie ligt...",'i')
+
+    # hier eindpunten bepalen...
+    #
+    #
+    #
+    #
+    # expr = QgsExpression("\"BEGIN_EIND\" = {}".format(0))
+    # it = KNOOPPUNTEN.getFeatures(QgsFeatureRequest(expr))  # iterator object
+    # KNOOPPUNTEN.setSelectedFeatures([i.id() for i in it])
+    # print_log("{} selected".format(KNOOPPUNTEN.selectedFeatureCount()), "i")
+    # processing.runalg("qgis:joinattributesbylocation", INP_POLYGON, KNOOPPUNTEN, u'intersects', 0, 0, '', 1,
+    #                   POLYGON_LIS)
+    #
+    #
+    #
+    #
+
+
+    # eindpunten voorzien van bemalingsgebied (sp.join)
     # arcpy.MakeFeatureLayer_management(KNOOPPUNTEN,"SEL_EINDKNOOPPUNTEN","BEGIN_EIND = 1") # 0 = beginpunt, 1 = eindpunt
     # arcpy.SpatialJoin_analysis("SEL_EINDKNOOPPUNTEN", POLYGON_LIS, EINDKNOOPPUNTEN, "JOIN_ONE_TO_ONE", "KEEP_ALL")
     #
@@ -239,35 +263,25 @@ def lis2graph(POLYGON_LIS):
     return POLYGON_LIS
 
 
-def controleer_spjoin(fc,fld_join_count):
+def controleer_spjoin(layer,fld_join_count):
     """Controleer of spjoin geslaagd is (Join_Count moet in principe overal 1 zijn).
        Vult VAN_KNOOPN voor lege polygonen met 'LEEG-<OBJID>'."""
     i_dubbel, i_leeg = 0, 0
 
-    layer = QgsVectorLayer(fc, "layer", "ogr")
-
+    layer.startEditing()
     for i, feature in enumerate(layer.getFeatures()):
-        JOIN_COUNT = feature[fld_join_count]
-        VAN_KNOOPN = feature["VAN_KNOOPN"]
+
+        JOIN_COUNT = feature[fld_join_count] if feature[fld_join_count] else 0
+        VAN_KNOOPN = feature["VAN_KNOOPN"] if feature["VAN_KNOOPN"] else None
+        print_log("{} - {}".format(VAN_KNOOPN,JOIN_COUNT), "i")
         if JOIN_COUNT >= 2:
             i_dubbel += 1
             print_log("polygon '{}' bevat {} objecten!".format(VAN_KNOOPN,JOIN_COUNT), "i")
         if JOIN_COUNT == 0:
             i_leeg += 1
             feature.setAttribute("VAN_KNOOPN", "LEEG-{}".format(i))
-
-    # with arcpy.da.UpdateCursor(fc, (["OID@","VAN_KNOOPN",fld_join_count])) as cursor:
-    #     for row in cursor:
-    #         OID, VAN_KNOOPN, JOIN_COUNT = row
-    #         if JOIN_COUNT >= 2:
-    #             i_dubbel += 1
-    #             print_log("polygon '{}' bevat {} objecten!".format(VAN_KNOOPN,JOIN_COUNT), "i")
-    #         if JOIN_COUNT == 0:
-    #             i_leeg += 1
-    #             row[1] = "LEEG-{}".format(OID)
-    #             cursor.updateRow(row)
-    # del cursor, row
-
+            layer.changeAttributeValue(feature.id(), layer.fieldNameIndex("VAN_KNOOPN"), "LEEG-{}".format(i))
+    layer.commitChanges()
 
     if i_dubbel == 1: print_log("\n{} polygoon bevat 2 of meer LIS-objecten".format(i_dubbel),"w")
     if i_dubbel > 1: print_log("\n{} polygonen bevatten 2 of meer LIS-objecten".format(i_dubbel),"w")

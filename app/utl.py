@@ -18,7 +18,9 @@ from xlrd import open_workbook
 
 # QGIS
 from qgis.gui import QgsMessageBar
-from qgis.core import QgsMessageLog
+from qgis.core import QgsMessageLog, QgsVectorJoinInfo, QgsExpression
+
+from PyQt4.QtCore import QVariant
 
 def start_timer():
     '''Start timer'''
@@ -174,41 +176,31 @@ def join_field(input_table, join_table, field_to_calc, field_to_copy, joinfield_
     """Veld overnemen uit andere tabel o.b.v. tablejoin.
        Het veld wat gevuld moet worden (field_to_calc) moet al wel bestaan en wordt in deze functie alleen gevuld.
        Vul "pk" in bij joinfield_join_table om de primary key te laten bepalen of kies een ander veld"""
-    # voorbeeld: join_field(input_table="", join_table="", field_to_calc="", field_to_copy="", joinfield_input_table="", join_field_join_table="")
+    # voorbeeld: join_field(input_table="", join_table="", field_to_calc="", field_to_copy="", joinfield_input_table="", joinfield_join_table="")
     try:
 
-        # calculate field code snippet.
-        vl.startEditing()
+        print_log("joining field {} from {}...".format(field_to_calc, os.path.basename(join_table.name())), "i")
 
-        # step 1
-        myField = QgsField('TESTVELD', QVariant.Double)
-        vl.dataProvider().addAttributes([myField])
-        vl.updateFields()
-        idx = vl.fieldNameIndex('TESTVELD')
+        # add join
+        joinObject = QgsVectorJoinInfo()
+        joinObject.joinLayerId = join_table.id()
+        joinObject.joinFieldName = joinfield_join_table
+        joinObject.targetFieldName = joinfield_input_table
+        input_table.addJoin(joinObject)
 
-        # step 2
-        e = QgsExpression(' "OBJECTID" + 3 ')
-        e.prepare(vl.pendingFields())
+        # calculate field
+        e = QgsExpression('"{}_{}"'.format(join_table.name(),field_to_copy))
+        e.prepare(input_table.pendingFields())
 
-        for f in vl.getFeatures():
+        input_table.startEditing()
+        idx = input_table.fieldNameIndex(field_to_calc)
+        for f in input_table.getFeatures():
             f[idx] = e.evaluate(f)
-            vl.updateFeature(f)
+            input_table.updateFeature(f)
+        input_table.commitChanges()
 
-        vl.commitChanges()
+        input_table.removeJoin(joinObject.joinLayerId)
 
-
-        print_log("joining field {} from {}...".format(field_to_calc,os.path.basename(join_table)),"i")
-        if joinfield_join_table == "pk":
-            joinfield_join_table = arcpy.Describe(join_table).OIDFieldName
-        try:
-            layer = arcpy.MakeFeatureLayer_management (input_table, "layer")
-        except:
-            layer = arcpy.MakeTableView_management(input_table, "table_view") # vage bug! hier "layer" gebruiken genereert Execution error bij hergebruik in sessie!
-        arcpy.AddJoin_management(layer,joinfield_input_table,join_table,joinfield_join_table)
-        calculation = '[{0}.{1}]'.format(arcpy.Describe(join_table).baseName, field_to_copy)
-        print_log("calculate [{}] = '{}'".format(field_to_calc, calculation),"d")
-        arcpy.CalculateField_management (layer, field_to_calc, calculation)
-        del layer
     except Exception as e:
         print_log("problemen met join_field {}! {}".format(field_to_calc,e),"w")
 
