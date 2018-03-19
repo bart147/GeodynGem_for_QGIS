@@ -187,21 +187,18 @@ def koppel_knooppunten_aan_bemalingsgebieden(iface, d_velden, INP_POLYGON, KNOOP
     print_log("Bepaal in welk bemalingsgebied het eindpunt van afvoerrelatie ligt...",'i')
 
     # hier eindpunten bepalen...
-    #
-    #
-    #
-    #
-    # expr = QgsExpression("\"BEGIN_EIND\" = {}".format(0))
-    # it = KNOOPPUNTEN.getFeatures(QgsFeatureRequest(expr))  # iterator object
-    # KNOOPPUNTEN.setSelectedFeatures([i.id() for i in it])
-    # print_log("{} selected".format(KNOOPPUNTEN.selectedFeatureCount()), "i")
-    # processing.runalg("qgis:joinattributesbylocation", INP_POLYGON, KNOOPPUNTEN, u'intersects', 0, 0, '', 1,
-    #                   POLYGON_LIS)
-    #
-    #
-    #
-    #
+    expr = QgsExpression("\"BEGIN_EIND\" = {}".format(1))
+    it = KNOOPPUNTEN.getFeatures(QgsFeatureRequest(expr))  # iterator object
+    KNOOPPUNTEN.setSelectedFeatures([i.id() for i in it])
+    print_log("{} selected".format(KNOOPPUNTEN.selectedFeatureCount()), "i")
+    processing.runalg("qgis:joinattributesbylocation", KNOOPPUNTEN, POLYGON_LIS, u'intersects', 0, 0, '', 1, EINDKNOOPPUNTEN)
 
+    eindknooppunten = QgsVectorLayer(EINDKNOOPPUNTEN, "eindknooppunten", "ogr")
+    QgsMapLayerRegistry.instance().addMapLayer(eindknooppunten)
+
+    # invullen veld LOOST_OP met code bemalingsgebied.
+    add_field_from_dict_label(polygon_lis, "st1a", d_velden)
+    join_field(polygon_lis, eindknooppunten, "K_LOOST_OP", "VAN_KNOO_1", "VAN_KNOOPN", "VAN_KNOOPN")
 
     # eindpunten voorzien van bemalingsgebied (sp.join)
     # arcpy.MakeFeatureLayer_management(KNOOPPUNTEN,"SEL_EINDKNOOPPUNTEN","BEGIN_EIND = 1") # 0 = beginpunt, 1 = eindpunt
@@ -215,10 +212,10 @@ def koppel_knooppunten_aan_bemalingsgebieden(iface, d_velden, INP_POLYGON, KNOOP
     # arcpy.MakeFeatureLayer_management(POLYGON_LIS,"SEL_POLYGON_LIS","Join_Count > 0 ") # selectie beginpunten
     # where_clause = "Join_Count > 0 AND K_LOOST_OP IS NULL"
 
-    return POLYGON_LIS, POLYGON_LIS_OVERLAP
+    return polygon_lis, POLYGON_LIS_OVERLAP
 
 
-def lis2graph(POLYGON_LIS):
+def lis2graph(layer):
     """Maakt Graph met LIS-netwerk en bepaalt onderbemalingen.
        Vult [ONTV_VAN] en [X_OBEMAL].
        Gebruikt [LOOST_OP] en [VAN_KNOOPN] als edge (relation) en VAN_KNOOPN als node"""
@@ -226,39 +223,63 @@ def lis2graph(POLYGON_LIS):
     graph = Graph()
     graph_rev = Graph()
 
-    # Cursur velden
-    search_fields = ["VAN_KNOOPN", "K_LOOST_OP"]
-    update_fields = ["VAN_KNOOPN", "K_ONTV_VAN", "X_OBEMAL", "X_OPPOMP", "K_KNP_EIND"]
-
     print_log ("netwerk opslaan als graph...","i")
-    with arcpy.da.SearchCursor(POLYGON_LIS, (search_fields)) as cursor: # sql_clause=(None, 'ORDER BY {}'.format("VAN_KNOOPN")))
-        for row in cursor:
-            VAN_KNOOPN, LOOST_OP = row
-            graph.add_node(VAN_KNOOPN)
-            graph_rev.add_node(VAN_KNOOPN)
-            if LOOST_OP != None:
-                graph.add_edge(VAN_KNOOPN, LOOST_OP, 1) # richting behouden voor bovenliggende gebied
-                graph_rev.add_edge(LOOST_OP, VAN_KNOOPN, 1) # richting omdraaien voor onderliggende gebied
-    del cursor, row
+    for feature in layer.getFeatures():  # .getFeatures()
+        VAN_KNOOPN = feature["VAN_KNOOPN"]
+        LOOST_OP = feature["K_LOOST_OP"]
+        graph.add_node(VAN_KNOOPN)
+        graph_rev.add_node(VAN_KNOOPN)
+        if LOOST_OP != None:
+            graph.add_edge(VAN_KNOOPN, LOOST_OP, 1)  # richting behouden voor bovenliggende gebied
+            graph_rev.add_edge(LOOST_OP, VAN_KNOOPN, 1)  # richting omdraaien voor onderliggende gebied
 
-    print_log ("onderbemaling bepalen voor rioolgemalen en zuiveringen...","i")
+    print_log("onderbemaling bepalen voor rioolgemalen en zuiveringen...", "i")
     where_clause = "Join_Count > 0"
-    with arcpy.da.UpdateCursor(POLYGON_LIS, (update_fields), where_clause) as cursor: # sql_clause=(None, 'ORDER BY {}'.format("VAN_KNOOPN")))
-        for row in cursor:
-            VAN_KNOOPN = row[0]
-            nodes = dijkstra(graph, VAN_KNOOPN)[0]
-            ##arcpy.AddMessage("nodes for {}: {}".format(VAN_KNOOPN,nodes))
-            K_KNP_EIND, X_OPPOMP  = [(key, value) for key, value in sorted(nodes.iteritems(), key=lambda (k,v): (v,k))][-1]
-            ##arcpy.AddMessage("endnode for {}: {},{}".format(VAN_KNOOPN,K_KNP_EIND, X_OPPOMP))
-            d_edges = dijkstra(graph_rev,VAN_KNOOPN)[1]  # {'B': 'A', 'C': 'B', 'D': 'C'}
-            l_onderliggende_gemalen = str(list(d_edges)) # [u'ZRE-123',u'ZRE-234']
-            l_onderliggende_gemalen = l_onderliggende_gemalen.replace("u'","'").replace("[","").replace("]","")
-            row[1] = l_onderliggende_gemalen             # ONTV_VAN = 'ZRE-1','ZRE-2'
-            row[2] = len(list(d_edges))                  # X_OBEMAL = 2 (aantal onderbemalingen)
-            row[3] = X_OPPOMP + 1                        # X_OPPOMP = 1 (aantal keer oppompen tot rwzi) met shortestPath ('RWZI','ZRE-4')
-            row[4] = K_KNP_EIND                          # eindbemalingsgebied / overnamepunt. bepaald uit netwerk.
-            cursor.updateRow(row)
-    del cursor, row
+    layer.startEditing()
+    for i, feature in enumerate(layer.getFeatures()):  # .getFeatures()
+        if not feature["count"] >= 1: continue
+        VAN_KNOOPN = feature["VAN_KNOOPN"]
+        nodes = dijkstra(graph, VAN_KNOOPN)[0]
+        print_log("nodes for {}: {}".format(VAN_KNOOPN,nodes), 'd')
+        K_KNP_EIND, X_OPPOMP = [(key, value) for key, value in sorted(nodes.iteritems(), key=lambda (k, v): (v, k))][-1]
+        print_log("endnode for {}: {},{}".format(VAN_KNOOPN,K_KNP_EIND, X_OPPOMP),'d')
+        d_edges = dijkstra(graph_rev, VAN_KNOOPN)[1]  # {'B': 'A', 'C': 'B', 'D': 'C'}
+        l_onderliggende_gemalen = str(list(d_edges))  # [u'ZRE-123',u'ZRE-234']
+        l_onderliggende_gemalen = l_onderliggende_gemalen.replace("u'", "'").replace("[", "").replace("]", "")
+        layer.changeAttributeValue(feature.id(), layer.fieldNameIndex("K_ONTV_VAN"), l_onderliggende_gemalen) # K_ONTV_VAN = 'ZRE-1','ZRE-2'
+        layer.changeAttributeValue(feature.id(), layer.fieldNameIndex("X_OBEMAL"), len(list(d_edges)))        # X_OBEMAL = 2 (aantal onderbemalingen)
+        layer.changeAttributeValue(feature.id(), layer.fieldNameIndex("X_OPPOMP"),  X_OPPOMP + 1)             # X_OPPOMP = 1 (aantal keer oppompen tot rwzi) met shortestPath ('RWZI','ZRE-4')
+        layer.changeAttributeValue(feature.id(), layer.fieldNameIndex("K_KNP_EIND"), K_KNP_EIND)              # eindbemalingsgebied / overnamepunt. bepaald uit netwerk.
+    layer.commitChanges()
+
+    # with arcpy.da.SearchCursor(POLYGON_LIS, (search_fields)) as cursor: # sql_clause=(None, 'ORDER BY {}'.format("VAN_KNOOPN")))
+    #     for row in cursor:
+    #         VAN_KNOOPN, LOOST_OP = row
+    #         graph.add_node(VAN_KNOOPN)
+    #         graph_rev.add_node(VAN_KNOOPN)
+    #         if LOOST_OP != None:
+    #             graph.add_edge(VAN_KNOOPN, LOOST_OP, 1) # richting behouden voor bovenliggende gebied
+    #             graph_rev.add_edge(LOOST_OP, VAN_KNOOPN, 1) # richting omdraaien voor onderliggende gebied
+    # del cursor, row
+
+    # print_log ("onderbemaling bepalen voor rioolgemalen en zuiveringen...","i")
+    # where_clause = "Join_Count > 0"
+    # with arcpy.da.UpdateCursor(POLYGON_LIS, (update_fields), where_clause) as cursor: # sql_clause=(None, 'ORDER BY {}'.format("VAN_KNOOPN")))
+    #     for row in cursor:
+    #         VAN_KNOOPN = row[0]
+    #         nodes = dijkstra(graph, VAN_KNOOPN)[0]
+    #         ##arcpy.AddMessage("nodes for {}: {}".format(VAN_KNOOPN,nodes))
+    #         K_KNP_EIND, X_OPPOMP  = [(key, value) for key, value in sorted(nodes.iteritems(), key=lambda (k,v): (v,k))][-1]
+    #         ##arcpy.AddMessage("endnode for {}: {},{}".format(VAN_KNOOPN,K_KNP_EIND, X_OPPOMP))
+    #         d_edges = dijkstra(graph_rev,VAN_KNOOPN)[1]  # {'B': 'A', 'C': 'B', 'D': 'C'}
+    #         l_onderliggende_gemalen = str(list(d_edges)) # [u'ZRE-123',u'ZRE-234']
+    #         l_onderliggende_gemalen = l_onderliggende_gemalen.replace("u'","'").replace("[","").replace("]","")
+    #         row[1] = l_onderliggende_gemalen             # ONTV_VAN = 'ZRE-1','ZRE-2'
+    #         row[2] = len(list(d_edges))                  # X_OBEMAL = 2 (aantal onderbemalingen)
+    #         row[3] = X_OPPOMP + 1                        # X_OPPOMP = 1 (aantal keer oppompen tot rwzi) met shortestPath ('RWZI','ZRE-4')
+    #         row[4] = K_KNP_EIND                          # eindbemalingsgebied / overnamepunt. bepaald uit netwerk.
+    #         cursor.updateRow(row)
+    # del cursor, row
 
     return POLYGON_LIS
 
@@ -332,18 +353,18 @@ def main(iface):
 
     blokje_log("Knooppunten genereren...","i")
     # genereer knooppunten uit afvoerrelaties
-    ##KNOOPPUNTEN, EINDKNOOPPUNTEN = genereer_knooppunten(INP_POLYGON, INP_AFVOERRELATIES)
+    ##KNOOPPUNTEN, EINDKNOOPPUNTEN = genereer_knooppunten(iface, INP_POLYGON, INP_AFVOERRELATIES)
     point_layer = genereer_knooppunten(iface, INP_POLYGON, INP_AFVOERRELATIES)
 
     blokje_log("Knooppunten koppelen aan bemalingsgebieden...","i")
-    POLYGON_LIS, POLYGON_LIS_OVERLAP = koppel_knooppunten_aan_bemalingsgebieden(iface, d_velden, INP_POLYGON, point_layer)
+    polygon_lis, POLYGON_LIS_OVERLAP = koppel_knooppunten_aan_bemalingsgebieden(iface, d_velden, INP_POLYGON, point_layer)
 
-    # # ##########################################################################
-    # # 2.) Graph vullen met LIS [LOOST_OP], onderbemaling bepalen en wegschrijven in [ONTV_VAN]
-    #
-    # blokje_log("Bepaal onderbemaling en aantal keer oppompen...","i")
-    # POLYGON_LIS = lis2graph(POLYGON_LIS)
-    #
+    # ##########################################################################
+    # 2.) Graph vullen met LIS [LOOST_OP], onderbemaling bepalen en wegschrijven in [ONTV_VAN]
+
+    blokje_log("Bepaal onderbemaling en aantal keer oppompen...","i")
+    polygon_lis = lis2graph(polygon_lis)
+
     # # ##########################################################################
     # # 3.) Controleer overlap HOOFDBEMALINGSGEBIEDEN
     # blokje_log("Controleer topologie bemalingsgebieden...","i")

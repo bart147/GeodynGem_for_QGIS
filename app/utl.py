@@ -18,7 +18,7 @@ from xlrd import open_workbook
 
 # QGIS
 from qgis.gui import QgsMessageBar
-from qgis.core import QgsMessageLog, QgsVectorJoinInfo, QgsExpression
+from qgis.core import QgsMessageLog, QgsVectorJoinInfo, QgsExpression, QgsField, QgsVectorLayer
 
 from PyQt4.QtCore import QVariant
 
@@ -100,14 +100,31 @@ def add_field_from_dict(fc, fld_name, d_fld):
     if "field_length" in fld.keys():
         field_length = fld["field_length"]
     else:
-        field_length = ""
-    arcpy.AddField_management (
-        in_table=fc,
-        field_name=fld_name,
-        field_type=fld["field_type"],
-        field_length=field_length,
-        field_alias=fld["field_alias"],
-        )
+        field_length = 0
+    print_log("veld lengte = {}".format(field_length), "i")
+
+    if not isinstance(fc, QgsVectorLayer): fc = QgsVectorLayer(fc, "layer", "ogr")
+
+    fldtype_mapper = {
+        "TEXT" : QVariant.String,
+        "LONG" : QVariant.Int,
+        "SHORT": QVariant.Int,
+        "DOUBLE":QVariant.Double,
+        "FLOAT": QVariant.Double,
+        "DATE" : QVariant.DateTime,
+    }
+
+
+    fc.dataProvider().addAttributes([QgsField(name=fld_name, type=fldtype_mapper.get(fld["field_type"],QVariant.String), len=field_length)])
+    fc.updateFields()
+
+    # arcpy.AddField_management (
+    #     in_table=fc,
+    #     field_name=fld_name,
+    #     field_type=fld["field_type"],
+    #     field_length=field_length,
+    #     field_alias=fld["field_alias"],
+    #     )
 
 def add_field_from_dict_label(fc, add_fld_value, d_fld):
     """velden toevoegen op basis van dict.keys 'add_fld', 'order' en 'fc' in d_fld
@@ -246,9 +263,11 @@ def get_d_velden(INP_FIELDS_XLS, SHEETNR):
             fld["mag_niet_0_zijn"] = str(srow["mag_niet_0_zijn"]).split(";")
         else:
             print (type(srow["mag_niet_0_zijn"]),srow["mag_niet_0_zijn"])
-        if str(srow["expression"]) != "nan":
+        if str(srow["lengte"]) not in ["nan", ""," "]:
+            fld["field_length"] = int(srow["lengte"])
+        if str(srow["expression"]) not in ["nan", ""," "]:
             fld["expression"] = srow["expression"]
-        if str(srow["stap_bereken"]) != "nan":
+        if str(srow["stap_bereken"]) not in ["nan", ""," "]:
             fld["bereken"] = srow["stap_bereken"]
         d_velden[srow["fieldname"]] = fld
 
