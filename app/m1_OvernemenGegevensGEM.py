@@ -23,11 +23,11 @@ log_dir                 = settings.log_dir
 INP_FIELDS_XLS          = settings.INP_FIELDS_XLS
 INP_FIELDS_XLS_SHEET    = settings.INP_FIELDS_XLS_SHEET
 INP_POLYGON             = os.path.join(gdb,"medemblik_bemalingsgebieden.shp")
-INP_KNOOPPUNTEN         = os.path.join(gdb,"medemblik_MLA_punt.shp")
+# INP_KNOOPPUNTEN         = os.path.join(gdb,"medemblik_MLA_punt.shp")
 INP_AFVOERRELATIES      = os.path.join(gdb,"medemblik_MLA_lijn.shp")
-
-# tussenresultaten
-KNOOPPUNTEN             = os.path.join(gdb,"KNOOPPUNTEN.shp")         # begin- en eindpunten van afvoerrelaties (lijn-bestand).
+#
+# # tussenresultaten
+KNOOPPUNTEN             = os.path.join(gdb,"knooppunten.shp")         # begin- en eindpunten van afvoerrelaties (lijn-bestand).
 EINDKNOOPPUNTEN         = os.path.join(gdb,"EINDKNOOPPUNTEN.shp")     # Alle knooppunten met daarbij het eindpunt
 POLYGON_LIS_OVERLAP     = os.path.join(gdb,"POLYGON_LIS_OVERLAP.shp") # bestand met gaten.
 
@@ -35,7 +35,7 @@ POLYGON_LIS_OVERLAP     = os.path.join(gdb,"POLYGON_LIS_OVERLAP.shp") # bestand 
 POLYGON_LIS             = os.path.join(gdb,"POLYGON_LIS.shp")
 POLYGON_LIS_SUM         = os.path.join(gdb,"POLYGON_LIS_SUM.shp")
 
-def genereer_knooppunten(iface, INP_POLYGON, INP_AFVOERRELATIES):
+def genereer_knooppunten(iface, inp_polygon, sel_afvoerrelaties):
     '''Genereert knooppunten op basis van afvoerrelaties (lijn-bestand) waarbij 1 knooppunt per bemalingsgebied is toegestaan.
        Alleen knooppunten die afvoeren naar een andere bemalingsgebied worden meegenomen.
        Van ieder knooppunt wordt het eindpunt bepaald, oftewel het overnamepunt.
@@ -53,21 +53,23 @@ def genereer_knooppunten(iface, INP_POLYGON, INP_AFVOERRELATIES):
     # QgsMapLayerRegistry.instance().addMapLayer(sel_afvoerrelaties)
 
     # methode 2 layer maken
-    mapcanvas = iface.mapCanvas()
-    layers = mapcanvas.layers()
-    for layer in layers:
-        print_log("{} == {}".format(layer.source(),INP_AFVOERRELATIES),"i")
-        if os.path.basename(layer.source()) == os.path.basename(INP_AFVOERRELATIES):
-            sel_afvoerrelaties = layer
+    # mapcanvas = iface.mapCanvas()
+    # layers = mapcanvas.layers()
+    # for layer in layers:
+    #     print_log("{} == {}".format(layer.name(),inp_afvoerrelaties.name()),"i")
+    #     if os.path.basename(layer.source()) == os.path.basename(INP_AFVOERRELATIES):
+    #         sel_afvoerrelaties = layer
+
+    # methode 3 layer uit dialog
 
     ##sel_afvoerrelaties = layers[0]
     ##sel_afvoerrelaties = QgsVectorLayer(INP_AFVOERRELATIES, "SEL_AFVOERRELATIES", "ogr")
     ##sel_afvoerrelaties = iface.addVectorLayer(INP_AFVOERRELATIES, "selectie", "ogr")
 
-    print_log(sel_afvoerrelaties.source(),"i")
+    ##print_log(sel_afvoerrelaties.source(),"i")
 
     sel_afvoerrelaties.selectAll()
-    processing.runalg("qgis:selectbylocation", sel_afvoerrelaties, INP_POLYGON, u'within', 0, 2)
+    processing.runalg("qgis:selectbylocation", sel_afvoerrelaties, inp_polygon, u'within', 0, 2)
     print_log("{} features selected".format(sel_afvoerrelaties.selectedFeatureCount()),'i')
     # QgsVectorFileWriter.writeAsVectorFormat(sel_afvoerrelaties,
     #                                         os.path.join(gdb,"exp_selection.shp"), "utf-8",
@@ -79,12 +81,12 @@ def genereer_knooppunten(iface, INP_POLYGON, INP_AFVOERRELATIES):
 
 
     # processing.runalg("grass7:v.to.points", sel_afvoerrelaties, "100000",
-    #                   0, False, "134943.95,136747.42,530403.39,531629.38", -1, 0.0001, 0, KNOOPPUNTEN)
+    #                   0, False, "134943.95,136747.42,530403.39,531629.38", -1, 0.0001, 0, knooppunten)
 
     # functie voor bepalen begin en eindpunt
     ##line_layer = qgis.utils.iface.activeLayer()
 
-    point_layer = QgsVectorLayer("Point?crs=epsg:28992", "KNOOPPUNTEN", "memory")
+    point_layer = QgsVectorLayer("Point?crs=epsg:28992", "knooppunten", "memory")
     pr = point_layer.dataProvider()
     point_layer.dataProvider().addAttributes(
         [QgsField("VAN_KNOOPN", QVariant.String),
@@ -116,50 +118,17 @@ def genereer_knooppunten(iface, INP_POLYGON, INP_AFVOERRELATIES):
 
     return point_layer
 
-#     # begin-/eindpunten genereren op basis van selectie
-#     polyline = "SEL_AFVOERRELATIES"
-#     spatial_ref = arcpy.Describe(polyline).spatialReference
-#
-#     mem_point = arcpy.CreateFeatureclass_management(gdb, KNOOPPUNTEN, "POINT", "", "DISABLED", "DISABLED", polyline)
-#     arcpy.AddField_management(mem_point, "LineOID", "LONG")
-#     arcpy.AddField_management(mem_point, "BEGIN_EIND", "LONG")
-#     arcpy.AddField_management(mem_point, "VAN_KNOOPN", "TEXT")
-#
-#     result = arcpy.GetCount_management(polyline)
-#     features = int(result.getOutput(0))
-#
-#     search_fields = ["SHAPE@", "OID@", "VAN_KNOOPN"]
-#     insert_fields = ["SHAPE@", "LineOID", "BEGIN_EIND", "VAN_KNOOPN"]
-#
-#     with arcpy.da.SearchCursor(polyline, (search_fields)) as search:
-#         with arcpy.da.InsertCursor(mem_point, (insert_fields)) as insert:
-#             for row in search:
-#                 try:
-#                     line_geom = row[0]
-# ##                    length = float(line_geom.length)
-#                     oid = str(row[1])
-#                     van_knoopn = row[2]
-#                     start = arcpy.PointGeometry(line_geom.firstPoint)
-#                     end = arcpy.PointGeometry(line_geom.lastPoint)
-#
-#                     insert.insertRow((start, oid, 0, van_knoopn)) # 0 = beginpunt
-#                     insert.insertRow((end, oid, 1, van_knoopn))   # 1 = eindpunt
-#                 except Exception as e:
-#                     arcpy.AddMessage(str(e.message))
-#
-#     return KNOOPPUNTEN, EINDKNOOPPUNTEN
 
-
-def koppel_knooppunten_aan_bemalingsgebieden(iface, d_velden, INP_POLYGON, KNOOPPUNTEN):
+def koppel_knooppunten_aan_bemalingsgebieden(iface, d_velden, inp_polygon, knooppunten):
     # knooppunten koppelen aan bemalingsgebieden / gebieden voorzien van code. (sp.join)
-    ##arcpy.MakeFeatureLayer_management(KNOOPPUNTEN,"VAN_KNOOPPUNTEN","BEGIN_EIND = 0") # selectie beginpunten
+    ##arcpy.MakeFeatureLayer_management(knooppunten,"VAN_KNOOPPUNTEN","BEGIN_EIND = 0") # selectie beginpunten
 
     expr = QgsExpression("\"BEGIN_EIND\" = {}".format(0))
-    it = KNOOPPUNTEN.getFeatures(QgsFeatureRequest(expr)) # iterator object
-    KNOOPPUNTEN.setSelectedFeatures([i.id() for i in it])
-    print_log("{} selected".format(KNOOPPUNTEN.selectedFeatureCount()), "i")
-    processing.runalg("qgis:joinattributesbylocation", INP_POLYGON, KNOOPPUNTEN, u'intersects', 0, 0, '', 1, POLYGON_LIS)
-    processing.runalg("qgis:joinattributesbylocation", INP_POLYGON, KNOOPPUNTEN, u'intersects', 0, 1, 'sum', 1, POLYGON_LIS_SUM)
+    it = knooppunten.getFeatures(QgsFeatureRequest(expr)) # iterator object
+    knooppunten.setSelectedFeatures([i.id() for i in it])
+    print_log("{} selected".format(knooppunten.selectedFeatureCount()), "i")
+    processing.runalg("qgis:joinattributesbylocation", inp_polygon, knooppunten, u'intersects', 0, 0, '', 1, POLYGON_LIS)
+    processing.runalg("qgis:joinattributesbylocation", inp_polygon, knooppunten, u'intersects', 0, 1, 'sum', 1, POLYGON_LIS_SUM)
 
     ## arcpy.SpatialJoin_analysis(INP_POLYGON, "VAN_KNOOPPUNTEN", POLYGON_LIS, "JOIN_ONE_TO_ONE", "KEEP_ALL")
 
@@ -188,10 +157,10 @@ def koppel_knooppunten_aan_bemalingsgebieden(iface, d_velden, INP_POLYGON, KNOOP
 
     # hier eindpunten bepalen...
     expr = QgsExpression("\"BEGIN_EIND\" = {}".format(1))
-    it = KNOOPPUNTEN.getFeatures(QgsFeatureRequest(expr))  # iterator object
-    KNOOPPUNTEN.setSelectedFeatures([i.id() for i in it])
-    print_log("{} selected".format(KNOOPPUNTEN.selectedFeatureCount()), "i")
-    processing.runalg("qgis:joinattributesbylocation", KNOOPPUNTEN, POLYGON_LIS, u'intersects', 0, 0, '', 1, EINDKNOOPPUNTEN)
+    it = knooppunten.getFeatures(QgsFeatureRequest(expr))  # iterator object
+    knooppunten.setSelectedFeatures([i.id() for i in it])
+    print_log("{} selected".format(knooppunten.selectedFeatureCount()), "i")
+    processing.runalg("qgis:joinattributesbylocation", knooppunten, POLYGON_LIS, u'intersects', 0, 0, '', 1, EINDKNOOPPUNTEN)
 
     eindknooppunten = QgsVectorLayer(EINDKNOOPPUNTEN, "eindknooppunten", "ogr")
     QgsMapLayerRegistry.instance().addMapLayer(eindknooppunten)
@@ -212,7 +181,7 @@ def koppel_knooppunten_aan_bemalingsgebieden(iface, d_velden, INP_POLYGON, KNOOP
     # arcpy.MakeFeatureLayer_management(POLYGON_LIS,"SEL_POLYGON_LIS","Join_Count > 0 ") # selectie beginpunten
     # where_clause = "Join_Count > 0 AND K_LOOST_OP IS NULL"
 
-    return polygon_lis, POLYGON_LIS_OVERLAP
+    return polygon_lis
 
 
 def lis2graph(layer):
@@ -281,7 +250,7 @@ def lis2graph(layer):
     #         cursor.updateRow(row)
     # del cursor, row
 
-    return POLYGON_LIS
+    return layer
 
 
 def controleer_spjoin(layer,fld_join_count):
@@ -311,14 +280,29 @@ def controleer_spjoin(layer,fld_join_count):
     if i_leeg >= 1: print_log("lege polygonen voorzien van VAN_KNOOPN-> 'LEEG-<OBJID>'","i")
 
 
-def controleer_hoofdbemalingsgebieden(POLYGON_LIS, POLYGON_LIS_OVERLAP):
+def controleer_hoofdbemalingsgebieden(polygon_lis):
     """Controleer of hoofdbemalingsgebieden overlappen."""
     # Intersect_analysis (in_features, out_feature_class, {join_attributes}, {cluster_tolerance}, {output_type})
-    arcpy.Intersect_analysis (POLYGON_LIS, POLYGON_LIS_OVERLAP)
-    return get_count(POLYGON_LIS_OVERLAP)
+    ##arcpy.Intersect_analysis (POLYGON_LIS, POLYGON_LIS_OVERLAP)
+    processing.runalg("saga:polygonselfintersection", polygon_lis, "VAN_KNOOPN", POLYGON_LIS_OVERLAP)
+    polygon_lis_overlap = QgsVectorLayer(POLYGON_LIS_OVERLAP, "bemalingsgebieden overlap", "ogr")
+    QgsMapLayerRegistry.instance().addMapLayer(polygon_lis_overlap)
+
+    expr = QgsExpression("\"VAN_KNOOPN\" {}".format("IS NULL"))
+    it = polygon_lis_overlap.getFeatures(QgsFeatureRequest(expr))  # iterator object
+    polygon_lis_overlap.setSelectedFeatures([i.id() for i in it])
+    if polygon_lis_overlap.selectedFeatureCount() > 0:
+        print_log("{} bemalingsgebieden met overlap!".format(polygon_lis_overlap.selectedFeatureCount()*2),'w',iface=g_iface)
+        for feature in polygon_lis_overlap.selectedFeatures():
+            print_log("\toverlap tussen bemalingsgebieden {}".format(feature["ID"]),"i")
+    else:
+        print_log("geen overlap gevonden tussen bemalingsgebieden", "i")
+        QgsMapLayerRegistry.instance().removeMapLayer(polygon_lis_overlap)
+
+    return POLYGON_LIS_OVERLAP
 
 
-def main(iface):
+def main(iface, layers):
     """Hoofdmenu:
         1.) Knooppunten kopieren en velden toevoegen.
             Koppel KNOOPPUNTEN aan RIOLERINGSGEBIEDEN
@@ -326,15 +310,25 @@ def main(iface):
         3.) Controleer overlap HOOFDBEMALINGSGEBIEDEN
         4.) Add results to map
         """
+    global g_iface
+    g_iface = iface
 
     # laod from settings
     gdb = settings.gdb
     log_dir = settings.log_dir
     INP_FIELDS_XLS = settings.INP_FIELDS_XLS
     INP_FIELDS_XLS_SHEET = settings.INP_FIELDS_XLS_SHEET
-    INP_POLYGON = os.path.join(gdb, "medemblik_bemalingsgebieden.shp")
-    INP_KNOOPPUNTEN = os.path.join(gdb, "medemblik_MLA_punt.shp")
-    INP_AFVOERRELATIES = os.path.join(gdb, "medemblik_MLA_lijn.shp")
+
+    # INP_POLYGON = os.path.join(gdb, "medemblik_bemalingsgebieden.shp")
+    # INP_KNOOPPUNTEN = os.path.join(gdb, "medemblik_MLA_punt.shp")
+    # INP_AFVOERRELATIES = os.path.join(gdb, "medemblik_MLA_lijn.shp")
+
+    inp_knooppunten, inp_afvoerrelaties, inp_drinkwater_bag, inp_ve_belasting, inp_plancap, inp_verhard_opp, inp_polygon = layers
+
+    for layer in layers:
+        print_log(layer.name(),"i")
+
+    print_log("inp_afvoerrelatie = {}".format(inp_afvoerrelaties.name()),"i")
 
     # ##########################################################################
     # 1.) Knooppunten exporteren, velden toevoegen.
@@ -348,16 +342,17 @@ def main(iface):
     blokje_log("Veld-info ophalen...","i")
     d_velden = get_d_velden(INP_FIELDS_XLS, 0)
     for fld in d_velden:
+        break
         print_log("{}\n{}".format(fld,d_velden[fld]),"i")
 
 
     blokje_log("Knooppunten genereren...","i")
     # genereer knooppunten uit afvoerrelaties
     ##KNOOPPUNTEN, EINDKNOOPPUNTEN = genereer_knooppunten(iface, INP_POLYGON, INP_AFVOERRELATIES)
-    point_layer = genereer_knooppunten(iface, INP_POLYGON, INP_AFVOERRELATIES)
+    point_layer = genereer_knooppunten(iface, inp_polygon, inp_afvoerrelaties)
 
     blokje_log("Knooppunten koppelen aan bemalingsgebieden...","i")
-    polygon_lis, POLYGON_LIS_OVERLAP = koppel_knooppunten_aan_bemalingsgebieden(iface, d_velden, INP_POLYGON, point_layer)
+    polygon_lis = koppel_knooppunten_aan_bemalingsgebieden(iface, d_velden, inp_polygon, point_layer)
 
     # ##########################################################################
     # 2.) Graph vullen met LIS [LOOST_OP], onderbemaling bepalen en wegschrijven in [ONTV_VAN]
@@ -365,22 +360,22 @@ def main(iface):
     blokje_log("Bepaal onderbemaling en aantal keer oppompen...","i")
     polygon_lis = lis2graph(polygon_lis)
 
-    # # ##########################################################################
-    # # 3.) Controleer overlap HOOFDBEMALINGSGEBIEDEN
-    # blokje_log("Controleer topologie bemalingsgebieden...","i")
-    # controleer_spjoin(POLYGON_LIS,"Join_Count")
-    # aantal_overlaps = controleer_hoofdbemalingsgebieden(POLYGON_LIS, POLYGON_LIS_OVERLAP)
-    #
-    # # ##########################################################################
-    # # 4.) Velden overnemen uit Kikker
-    # blokje_log("Overige velden overnemen uit knooppunten Kikker...","i")
-    # add_field_from_dict_label(POLYGON_LIS, "st1b", d_velden)
-    # join_field(POLYGON_LIS,INP_KNOOPPUNTEN,"K_KNP_NR",   "VAN_KNOOPN",  "VAN_KNOOPN", "VAN_KNOOPN")
-    # join_field(POLYGON_LIS,INP_KNOOPPUNTEN,"K_BEM_GEB",  "NAAM",        "VAN_KNOOPN", "VAN_KNOOPN")
-    # join_field(POLYGON_LIS,INP_KNOOPPUNTEN,"K_INST_TOT", "CAP_INST_M",  "VAN_KNOOPN", "VAN_KNOOPN")
-    # join_field(POLYGON_LIS,INP_KNOOPPUNTEN,"K_BR_ST_M3", "BERGING_M3",  "VAN_KNOOPN", "VAN_KNOOPN")
-    # join_field(POLYGON_LIS,INP_KNOOPPUNTEN,"K_OSH",      "LAAGSTE_OS",  "VAN_KNOOPN", "VAN_KNOOPN")
-    #
+    # ##########################################################################
+    # 3.) Controleer overlap HOOFDBEMALINGSGEBIEDEN
+    blokje_log("Controleer topologie bemalingsgebieden...","i")
+    controleer_spjoin(polygon_lis,"count")
+    POLYGON_LIS_OVERLAP = controleer_hoofdbemalingsgebieden(polygon_lis)
+
+    # ##########################################################################
+    # 4.) Velden overnemen uit Kikker
+    blokje_log("Overige velden overnemen uit knooppunten Kikker...","i")
+    add_field_from_dict_label(polygon_lis, "st1b", d_velden)
+    join_field(polygon_lis,inp_knooppunten,"K_KNP_NR",   "VAN_KNOOPN",  "VAN_KNOOPN", "VAN_KNOOPN")
+    join_field(polygon_lis,inp_knooppunten,"K_BEM_GEB",  "NAAM",        "VAN_KNOOPN", "VAN_KNOOPN")
+    join_field(polygon_lis,inp_knooppunten,"K_INST_TOT", "CAP_INST_M",  "VAN_KNOOPN", "VAN_KNOOPN")
+    join_field(polygon_lis,inp_knooppunten,"K_BR_ST_M3", "BERGING_M3",  "VAN_KNOOPN", "VAN_KNOOPN")
+    join_field(polygon_lis,inp_knooppunten,"K_OSH",      "LAAGSTE_OS",  "VAN_KNOOPN", "VAN_KNOOPN")
+
     # # ##########################################################################
     # # 5.) Add results to map
     # blokje_log("Tussenresultaten toevoegen aan mxd...","i")

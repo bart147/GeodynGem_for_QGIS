@@ -22,7 +22,7 @@
 """
 from PyQt4.QtCore import QSettings, QTranslator, qVersion, QCoreApplication
 from PyQt4.QtGui import QAction, QIcon, QMessageBox
-from qgis.core import QgsMessageLog
+from qgis.core import QgsMessageLog, QgsWKBTypes
 
 # Initialize Qt resources from file resources.py
 import resources
@@ -188,17 +188,45 @@ class GeodynGem:
         # remove the toolbar
         del self.toolbar
 
+    def move_to_front(self, l, txt):
+        """searches for txt in layer.name() if match: move to front of list"""
+        index = [l.index(i) for i in l if txt.lower() in i.name().lower()]
+        if len(index) > 0:
+            l.insert(0, l.pop(index[0]))
+        return l
 
     def run(self):
         """Run method that performs all the real work"""
         layers = self.iface.legendInterface().layers()
-        layer_list = []
-        for layer in layers:
-            layer_list.append(layer.name())
-            self.dlg.comboBox.addItems(layer_list)
+        layer_points, layer_lines, layer_polygons = [], [], []
+        for i, layer in enumerate(layers):
+            # qgis.core.QgsWKBTypes.displayString(int(vl.wkbType()))
+            if "point" in QgsWKBTypes.displayString(int(layer.wkbType())).lower(): ## QGis.WKBPoint:
+                layer_points.append(layer)
+            elif "line" in QgsWKBTypes.displayString(int(layer.wkbType())).lower(): ##QGis.WKBLineString:
+                layer_lines.append(layer)
+            elif "polygon" in QgsWKBTypes.displayString(int(layer.wkbType())).lower(): ##QGis.WKBPolygon:
+                layer_polygons.append(layer)
+            else:
+                pass
 
-        ##m1.main()
+        self.dlg.comboBox_1.addItems([i.name() for i in self.move_to_front(layer_points, "MLA")])   # knooppunt
+        self.dlg.comboBox_2.addItems([i.name() for i in self.move_to_front(layer_lines, "MLA")])   # afvoerrelatie
+        self.dlg.comboBox_3.addItems([i.name() for i in self.move_to_front(layer_points, "BAG")])   # drinkwater BAG
+        self.dlg.comboBox_4.addItems([i.name() for i in self.move_to_front(layer_points, "VE")])   # VE's
+        self.dlg.comboBox_5.addItems([i.name() for i in self.move_to_front(layer_polygons, "RIGO")])   # plancap
+        self.dlg.comboBox_6.addItems([i.name() for i in self.move_to_front(layer_polygons, "opp")])   # verhard opp
+        self.dlg.comboBox_7.addItems([i.name() for i in self.move_to_front(layer_polygons, "bemaling")])   # bemalingsgebieden
 
+        sel_layers = [
+            self.move_to_front(layer_points, "MLA")[self.dlg.comboBox_1.currentIndex()],
+            self.move_to_front(layer_lines, "MLA")[self.dlg.comboBox_2.currentIndex()],
+            self.move_to_front(layer_points, "BAG")[self.dlg.comboBox_3.currentIndex()],
+            self.move_to_front(layer_points, "VE")[self.dlg.comboBox_4.currentIndex()],
+            self.move_to_front(layer_polygons, "RIGO")[self.dlg.comboBox_5.currentIndex()],
+            self.move_to_front(layer_polygons, "opp")[self.dlg.comboBox_6.currentIndex()],
+            self.move_to_front(layer_polygons, "bemaling")[self.dlg.comboBox_7.currentIndex()],
+        ]
 
         # show the dialog
         self.dlg.show()
@@ -208,13 +236,15 @@ class GeodynGem:
         if result:
             # Do something useful here - delete the line containing pass and
             # substitute with your code.
+            global iface
+            iface = self.iface
 
             self.iface.messageBar().pushMessage("titel", "Start module 1", QgsMessageBar.INFO, duration=5)
-            m1.main(self.iface)
+            m1.main(self.iface, sel_layers)
 
             self.iface.mainWindow().statusBar().showMessage("dit is de mainWindow")
             msg = QMessageBox()
             QMessageBox.information(msg, "titel MessageBox", "tekst in messagebox")
-            QgsMessageLog.logMessage("hello world!", level=QgsMessageLog.INFO)
+            QgsMessageLog.logMessage("Script completed!", level=QgsMessageLog.INFO)
 
             pass

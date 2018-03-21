@@ -17,7 +17,7 @@ from datetime import datetime, date
 from xlrd import open_workbook
 
 # QGIS
-from qgis.gui import QgsMessageBar
+from qgis.gui import QgsMessageBar, QgisInterface
 from qgis.core import QgsMessageLog, QgsVectorJoinInfo, QgsExpression, QgsField, QgsVectorLayer
 
 from PyQt4.QtCore import QVariant
@@ -51,7 +51,12 @@ def blokje_log(txt,logType):
              "---------------------------------------------------------------------------------------------------------\n" + \
              "\n", logType)
 
-def print_log(message,logType):
+def print_log(message, logType, iface=False, **kwargs):
+
+    # if args:
+    #     iface = args[0] if isinstance(args[0], QgisInterface) else False
+    # else:
+    #     iface = False
 
     try:
         print (message)  # print mag niet?
@@ -67,8 +72,8 @@ def print_log(message,logType):
         logging.info(message)
     elif logType == "w": # warning
         QgsMessageLog.logMessage(message, level=QgsMessageLog.WARNING)
-        ##iface.messageBar().pushMessage("Warning", txt, level=QgsMessageBar.WARNING)
-        logging.warning(message)
+        if iface: iface.messageBar().pushMessage("Warning", message, level=QgsMessageBar.WARNING)
+        ##logging.warning(message)
     elif logType == "e": # error
         logging.error(message)
         ##iface.messageBar().pushMessage("Error", txt, level=QgsMessageBar.CRITICAL)
