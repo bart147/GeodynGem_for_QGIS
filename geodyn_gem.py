@@ -31,6 +31,7 @@ from geodyn_gem_dialog import GeodynGemDialog
 import os.path
 
 from app import m1_OvernemenGegevensGEM as m1
+from app import m2_BerekenResultaten as m2
 
 from qgis.gui import QgsMessageBar
 
@@ -239,8 +240,10 @@ class GeodynGem:
             global iface
             iface = self.iface
 
-            self.iface.messageBar().pushMessage("titel", "Start module 1", QgsMessageBar.INFO, duration=5)
-            m1.main(self.iface, sel_layers)
+            # self.iface.messageBar().pushMessage("titel", "Start module 1", QgsMessageBar.INFO, duration=5)
+            # m1.main(self.iface, sel_layers)
+            self.iface.messageBar().pushMessage("titel", "Start module 2", QgsMessageBar.INFO, duration=5)
+            m2.main(self.iface, sel_layers)
 
             self.iface.mainWindow().statusBar().showMessage("dit is de mainWindow")
             msg = QMessageBox()

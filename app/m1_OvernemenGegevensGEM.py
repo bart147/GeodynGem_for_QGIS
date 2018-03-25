@@ -303,13 +303,14 @@ def controleer_hoofdbemalingsgebieden(polygon_lis):
 
 
 def main(iface, layers):
-    """Hoofdmenu:
-        1.) Knooppunten kopieren en velden toevoegen.
-            Koppel KNOOPPUNTEN aan RIOLERINGSGEBIEDEN
-        2.) Dijkstra.Graph maken o.b.v. [KNOOPNR] en [LOOST_OP]. bepaal "X_OBEMAL", "X_OPPOMP", "K_KNP_EIND", "ONTV_VAN"
-        3.) Controleer overlap HOOFDBEMALINGSGEBIEDEN
-        4.) Add results to map
-        """
+    ''' 1.) Knooppunten exporteren, velden toevoegen.
+    # relaties selecteren die naar ander bemalingsgebied afvoeren. (niet volledig binnen 1 polygoon vallen)
+    # knooppunten selecteren die op ander bemalingsgebied afvoeren (op basis van selectie afvoerrelaties)
+    # knooppunten koppelen aan bemalingsgebieden / gebieden voorzien van code. (sp.join)
+    # eindpunten genereren van afvoerrelatie (line_to_point, select if not intersect with knooppunt)
+    # eindpunten voorzien van bemalingsgebied (sp.join)
+    # invullen veld LOOST_OP met code bemalingsgebied. '''
+
     global g_iface
     g_iface = iface
 
@@ -330,14 +331,7 @@ def main(iface, layers):
 
     print_log("inp_afvoerrelatie = {}".format(inp_afvoerrelaties.name()),"i")
 
-    # ##########################################################################
-    # 1.) Knooppunten exporteren, velden toevoegen.
-    # relaties selecteren die naar ander bemalingsgebied afvoeren. (niet volledig binnen 1 polygoon vallen)
-    # knooppunten selecteren die op ander bemalingsgebied afvoeren (op basis van selectie afvoerrelaties)
-    # knooppunten koppelen aan bemalingsgebieden / gebieden voorzien van code. (sp.join)
-    # eindpunten genereren van afvoerrelatie (line_to_point, select if not intersect with knooppunt)
-    # eindpunten voorzien van bemalingsgebied (sp.join)
-    # invullen veld LOOST_OP met code bemalingsgebied.
+
 
     blokje_log("Veld-info ophalen...","i")
     d_velden = get_d_velden(INP_FIELDS_XLS, 0)
@@ -376,25 +370,6 @@ def main(iface, layers):
     join_field(polygon_lis,inp_knooppunten,"K_BR_ST_M3", "BERGING_M3",  "VAN_KNOOPN", "VAN_KNOOPN")
     join_field(polygon_lis,inp_knooppunten,"K_OSH",      "LAAGSTE_OS",  "VAN_KNOOPN", "VAN_KNOOPN")
 
-    # # ##########################################################################
-    # # 5.) Add results to map
-    # blokje_log("Tussenresultaten toevoegen aan mxd...","i")
-    # MXD = arcpy.mapping.MapDocument("CURRENT")
-    # DF = arcpy.mapping.ListDataFrames(MXD)[0]
-    # results_to_add = [
-    #     (POLYGON_LIS,"eindresultaat stap 1"),
-    #     (KNOOPPUNTEN,"tussenresultaat"),
-    #     (EINDKNOOPPUNTEN,"tussenresultaat"),
-    #     ]
-    # if aantal_overlaps > 0:
-    #     results_to_add.append(POLYGON_LIS_OVERLAP)
-    #     print_log("hoofdbemalingsgebieden overlappen op {} plekken!".format(aantal_overlaps/2),"w")
-    #     print_log("{} wordt toegevoegd als tussenresultaat".format(POLYGON_LIS_OVERLAP),"i")
-    # for fc,besch in results_to_add:
-    #     layername = "{}: {}".format(besch,fc)
-    #     arcpy.MakeFeatureLayer_management(fc, layername)
-    #     layer = arcpy.mapping.Layer(layername)
-    #     arcpy.mapping.AddLayer(DF, layer, "TOP") # AUTO_ARRANGE, BOTTOM
 
 if __name__ == '__main__':
 

@@ -1,7 +1,6 @@
 
 import sys, os, logging
 from datetime import datetime
-import arcpy
 
 # importeer utilities
 from utl import start_timer, end_timer, blokje_log, print_log, add_field_from_dict, add_field_from_dict_label, fld_exists, join_field, bereken_veld, get_d_velden, bereken_veld_label
@@ -9,6 +8,9 @@ from utl import start_timer, end_timer, blokje_log, print_log, add_field_from_di
 # importeer settings
 import settings
 
+import processing
+from qgis.core import *
+from PyQt4.QtCore import QVariant
 
 def bepaal_b_VIEW(fc,wildcard):
     """Bepaal of extra gemaal bron (Spoc_views) gebruikt is in stap 1.
@@ -108,11 +110,13 @@ def bereken_onderbemaling2(fc):
 def spjoin_bronbestanden_aan_bemalingsgebieden():
     # joining DRINKWATER_BAG to POLYGONS
     print_log("spatialjoin DRINKWATER_BAG to POLYGONS...","i")
-    arcpy.SpatialJoin_analysis(INP_DRINKWATER_BAG, POLYGON_LIS, DRINKWATER_POLYGON_LIS, "JOIN_ONE_TO_ONE", "KEEP_ALL")
-    print_log("summarize DRINKWATER_BAG per POLYGON...","i")
-    arcpy.Statistics_analysis (DRINKWATER_POLYGON_LIS, STATS_DRINKWATER, [["PAR_RESULT","SUM"],["ZAK_RESULT","SUM"]], "VAN_KNOOPN")
-    # extra stapje om om te reken van liter/hr naar m3/hr voor part. en zakelijk drinkwater in STAT-tabel.
+    ##arcpy.SpatialJoin_analysis(INP_DRINKWATER_BAG, POLYGON_LIS, DRINKWATER_POLYGON_LIS, "JOIN_ONE_TO_ONE", "KEEP_ALL")
 
+    print_log("summarize DRINKWATER_BAG per POLYGON...","i")
+    ##arcpy.Statistics_analysis (DRINKWATER_POLYGON_LIS, STATS_DRINKWATER, [["PAR_RESULT","SUM"],["ZAK_RESULT","SUM"]], "VAN_KNOOPN")
+
+
+    # extra stapje om om te reken van liter/hr naar m3/hr voor part. en zakelijk drinkwater in STAT-tabel.
     add_field_from_dict_label(STATS_DRINKWATER, "stap2tmp", d_velden_tmp)
 
     bereken_veld(STATS_DRINKWATER, "SUM_PAR_RESULT_M3U", d_velden_tmp)
@@ -182,22 +186,69 @@ def bepaal_verhard_oppervlak():
         join_field(POLYGON_LIS, stat_name, fld_ha, "OPP_BEMGEBIED_HA", "VAN_KNOOPN", "VAN_KNOOPN")
         # percentages worden achteraf berekend ##join_field(POLYGON_LIS, stat_name, fld_pi, "PERCENTAGE", "VAN_KNOOPN", "VAN_KNOOPN")
 
+def add_layer(layer_name):
+    ins = QgsMapLayerRegistry.instance()
+    if ins.mapLayersByName(layer_name.name()):
+        ins.removeMapLayer(layer_name)
+    ins.addMapLayer(layer_name)
 
-
-def main(POLYGON_LIS):
+def main(iface, layers):
     """Hoofdmenu:
-        1.) Kopie maken INPUT_POLYGON_LIS
-        2.) Spatial joins tussen POLYGON_LIS en de externe gegevens bronnen.
-        3.) Velden toevoegen en gegevens overnemen
-        4.) Bereken onderbemaling voor DRINKWATER, PLANCAP en VE's
-        5.) alle None vervangen door 0
-        6.) berekeningen uitvoeren
-        7.) resultaat omzetten naar template (als "template" bestaat)
-        8.) add results to map
-        """
+    1.) Kopie maken INPUT_POLYGON_LIS
+    2.) Spatial joins tussen POLYGON_LIS en de externe gegevens bronnen.
+    3.) Velden toevoegen en gegevens overnemen
+    4.) Bereken onderbemaling voor DRINKWATER, PLANCAP en VE's
+    5.) alle None vervangen door 0
+    6.) berekeningen uitvoeren
+    7.) resultaat omzetten naar template (als "template" bestaat)
+    8.) add results to map
+    """
+    global g_iface
+    g_iface = iface
+
+    INP_SKIP_SPJOIN = False
+
+    # laod from settings
+    gdb = settings.gdb
+    INP_FIELDS_XLS = settings.INP_FIELDS_XLS
+    l_src_None_naar_0_omzetten = settings.l_fld_None_naar_0_omzetten  # velden waarvan waardes worden omgezet van None naar 0
+    d_velden_tmp = settings.d_velden_tmp  # tijdelijke velden
+
+    # layers
+    inp_knooppunten, inp_afvoerrelaties, inp_drinkwater_bag, inp_ve_belasting, inp_plancap, inp_verhard_opp, inp_polygon = layers
+    for layer in layers:
+        print_log(layer.name(), "i")
+
+    # tussenresultaten
+    POLYGON_LIS             = os.path.join(gdb, "eindresultaat.shp")
+    DRINKWATER_POLYGON_LIS  = "SpJoin_DRINKWATER2POLYGON_LIS"
+    PLANCAP_POLYGON_LIS     = "SpJoin_PLANCAP2POLYGON_LIS"
+    VE_POLYGON_LIS          = "SpJoin_VE2POLYGON_LIS"
+    STATS_DRINKWATER        = "STATS_DRINKWATER"
+    STATS_PLANCAP           = "STATS_PLANCAP"
+    STATS_VE                = "STATS_VE"
+    EXP_VERHARD_OPP         = 'EXP_VERHARD_OPP'
+    VERHARD_OPP_INTERSECT   = "VERHARD_OPP_INTERSECT"
+    STATS_VERHARD_OPP       = "STATS_VERHARD_OPP"
+
+    blokje_log("Veld-info ophalen...", "i")
+    d_velden = get_d_velden(INP_FIELDS_XLS, 0)
+    for fld in d_velden:
+        break
+        print_log("{}\n{}".format(fld, d_velden[fld]), "i")
+
     # ##########################################################################
     # 1.) export input INP_POLYGON_LIS to result POLYGON_LIS
-    arcpy.FeatureClassToFeatureClass_conversion(INP_POLYGON_LIS, gdb, POLYGON_LIS)
+    ##arcpy.FeatureClassToFeatureClass_conversion(INP_POLYGON_LIS, gdb, POLYGON_LIS)
+    # # methode 2 layer maken
+    # for layer in iface.mapCanvas().layers():
+    #     if layer.name() == "polygon_lis":
+    #         sel_layer = layer
+
+    tussenresultaat = QgsVectorLayer(os.path.join(gdb,"POLYGON_LIS.shp"), "tussenresultaat", "ogr")
+    QgsVectorFileWriter.writeAsVectorFormat(tussenresultaat, POLYGON_LIS, "utf-8", None, "ESRI Shapefile")
+    polygon_lis = QgsVectorLayer(POLYGON_LIS, "eindresultaat", "ogr")
+    add_layer(polygon_lis)
 
     # ##########################################################################
     # 2.) Spatial joins tussen POLYGON_LIS en de externe gegevens bronnen
@@ -209,88 +260,64 @@ def main(POLYGON_LIS):
 
     blokje_log("Velden toevoegen en voorbereiden voor berekening onderbemaling...", "i")
 
-    # ##########################################################################
-    # 3.) Velden toevoegen en gegevens overnemen
-    add_field_from_dict_label(POLYGON_LIS, "st2a", d_velden)
+    # # ##########################################################################
+    # # 3.) Velden toevoegen en gegevens overnemen
+    # add_field_from_dict_label(POLYGON_LIS, "st2a", d_velden)
+    #
+    # # join stat_fields to POLYGON_LIS
+    # join_field(POLYGON_LIS, STATS_DRINKWATER, "PAR_RESULT", "SUM_PAR_RESULT_M3U", "VAN_KNOOPN", "VAN_KNOOPN")
+    # join_field(POLYGON_LIS, STATS_DRINKWATER, "ZAK_RESULT", "SUM_ZAK_RESULT_M3U", "VAN_KNOOPN", "VAN_KNOOPN")
+    # join_field(POLYGON_LIS, STATS_DRINKWATER, "X_WON_GEB", "FREQUENCY", "VAN_KNOOPN", "VAN_KNOOPN")
+    # join_field(POLYGON_LIS, STATS_PLANCAP, "AW_15_24_G", "SUM_Extra_AFW_2015_tm_2024", "VAN_KNOOPN", "VAN_KNOOPN")
+    # join_field(POLYGON_LIS, STATS_PLANCAP, "AW_25_50_G", "SUM_Extra_AFW_2025_tm_2050", "VAN_KNOOPN", "VAN_KNOOPN")
+    # join_field(POLYGON_LIS, STATS_VE, "X_VE_GEB", "SUM_GRONDSLAG", "VAN_KNOOPN", "VAN_KNOOPN")
+    #
+    # # bereken drinkwater per gebied (input voor onderbemalingen)
+    # bereken_veld(POLYGON_LIS, "DWR_GEBIED", d_velden)
+    #
+    # # ##########################################################################
+    # # 4.) Bereken onderbemaling voor DRINKWATER en PLANCAP en VE's
+    # blokje_log("bereken onderbemalingen voor drinkwater, plancap en ve's...","i")
+    # bereken_onderbemaling(POLYGON_LIS)
+    #
+    # vervang_None_door_0_voor_velden_in_lijst(l_src_None_naar_0_omzetten, POLYGON_LIS)
+    #
+    # # ##########################################################################
+    # # 6.) berekeningen uitvoeren
+    # # bereken dwa prognose & drinkwater per gebied
+    # # "bereken": "b2a"
+    # bereken_veld_label(POLYGON_LIS, "04_ber", d_velden)
+    # bereken_veld_label(POLYGON_LIS, "04a_ber", d_velden)
+    #
+    # # Vergelijk geschat en gemeten zonder
+    # # "bereken": "b2b"
+    # bereken_veld_label(POLYGON_LIS, "05_ber", d_velden)
+    #
+    # # bereken verhard opp
+    # blokje_log("Bepaal verhard oppervlak binnen bemalingsgebieden...","i")
+    # bepaal_verhard_oppervlak()
+    #
+    # vervang_None_door_0_voor_velden_in_lijst(
+    #     ["HA_GEM_G", "HA_VGS_G", "HA_HWA_G","HA_OPW_G", "HA_NAG_G", "HA_OBK_G"],
+    #     POLYGON_LIS)
+    #
+    # # bereken velden afhankelijk van verhard opp
+    # bereken_veld_label(POLYGON_LIS, '06_ber', d_velden)
+    # bereken_veld_label(POLYGON_LIS, '07_ber', d_velden)
+    # bereken_veld_label(POLYGON_LIS, '08_ber', d_velden)
+    # bereken_veld_label(POLYGON_LIS, '08a_ber', d_velden)
+    #
+    # # bepaal onderbemaling2 afhankelijk van verhard opp
+    # bereken_onderbemaling2(POLYGON_LIS)
+    # vervang_None_door_0_voor_velden_in_lijst(
+    #         ["POC_B_M3_O", "POC_O_M3_O","POC_B_M3_G", "POC_O_M3_G"], POLYGON_LIS)
+    # bereken_veld_label(POLYGON_LIS, '10_ber', d_velden)
 
-    # join stat_fields to POLYGON_LIS
-    join_field(POLYGON_LIS, STATS_DRINKWATER, "PAR_RESULT", "SUM_PAR_RESULT_M3U", "VAN_KNOOPN", "VAN_KNOOPN")
-    join_field(POLYGON_LIS, STATS_DRINKWATER, "ZAK_RESULT", "SUM_ZAK_RESULT_M3U", "VAN_KNOOPN", "VAN_KNOOPN")
-    join_field(POLYGON_LIS, STATS_DRINKWATER, "X_WON_GEB", "FREQUENCY", "VAN_KNOOPN", "VAN_KNOOPN")
-    join_field(POLYGON_LIS, STATS_PLANCAP, "AW_15_24_G", "SUM_Extra_AFW_2015_tm_2024", "VAN_KNOOPN", "VAN_KNOOPN")
-    join_field(POLYGON_LIS, STATS_PLANCAP, "AW_25_50_G", "SUM_Extra_AFW_2025_tm_2050", "VAN_KNOOPN", "VAN_KNOOPN")
-    join_field(POLYGON_LIS, STATS_VE, "X_VE_GEB", "SUM_GRONDSLAG", "VAN_KNOOPN", "VAN_KNOOPN")
-
-    # bereken drinkwater per gebied (input voor onderbemalingen)
-    bereken_veld(POLYGON_LIS, "DWR_GEBIED", d_velden)
-
-    # ##########################################################################
-    # 4.) Bereken onderbemaling voor DRINKWATER en PLANCAP en VE's
-    blokje_log("bereken onderbemalingen voor drinkwater, plancap en ve's...","i")
-    bereken_onderbemaling(POLYGON_LIS)
-
-    vervang_None_door_0_voor_velden_in_lijst(l_src_None_naar_0_omzetten, POLYGON_LIS)
-
-    # ##########################################################################
-    # 6.) berekeningen uitvoeren
-    # bereken dwa prognose & drinkwater per gebied
-    # "bereken": "b2a"
-    bereken_veld_label(POLYGON_LIS, "04_ber", d_velden)
-    bereken_veld_label(POLYGON_LIS, "04a_ber", d_velden)
-
-    # Vergelijk geschat en gemeten zonder
-    # "bereken": "b2b"
-    bereken_veld_label(POLYGON_LIS, "05_ber", d_velden)
-
-    # bereken verhard opp
-    blokje_log("Bepaal verhard oppervlak binnen bemalingsgebieden...","i")
-    bepaal_verhard_oppervlak()
-
-    vervang_None_door_0_voor_velden_in_lijst(
-        ["HA_GEM_G", "HA_VGS_G", "HA_HWA_G","HA_OPW_G", "HA_NAG_G", "HA_OBK_G"],
-        POLYGON_LIS)
-
-    # bereken velden afhankelijk van verhard opp
-    bereken_veld_label(POLYGON_LIS, '06_ber', d_velden)
-    bereken_veld_label(POLYGON_LIS, '07_ber', d_velden)
-    bereken_veld_label(POLYGON_LIS, '08_ber', d_velden)
-    bereken_veld_label(POLYGON_LIS, '08a_ber', d_velden)
-
-    # bepaal onderbemaling2 afhankelijk van verhard opp
-    bereken_onderbemaling2(POLYGON_LIS)
-    vervang_None_door_0_voor_velden_in_lijst(
-            ["POC_B_M3_O", "POC_O_M3_O","POC_B_M3_G", "POC_O_M3_G"], POLYGON_LIS)
-    bereken_veld_label(POLYGON_LIS, '10_ber', d_velden)
-
-##    # ##########################################################################
-##    # 7.) resultaat omzetten naar template (if "template" Exists)
-##    if arcpy.Exists("template"):
-##        print_log("resultaat omzetten naar template...", "i")
-##        RESULT_REORDERED = os.path.basename(POLYGON_LIS) + "_REORDERED"
-##        arcpy.FeatureClassToFeatureClass_conversion("template",gdb, RESULT_REORDERED)
-##        arcpy.Append_management(POLYGON_LIS, RESULT_REORDERED, "NO_TEST")
-##        arcpy.Delete_management(POLYGON_LIS)
-##        arcpy.Rename_management(RESULT_REORDERED,POLYGON_LIS)
-##    else:
-##         print_log("geen template aanwezig dus de volgorde van velden is niet optimaal", "w")
-
-
-    # ##########################################################################
-    # 8.) add results to map
-    blokje_log("eindresultaat toevoegen aan mxd", "i")
-    MXD = arcpy.mapping.MapDocument("CURRENT")
-    DF = arcpy.mapping.ListDataFrames(MXD)[0]
-    for fc in[POLYGON_LIS]:
-        layername = "eindresultaat: {}".format(fc)
-        arcpy.MakeFeatureLayer_management(fc, layername)
-        layer = arcpy.mapping.Layer(layername)
-        arcpy.mapping.AddLayer(DF, layer, "AUTO_ARRANGE") # AUTO_ARRANGE
 
 if __name__ == '__main__':
 
     # setting for development: skip spatial join. boolean
     INP_SKIP_SPJOIN             = True                  # skipp spatial join
-
 
     # laod from settings
 
@@ -328,6 +355,7 @@ if __name__ == '__main__':
     EXP_VERHARD_OPP         = 'EXP_VERHARD_OPP'
     VERHARD_OPP_INTERSECT   = "VERHARD_OPP_INTERSECT"
     STATS_VERHARD_OPP       = "STATS_VERHARD_OPP"
+
 ##    STATS_VERHARD_OPP_GEM   = "STATS_VERHARD_OPP_GEM"
 ##    STATS_VERHARD_OPP_HWA   = "STATS_VERHARD_OPP_HWA"
 ##    STATS_VERHARD_OPP_NAG   = "STATS_VERHARD_OPP_NAG"
