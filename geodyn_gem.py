@@ -247,7 +247,7 @@ class GeodynGem:
 
             self.iface.mainWindow().statusBar().showMessage("dit is de mainWindow")
             msg = QMessageBox()
-            QMessageBox.information(msg, "titel MessageBox", "tekst in messagebox")
+            ##QMessageBox.information(msg, "titel MessageBox", "tekst in messagebox")
             QgsMessageLog.logMessage("Script completed!", level=QgsMessageLog.INFO)
 
             pass

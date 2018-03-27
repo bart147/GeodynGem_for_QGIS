@@ -21,19 +21,29 @@ def bepaal_b_VIEW(fc,wildcard):
         print_log("geen [{}] gevonden in {}".format(wildcard,fc),"i")
         return False
 
-def controleer_spjoin_plancap(fc):
+
+def controleer_spjoin_plancap(layer, fld_join_count):
     """Controleer of spjoin geslaagd is (Join_Count moet in principe overal 1 zijn) voor plancap"""
-    i_dubbel, i_leeg, i_None = 0, 0, 0
-    with arcpy.da.SearchCursor(fc, (["OID@","VAN_KNOOPN","Join_Count_1"])) as cursor: # 'Join_Count' is overblijfsel van spjoin LIS met POLYGONS, vandaar '_1'.
-        for row in cursor:
-            OID, VAN_KNOOPN, JOIN_COUNT = row
-            if JOIN_COUNT >= 2:
-                i_dubbel += 1
-            if JOIN_COUNT == 0:
-                i_leeg += 1
-    del cursor, row
-    if i_dubbel > 0: print_log("\n{} plancaps vallen in meerdere hoofdbemalingsgebieden!".format(i_dubbel),"w")
-    if i_leeg > 0: print_log("{} plancaps vallen niet in een hoofdbemalingsgebied\n".format(i_leeg),"w")
+    i_dubbel, i_leeg = 0, 0
+
+    ##layer.startEditing()
+    for i, feature in enumerate(layer.getFeatures()):
+
+        JOIN_COUNT = feature[fld_join_count] if feature[fld_join_count] else 0
+        PLAN_ID = feature["PLANID"] if feature["PLANID"] else None
+        ##print_log("{} - {}".format(PLAN_ID, JOIN_COUNT), "i")
+        if JOIN_COUNT >= 2:
+            i_dubbel += 1
+            print_log("planid '{}' valt in {} bemalingsgebieden!".format(PLAN_ID, JOIN_COUNT), "w", g_iface)
+        if JOIN_COUNT == 0:
+            i_leeg += 1
+    ##layer.commitChanges()
+
+    if i_dubbel == 1: print_log("\n{} plancap valt in meerdere hoofdbemalingsgebieden!".format(i_dubbel), "w")
+    if i_dubbel > 1: print_log("\n{} plancaps vallen in meerdere hoofdbemalingsgebieden!".format(i_dubbel), "w")
+    if i_leeg == 1: print_log("{} plancaps valt niet in een hoofdbemalingsgebied\n".format(i_leeg), "w")
+    if i_leeg > 1: print_log("{} plancaps vallen niet in een hoofdbemalingsgebied\n".format(i_leeg), "w")
+
 
 def vervang_None_door_0_voor_velden_in_lijst(l,POLYGON_LIS):
     """Vervang alle None-waarden met 0 voor velden in lijst"""
@@ -50,6 +60,7 @@ def vervang_None_door_0_voor_velden_in_lijst(l,POLYGON_LIS):
                 del cursor, row
         else:
             print_log("veld {} niet gevonden! Kan None-waardes niet omzetten naar 0!".format(fld),"w")
+
 
 def bereken_onderbemaling(fc):
     """bereken onderbemalingen voor SUM_WAARDE, SUM_BLA, etc..
@@ -83,6 +94,7 @@ def bereken_onderbemaling(fc):
     del cursor, row
     print_log("Onderbemalingen succesvol berekend voor Plancap, drinkwater, woningen en ve's", "i")
 
+
 def bereken_onderbemaling2(fc):
     """bereken onderbemalingen voor SUM_WAARDE, SUM_BLA, etc..
        Maakt selectie op basis van veld [ONTV_VAN] -> VAN_KNOOPN IN ('ZRE-123424', 'ZRE-234')"""
@@ -107,35 +119,46 @@ def bereken_onderbemaling2(fc):
     del cursor, row
     print_log("Onderbemalingen succesvol berekend voor POC ontwerp en POC beschikbaar", "i")
 
-def spjoin_bronbestanden_aan_bemalingsgebieden():
+def spjoin_bronbestanden_aan_bemalingsgebieden(polygon_lis, inp_drinkwater_bag, inp_ve_belasting, inp_plancap, inp_polygon, STATS_DRINKWATER, STATS_VE, STATS_PLANCAP):
     # joining DRINKWATER_BAG to POLYGONS
     print_log("spatialjoin DRINKWATER_BAG to POLYGONS...","i")
     ##arcpy.SpatialJoin_analysis(INP_DRINKWATER_BAG, POLYGON_LIS, DRINKWATER_POLYGON_LIS, "JOIN_ONE_TO_ONE", "KEEP_ALL")
+#    processing.runalg("qgis:joinattributesbylocation", inp_polygon, inp_drinkwater_bag, u'intersects', 0, 1, 'sum', 1, STATS_DRINKWATER)
+    stats_drinkwater = QgsVectorLayer(STATS_DRINKWATER, "stats_drinkwater", "ogr")
+    add_layer(stats_drinkwater)
 
-    print_log("summarize DRINKWATER_BAG per POLYGON...","i")
+##    print_log("summarize DRINKWATER_BAG per POLYGON...","i")
     ##arcpy.Statistics_analysis (DRINKWATER_POLYGON_LIS, STATS_DRINKWATER, [["PAR_RESULT","SUM"],["ZAK_RESULT","SUM"]], "VAN_KNOOPN")
 
-
     # extra stapje om om te reken van liter/hr naar m3/hr voor part. en zakelijk drinkwater in STAT-tabel.
-    add_field_from_dict_label(STATS_DRINKWATER, "stap2tmp", d_velden_tmp)
+#    add_field_from_dict_label(stats_drinkwater, "stap2tmp", d_velden_tmp)
+#    bereken_veld(stats_drinkwater, "SUMPAR_M3U", d_velden_tmp)
+#    bereken_veld(stats_drinkwater, "SUMZAK_M3U", d_velden_tmp)
 
-    bereken_veld(STATS_DRINKWATER, "SUM_PAR_RESULT_M3U", d_velden_tmp)
-    bereken_veld(STATS_DRINKWATER, "SUM_ZAK_RESULT_M3U", d_velden_tmp)
+#    add_field_from_dict_label(polygon_lis, "stap2tmp", d_velden_tmp)
+#    join_field(polygon_lis, stats_drinkwater, "PAR_RESULT", "SUMPAR_M3U", "VAN_KNOOPN", "VAN_KNOOPN")
+#    join_field(polygon_lis, stats_drinkwater, "ZAK_RESULT", "SUMZAK_M3U", "VAN_KNOOPN", "VAN_KNOOPN")
+
 
     # joining PLANCAP_RIGO to POLYGONS
     print_log("spatialjoin PLANCAP_RIGO to POLYGONS...","i")
-    arcpy.SpatialJoin_analysis(INP_PLANCAP_RIGO, POLYGON_LIS, PLANCAP_POLYGON_LIS, "JOIN_ONE_TO_ONE", "KEEP_ALL")
-    controleer_spjoin_plancap(PLANCAP_POLYGON_LIS)
-    arcpy.AlterField_management(PLANCAP_POLYGON_LIS,"Join_Count_1","","aantal plannen per polygoon") # Join_Count_1 alias aanpassen.
-    print_log("summarize PLANCAP_RIGO per POLYGON...","i")
-    arcpy.Statistics_analysis (PLANCAP_POLYGON_LIS, STATS_PLANCAP, [["Extra_AFW_2015_tm_2024","SUM"],["Extra_AFW_2025_tm_2050","SUM"]], "VAN_KNOOPN")
+    ##arcpy.SpatialJoin_analysis(INP_PLANCAP_RIGO, POLYGON_LIS, PLANCAP_POLYGON_LIS, "JOIN_ONE_TO_ONE", "KEEP_ALL")
+    ##processing.runalg("qgis:joinattributesbylocation", inp_polygon, inp_plancap, u'intersects', 0, 1, 'sum', 1, STATS_PLANCAP)
+    processing.runalg("qgis:joinattributesbylocation", inp_plancap, inp_polygon, u'intersects', 0, 1, 'sum', 1, STATS_PLANCAP)
+    stats_plancap = QgsVectorLayer(STATS_PLANCAP, "stats_plancap", "ogr")
+    add_layer(stats_plancap)
 
-    # joining VE to POLYGONS
-    print_log("spatialjoin VE_BELASTING to POLYGONS...","i")
-    arcpy.SpatialJoin_analysis(INP_VE_BELASTING, POLYGON_LIS, VE_POLYGON_LIS, "JOIN_ONE_TO_ONE", "KEEP_ALL")
-    # ## controleer_spjoin_plancap(VE_POLYGON_LIS) # ook check doen voor VE's die niet in Bemalingsgebied vallen. Lijkt me niet nodig.
-    print_log("summarize VE_BELASTING per POLYGON...","i")
-    arcpy.Statistics_analysis (VE_POLYGON_LIS, STATS_VE, [["GRONDSLAG","SUM"]], "VAN_KNOOPN")
+    controleer_spjoin_plancap(stats_plancap, "count")
+    # arcpy.AlterField_management(PLANCAP_POLYGON_LIS,"Join_Count_1","","aantal plannen per polygoon") # Join_Count_1 alias aanpassen.
+    # print_log("summarize PLANCAP_RIGO per POLYGON...","i")
+    # arcpy.Statistics_analysis (PLANCAP_POLYGON_LIS, STATS_PLANCAP, [["Extra_AFW_2015_tm_2024","SUM"],["Extra_AFW_2025_tm_2050","SUM"]], "VAN_KNOOPN")
+    #
+    # # joining VE to POLYGONS
+    # print_log("spatialjoin VE_BELASTING to POLYGONS...","i")
+    # arcpy.SpatialJoin_analysis(INP_VE_BELASTING, POLYGON_LIS, VE_POLYGON_LIS, "JOIN_ONE_TO_ONE", "KEEP_ALL")
+    # # ## controleer_spjoin_plancap(VE_POLYGON_LIS) # ook check doen voor VE's die niet in Bemalingsgebied vallen. Lijkt me niet nodig.
+    # print_log("summarize VE_BELASTING per POLYGON...","i")
+    # arcpy.Statistics_analysis (VE_POLYGON_LIS, STATS_VE, [["GRONDSLAG","SUM"]], "VAN_KNOOPN")
 
 
 def bepaal_verhard_oppervlak():
@@ -186,11 +209,24 @@ def bepaal_verhard_oppervlak():
         join_field(POLYGON_LIS, stat_name, fld_ha, "OPP_BEMGEBIED_HA", "VAN_KNOOPN", "VAN_KNOOPN")
         # percentages worden achteraf berekend ##join_field(POLYGON_LIS, stat_name, fld_pi, "PERCENTAGE", "VAN_KNOOPN", "VAN_KNOOPN")
 
+
 def add_layer(layer_name):
     ins = QgsMapLayerRegistry.instance()
     if ins.mapLayersByName(layer_name.name()):
         ins.removeMapLayer(layer_name)
     ins.addMapLayer(layer_name)
+
+
+def setColumnVisibility( layer, columnName, visible ):
+    config = layer.attributeTableConfig()
+    columns = config.columns()
+    for column in columns:
+        if column.name == columnName:
+            column.hidden = not visible
+            break
+    config.setColumns( columns )
+    layer.setAttributeTableConfig( config )
+
 
 def main(iface, layers):
     """Hoofdmenu:
@@ -203,7 +239,7 @@ def main(iface, layers):
     7.) resultaat omzetten naar template (als "template" bestaat)
     8.) add results to map
     """
-    global g_iface
+    global g_iface, INP_SKIP_SPJOIN, gdb, l_src_None_naar_0_omzetten, d_velden_tmp, d_velden
     g_iface = iface
 
     INP_SKIP_SPJOIN = False
@@ -221,15 +257,15 @@ def main(iface, layers):
 
     # tussenresultaten
     POLYGON_LIS             = os.path.join(gdb, "eindresultaat.shp")
-    DRINKWATER_POLYGON_LIS  = "SpJoin_DRINKWATER2POLYGON_LIS"
-    PLANCAP_POLYGON_LIS     = "SpJoin_PLANCAP2POLYGON_LIS"
-    VE_POLYGON_LIS          = "SpJoin_VE2POLYGON_LIS"
-    STATS_DRINKWATER        = "STATS_DRINKWATER"
-    STATS_PLANCAP           = "STATS_PLANCAP"
-    STATS_VE                = "STATS_VE"
-    EXP_VERHARD_OPP         = 'EXP_VERHARD_OPP'
-    VERHARD_OPP_INTERSECT   = "VERHARD_OPP_INTERSECT"
-    STATS_VERHARD_OPP       = "STATS_VERHARD_OPP"
+    DRINKWATER_POLYGON_LIS  = os.path.join(gdb, "SpJoin_DRINKWATER2POLYGON_LIS.shp")
+    PLANCAP_POLYGON_LIS     = os.path.join(gdb, "SpJoin_PLANCAP2POLYGON_LIS.shp")
+    VE_POLYGON_LIS          = os.path.join(gdb, "SpJoin_VE2POLYGON_LIS.shp")
+    STATS_DRINKWATER        = os.path.join(gdb, "STATS_DRINKWATER.shp")
+    STATS_PLANCAP           = os.path.join(gdb, "STATS_PLANCAP.shp")
+    STATS_VE                = os.path.join(gdb, "STATS_VE.shp")
+    EXP_VERHARD_OPP         = os.path.join(gdb, "EXP_VERHARD_OPP.shp")
+    VERHARD_OPP_INTERSECT   = os.path.join(gdb, "VERHARD_OPP_INTERSECT.shp")
+    STATS_VERHARD_OPP       = os.path.join(gdb, "STATS_VERHARD_OPP.shp")
 
     blokje_log("Veld-info ophalen...", "i")
     d_velden = get_d_velden(INP_FIELDS_XLS, 0)
@@ -251,19 +287,19 @@ def main(iface, layers):
     add_layer(polygon_lis)
 
     # ##########################################################################
-    # 2.) Spatial joins tussen POLYGON_LIS en de externe gegevens bronnen
+    # 2.) Velden toevoegen en gegevens overnemen
+    add_field_from_dict_label(polygon_lis, "st2a", d_velden)
+
+    # ##########################################################################
+    # 3.) Spatial joins tussen POLYGON_LIS en de externe gegevens bronnen
     if INP_SKIP_SPJOIN:
         blokje_log("Skip SpatialJoin met externe inputs en gebruik bestaande STAT-tabellen.","i")
     else:
         blokje_log("Start SpatialJoin externe bronnen met hoofdbemalingsgebieden... (5 tot 25 minuten)","i")
-        spjoin_bronbestanden_aan_bemalingsgebieden()
+        spjoin_bronbestanden_aan_bemalingsgebieden(polygon_lis, inp_drinkwater_bag, inp_ve_belasting, inp_plancap, inp_polygon, STATS_DRINKWATER, STATS_VE, STATS_PLANCAP)
 
     blokje_log("Velden toevoegen en voorbereiden voor berekening onderbemaling...", "i")
 
-    # # ##########################################################################
-    # # 3.) Velden toevoegen en gegevens overnemen
-    # add_field_from_dict_label(POLYGON_LIS, "st2a", d_velden)
-    #
     # # join stat_fields to POLYGON_LIS
     # join_field(POLYGON_LIS, STATS_DRINKWATER, "PAR_RESULT", "SUM_PAR_RESULT_M3U", "VAN_KNOOPN", "VAN_KNOOPN")
     # join_field(POLYGON_LIS, STATS_DRINKWATER, "ZAK_RESULT", "SUM_ZAK_RESULT_M3U", "VAN_KNOOPN", "VAN_KNOOPN")

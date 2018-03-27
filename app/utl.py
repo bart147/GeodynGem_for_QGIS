@@ -100,8 +100,11 @@ def add_field_from_dict(fc, fld_name, d_fld):
             'field_length'  : '50', (optional)
             'field_type'    : 'TEXT',
             } """
+
     print_log("veld {} toevoegen".format(fld_name), "i")
     fld = d_fld[fld_name] # dict with field parameters
+    if fld in [field.name() for field in fc.pendingFields()]:
+        return
     if "field_length" in fld.keys():
         field_length = fld["field_length"]
     else:
@@ -157,15 +160,44 @@ def bereken_veld(fc, fld_name, d_fld):
        als dict de key 'mag_niet_0_zijn' bevat, wordt een selectie gemaakt voor het opgegeven veld"""
     try:
         expression = d_fld[fld_name]["expression"]
-        print_log("calculate {} = {}".format(fld_name,expression), "i" )
-        print_log(d_fld[fld_name],"d")
+        expression = expression.replace("[", '"').replace("]", '"')
+        print_log("calculate {} = {}".format(fld_name, expression), "i")
+        print_log(d_fld[fld_name], "d")
         if "mag_niet_0_zijn" in d_fld[fld_name]:
             l_fld = d_fld[fld_name]["mag_niet_0_zijn"]
-            where_clause = " and ".join(["{} <> 0".format(fld) for fld in l_fld]) # [FLD1,FLD2] -> "FLD1 <> 0 and FLD2 <> 0"
-            arcpy.MakeFeatureLayer_management(fc,"layer_sel_zonder_0",where_clause)
-            arcpy.CalculateField_management("layer_sel_zonder_0",fld_name,expression)
-        else:
-            arcpy.CalculateField_management(fc,fld_name,expression)
+            where_clause = " and ".join(
+                ['"{}" <> 0'.format(fld) for fld in l_fld])  # [FLD1,FLD2] -> "FLD1 <> 0 and FLD2 <> 0"
+            expr = QgsExpression(where_clause)
+            print_log(where_clause, "d")
+            it = fc.getFeatures(QgsFeatureRequest(expr))  # iterator object
+            fc.setSelectedFeatures([i.id() for i in it])
+
+        #     arcpy.MakeFeatureLayer_management(fc, "layer_sel_zonder_0", where_clause)
+        #     arcpy.CalculateField_management("layer_sel_zonder_0", fld_name, expression)
+        # else:
+        #     arcpy.CalculateField_management(fc, fld_name, expression)
+
+        # calculate field
+        e = QgsExpression(expression)
+        e.prepare(fc.pendingFields())
+
+        fc.startEditing()
+        idx = fc.fieldNameIndex(fld_name)
+        for f in fc.getFeatures():
+            f[idx] = e.evaluate(f)
+            fc.updateFeature(f)
+        fc.commitChanges()
+
+        # expression = d_fld[fld_name]["expression"]
+        # print_log("calculate {} = {}".format(fld_name,expression), "i" )
+        # print_log(d_fld[fld_name],"d")
+        # if "mag_niet_0_zijn" in d_fld[fld_name]:
+        #     l_fld = d_fld[fld_name]["mag_niet_0_zijn"]
+        #     where_clause = " and ".join(["{} <> 0".format(fld) for fld in l_fld]) # [FLD1,FLD2] -> "FLD1 <> 0 and FLD2 <> 0"
+        #     arcpy.MakeFeatureLayer_management(fc,"layer_sel_zonder_0",where_clause)
+        #     arcpy.CalculateField_management("layer_sel_zonder_0",fld_name,expression)
+        # else:
+        #     arcpy.CalculateField_management(fc,fld_name,expression)
     except Exception as e:
         print_log("probleem bij bereken veld {}! {}".format(fld_name,e),"w")
 
@@ -213,6 +245,7 @@ def join_field(input_table, join_table, field_to_calc, field_to_copy, joinfield_
         # calculate field
         e = QgsExpression('"{}_{}"'.format(join_table.name(),field_to_copy))
         e.prepare(input_table.pendingFields())
+        print_log("expression = {}".format('"{}_{}"'.format(join_table.name(),field_to_copy)), "i")
 
         input_table.startEditing()
         idx = input_table.fieldNameIndex(field_to_calc)
@@ -221,7 +254,7 @@ def join_field(input_table, join_table, field_to_calc, field_to_copy, joinfield_
             input_table.updateFeature(f)
         input_table.commitChanges()
 
-        input_table.removeJoin(joinObject.joinLayerId)
+        ##input_table.removeJoin(joinObject.joinLayerId)
 
     except Exception as e:
         print_log("problemen met join_field {}! {}".format(field_to_calc,e),"w")
