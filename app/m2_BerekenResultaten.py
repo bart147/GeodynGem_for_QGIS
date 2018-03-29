@@ -45,54 +45,65 @@ def controleer_spjoin_plancap(layer, fld_join_count):
     if i_leeg > 1: print_log("{} plancaps vallen niet in een hoofdbemalingsgebied\n".format(i_leeg), "w")
 
 
-def vervang_None_door_0_voor_velden_in_lijst(l,POLYGON_LIS):
+def vervang_None_door_0_voor_velden_in_lijst(l,layer):
     """Vervang alle None-waarden met 0 voor velden in lijst"""
     blokje_log("Data voorbereiden en berekeningen uitvoeren...","i")
     print_log("Vervang None met 0 voor alle velden in lijst {}...".format(l),"i")
-    l_fields = [fld.name for fld in arcpy.ListFields(POLYGON_LIS)]
+    layer.startEditing()
     for fld in l:
-        if fld in l_fields: #indien veld bestaat...
-            with arcpy.da.UpdateCursor(POLYGON_LIS, ([fld])) as cursor:
-                for row in cursor:
-                    if row[0] == None:
-                        row[0] = 0
-                        cursor.updateRow(row)
-                del cursor, row
-        else:
-            print_log("veld {} niet gevonden! Kan None-waardes niet omzetten naar 0!".format(fld),"w")
+        for f in layer.getFeatures():
+            try:
+                if str(f[fld]) in ["NULL", "", " ", "nan"]:
+                    layer.changeAttributeValue(f.id(), layer.fieldNameIndex(fld), 0)
+            except Exception as e:
+                print_log("fout bij omzetten None-waarden naar 0 bij veld {}. {}".format(fld, e), "w", g_iface)
+    layer.commitChanges()
 
 
-def bereken_onderbemaling(fc):
+def bereken_onderbemaling(layer):
     """bereken onderbemalingen voor SUM_WAARDE, SUM_BLA, etc..
        Maakt selectie op basis van veld [ONTV_VAN] -> VAN_KNOOPN IN ('ZRE-123424', 'ZRE-234')"""
     # sum values op basis van selectie [ONTV_VAN]
-    update_fields = ["VAN_KNOOPN",  # row[0]
-                     "K_ONTV_VAN",    # row[1]
-                     "AW_15_24_G",  # row[2]
-                     "AW_15_24_O",  # row[3] obm
-                     "AW_25_50_G",  # row[4]
-                     "AW_25_50_O",  # row[5] obm
-                     "DWR_GEBIED",  # row[6]
-                     "DWR_ONBG",    # row[7] obm
-                     "X_WON_GEB",   # row[8]
-                     "X_WON_ONBG",  # row[9] obm
-                     "X_VE_GEB",    # row[10]
-                     "X_VE_ONBG",   # row[11] obm
-                     ]
-
-    with arcpy.da.UpdateCursor(fc, (update_fields)) as cursor:
-        for row in cursor:
-            VAN_KNOOPN, ONTV_VAN = row[0], row[1]
-            if not ONTV_VAN in [None,""," "]: # check of sprake is van onderbemaling
-                where_clause = "VAN_KNOOPN IN ({})".format(ONTV_VAN)
-                row[3] = sum([r[0] for r in arcpy.da.SearchCursor(fc,["AW_15_24_G"],where_clause) if r[0] != None])    # AW_15_24_O = sum(AW_15_24_G)
-                row[5] = sum([r[0] for r in arcpy.da.SearchCursor(fc,["AW_25_50_G"],where_clause) if r[0] != None])    # AW_25_50_O = sum(AW_25_50_G)
-                row[7] = sum([r[0] for r in arcpy.da.SearchCursor(fc,["DWR_GEBIED"],where_clause) if r[0] != None])    # DWR_ONBG = sum(DWR_GEBIED)
-                row[9] = sum([r[0] for r in arcpy.da.SearchCursor(fc,["X_WON_GEB"],where_clause) if r[0] != None])     # X_WON_ONBG = sum(X_WON_GEB)
-                row[11]= sum([r[0] for r in arcpy.da.SearchCursor(fc,["X_VE_GEB"],where_clause) if r[0] != None])     # X_VE_ONBG = sum(X_VE_GEB)
-                cursor.updateRow(row)
-    del cursor, row
+    layer.startEditing()
+    for feature in layer.getFeatures():
+        VAN_KNOOPN = feature["VAN_KNOOPN"]
+        ONTV_VAN = feature["K_ONTV_VAN"]
+        if not str(ONTV_VAN) in ["NULL", ""," "]: # check of sprake is van onderbemaling
+            print_log("K_ONTV_VAN = {}".format(ONTV_VAN),"i")
+            where_clause = '"VAN_KNOOPN" IN ({})'.format(ONTV_VAN)
+            ##where_clause = '"VAN_KNOOPN" = '+"'MERG10'"
+            print_log("where_clause = {}".format(where_clause), "i")
+            expr = QgsExpression(where_clause)
+            it = layer.getFeatures(QgsFeatureRequest(expr))  # iterator object
+            layer.setSelectedFeatures([i.id() for i in it])
+            print_log("sel = {}".format([i.id() for i in it]),"i")
+            AW_15_24_O  = sum([float(f["AW_15_24_G"]) for f in layer.selectedFeatures() if str(f["AW_15_24_G"]) not in ["NULL","nan",""," "]])
+            AW_25_50_O  = sum([float(f["AW_25_50_G"]) for f in layer.selectedFeatures() if str(f["AW_25_50_G"]) not in ["NULL","nan",""," "]])
+            DWR_ONBG    = sum([float(f["DWR_GEBIED"]) for f in layer.selectedFeatures() if str(f["DWR_GEBIED"]) not in ["NULL","nan",""," "]])
+            X_WON_ONBG  = sum([float(f["X_WON_GEB"]) for f in layer.selectedFeatures() if str(f["X_WON_GEB"]) not in ["NULL","nan",""," "]])
+            X_VE_ONBG   = sum([float(f["X_VE_GEB"]) for f in layer.selectedFeatures() if str(f["X_VE_GEB"]) not in ["NULL","nan",""," "]])
+            layer.changeAttributeValue(feature.id(), layer.fieldNameIndex("AW_15_24_O"), AW_15_24_O)
+            layer.changeAttributeValue(feature.id(), layer.fieldNameIndex("AW_25_50_O"), AW_25_50_O)
+            layer.changeAttributeValue(feature.id(), layer.fieldNameIndex("DWR_ONBG"), DWR_ONBG)
+            layer.changeAttributeValue(feature.id(), layer.fieldNameIndex("X_WON_ONBG"), X_WON_ONBG)
+            layer.changeAttributeValue(feature.id(), layer.fieldNameIndex("X_VE_ONBG"), X_VE_ONBG)
+    layer.commitChanges()
+    layer.setSelectedFeatures([])
     print_log("Onderbemalingen succesvol berekend voor Plancap, drinkwater, woningen en ve's", "i")
+
+    # with arcpy.da.UpdateCursor(fc, (update_fields)) as cursor:
+    #     for row in cursor:
+    #         VAN_KNOOPN, ONTV_VAN = row[0], row[1]
+    #         if not ONTV_VAN in [None,""," "]: # check of sprake is van onderbemaling
+    #             where_clause = "VAN_KNOOPN IN ({})".format(ONTV_VAN)
+    #             row[3] = sum([r[0] for r in arcpy.da.SearchCursor(fc,["AW_15_24_G"],where_clause) if r[0] != None])    # AW_15_24_O = sum(AW_15_24_G)
+    #             row[5] = sum([r[0] for r in arcpy.da.SearchCursor(fc,["AW_25_50_G"],where_clause) if r[0] != None])    # AW_25_50_O = sum(AW_25_50_G)
+    #             row[7] = sum([r[0] for r in arcpy.da.SearchCursor(fc,["DWR_GEBIED"],where_clause) if r[0] != None])    # DWR_ONBG = sum(DWR_GEBIED)
+    #             row[9] = sum([r[0] for r in arcpy.da.SearchCursor(fc,["X_WON_GEB"],where_clause) if r[0] != None])     # X_WON_ONBG = sum(X_WON_GEB)
+    #             row[11]= sum([r[0] for r in arcpy.da.SearchCursor(fc,["X_VE_GEB"],where_clause) if r[0] != None])     # X_VE_ONBG = sum(X_VE_GEB)
+    #             cursor.updateRow(row)
+    # del cursor, row
+    # print_log("Onderbemalingen succesvol berekend voor Plancap, drinkwater, woningen en ve's", "i")
 
 
 def bereken_onderbemaling2(fc):
@@ -119,47 +130,39 @@ def bereken_onderbemaling2(fc):
     del cursor, row
     print_log("Onderbemalingen succesvol berekend voor POC ontwerp en POC beschikbaar", "i")
 
-def spjoin_bronbestanden_aan_bemalingsgebieden(polygon_lis, inp_drinkwater_bag, inp_ve_belasting, inp_plancap, inp_polygon, STATS_DRINKWATER, STATS_VE, STATS_PLANCAP):
+
+def spjoin_bronbestanden_aan_bemalingsgebieden(polygon_lis, inp_drinkwater_bag, inp_ve_belasting, inp_plancap, inp_polygon,
+                                                   PLANCAP_OVERLAP, STATS_DRINKWATER, STATS_VE, STATS_PLANCAP):
     # joining DRINKWATER_BAG to POLYGONS
     print_log("spatialjoin DRINKWATER_BAG to POLYGONS...","i")
-    ##arcpy.SpatialJoin_analysis(INP_DRINKWATER_BAG, POLYGON_LIS, DRINKWATER_POLYGON_LIS, "JOIN_ONE_TO_ONE", "KEEP_ALL")
-#    processing.runalg("qgis:joinattributesbylocation", inp_polygon, inp_drinkwater_bag, u'intersects', 0, 1, 'sum', 1, STATS_DRINKWATER)
+    processing.runalg("qgis:joinattributesbylocation", inp_polygon, inp_drinkwater_bag, u'intersects', 0, 1, 'sum', 1, STATS_DRINKWATER)
     stats_drinkwater = QgsVectorLayer(STATS_DRINKWATER, "stats_drinkwater", "ogr")
     add_layer(stats_drinkwater)
 
-##    print_log("summarize DRINKWATER_BAG per POLYGON...","i")
-    ##arcpy.Statistics_analysis (DRINKWATER_POLYGON_LIS, STATS_DRINKWATER, [["PAR_RESULT","SUM"],["ZAK_RESULT","SUM"]], "VAN_KNOOPN")
-
     # extra stapje om om te reken van liter/hr naar m3/hr voor part. en zakelijk drinkwater in STAT-tabel.
-#    add_field_from_dict_label(stats_drinkwater, "stap2tmp", d_velden_tmp)
-#    bereken_veld(stats_drinkwater, "SUMPAR_M3U", d_velden_tmp)
-#    bereken_veld(stats_drinkwater, "SUMZAK_M3U", d_velden_tmp)
+    add_field_from_dict_label(stats_drinkwater, "stap2tmp", d_velden_tmp)
+    bereken_veld(stats_drinkwater, "SUMPAR_M3U", d_velden_tmp)
+    bereken_veld(stats_drinkwater, "SUMZAK_M3U", d_velden_tmp)
 
-#    add_field_from_dict_label(polygon_lis, "stap2tmp", d_velden_tmp)
-#    join_field(polygon_lis, stats_drinkwater, "PAR_RESULT", "SUMPAR_M3U", "VAN_KNOOPN", "VAN_KNOOPN")
-#    join_field(polygon_lis, stats_drinkwater, "ZAK_RESULT", "SUMZAK_M3U", "VAN_KNOOPN", "VAN_KNOOPN")
-
+    # check for overlap between PLANCAP_RIGO and inp_polygon
+    print_log("spatialjoin PLANCAP_RIGO to POLYGONS...","i")
+    processing.runalg("qgis:joinattributesbylocation", inp_plancap, inp_polygon, u'intersects', 0, 1, 'sum', 1, PLANCAP_OVERLAP)
+    plancap_overlap = QgsVectorLayer(PLANCAP_OVERLAP, "plancap_overlap", "ogr")
+    add_layer(plancap_overlap)
+    controleer_spjoin_plancap(plancap_overlap, "count")
 
     # joining PLANCAP_RIGO to POLYGONS
-    print_log("spatialjoin PLANCAP_RIGO to POLYGONS...","i")
-    ##arcpy.SpatialJoin_analysis(INP_PLANCAP_RIGO, POLYGON_LIS, PLANCAP_POLYGON_LIS, "JOIN_ONE_TO_ONE", "KEEP_ALL")
-    ##processing.runalg("qgis:joinattributesbylocation", inp_polygon, inp_plancap, u'intersects', 0, 1, 'sum', 1, STATS_PLANCAP)
-    processing.runalg("qgis:joinattributesbylocation", inp_plancap, inp_polygon, u'intersects', 0, 1, 'sum', 1, STATS_PLANCAP)
+    processing.runalg("qgis:joinattributesbylocation", inp_polygon, inp_plancap, u'intersects', 0, 1, 'sum', 1, STATS_PLANCAP)
     stats_plancap = QgsVectorLayer(STATS_PLANCAP, "stats_plancap", "ogr")
     add_layer(stats_plancap)
 
-    controleer_spjoin_plancap(stats_plancap, "count")
-    # arcpy.AlterField_management(PLANCAP_POLYGON_LIS,"Join_Count_1","","aantal plannen per polygoon") # Join_Count_1 alias aanpassen.
-    # print_log("summarize PLANCAP_RIGO per POLYGON...","i")
-    # arcpy.Statistics_analysis (PLANCAP_POLYGON_LIS, STATS_PLANCAP, [["Extra_AFW_2015_tm_2024","SUM"],["Extra_AFW_2025_tm_2050","SUM"]], "VAN_KNOOPN")
-    #
-    # # joining VE to POLYGONS
-    # print_log("spatialjoin VE_BELASTING to POLYGONS...","i")
-    # arcpy.SpatialJoin_analysis(INP_VE_BELASTING, POLYGON_LIS, VE_POLYGON_LIS, "JOIN_ONE_TO_ONE", "KEEP_ALL")
-    # # ## controleer_spjoin_plancap(VE_POLYGON_LIS) # ook check doen voor VE's die niet in Bemalingsgebied vallen. Lijkt me niet nodig.
-    # print_log("summarize VE_BELASTING per POLYGON...","i")
-    # arcpy.Statistics_analysis (VE_POLYGON_LIS, STATS_VE, [["GRONDSLAG","SUM"]], "VAN_KNOOPN")
+    # joining VE to POLYGONS
+    print_log("spatialjoin VE_BELASTING to POLYGONS...","i")
+    processing.runalg("qgis:joinattributesbylocation", inp_polygon, inp_ve_belasting, u'intersects', 0, 1, 'sum', 1, STATS_VE)
+    stats_ve = QgsVectorLayer(STATS_VE, "stats_ve", "ogr")
+    add_layer(stats_ve)
 
+    return stats_drinkwater, stats_ve, stats_plancap
 
 def bepaal_verhard_oppervlak():
     arcpy.FeatureClassToFeatureClass_conversion(INP_VERHARD_OPP, gdb, EXP_VERHARD_OPP)
@@ -242,7 +245,7 @@ def main(iface, layers):
     global g_iface, INP_SKIP_SPJOIN, gdb, l_src_None_naar_0_omzetten, d_velden_tmp, d_velden
     g_iface = iface
 
-    INP_SKIP_SPJOIN = False
+    INP_SKIP_SPJOIN = True
 
     # laod from settings
     gdb = settings.gdb
@@ -260,6 +263,7 @@ def main(iface, layers):
     DRINKWATER_POLYGON_LIS  = os.path.join(gdb, "SpJoin_DRINKWATER2POLYGON_LIS.shp")
     PLANCAP_POLYGON_LIS     = os.path.join(gdb, "SpJoin_PLANCAP2POLYGON_LIS.shp")
     VE_POLYGON_LIS          = os.path.join(gdb, "SpJoin_VE2POLYGON_LIS.shp")
+    PLANCAP_OVERLAP         = os.path.join(gdb, "PLANCAP_OVERLAP.shp")
     STATS_DRINKWATER        = os.path.join(gdb, "STATS_DRINKWATER.shp")
     STATS_PLANCAP           = os.path.join(gdb, "STATS_PLANCAP.shp")
     STATS_VE                = os.path.join(gdb, "STATS_VE.shp")
@@ -294,41 +298,48 @@ def main(iface, layers):
     # 3.) Spatial joins tussen POLYGON_LIS en de externe gegevens bronnen
     if INP_SKIP_SPJOIN:
         blokje_log("Skip SpatialJoin met externe inputs en gebruik bestaande STAT-tabellen.","i")
+        stats_drinkwater    = QgsVectorLayer(STATS_DRINKWATER, "stats_drinkwater", "ogr")
+        stats_ve            = QgsVectorLayer(STATS_VE, "stats_ve", "ogr")
+        stats_plancap       = QgsVectorLayer(STATS_PLANCAP, "stats_plancap", "ogr")
+        for layer in [stats_drinkwater, stats_ve, stats_plancap]:
+            add_layer(layer)
     else:
         blokje_log("Start SpatialJoin externe bronnen met hoofdbemalingsgebieden... (5 tot 25 minuten)","i")
-        spjoin_bronbestanden_aan_bemalingsgebieden(polygon_lis, inp_drinkwater_bag, inp_ve_belasting, inp_plancap, inp_polygon, STATS_DRINKWATER, STATS_VE, STATS_PLANCAP)
+        stats_drinkwater, stats_ve, stats_plancap = spjoin_bronbestanden_aan_bemalingsgebieden(
+                polygon_lis, inp_drinkwater_bag, inp_ve_belasting, inp_plancap, inp_polygon,
+                PLANCAP_OVERLAP, STATS_DRINKWATER, STATS_VE, STATS_PLANCAP)
 
     blokje_log("Velden toevoegen en voorbereiden voor berekening onderbemaling...", "i")
 
-    # # join stat_fields to POLYGON_LIS
-    # join_field(POLYGON_LIS, STATS_DRINKWATER, "PAR_RESULT", "SUM_PAR_RESULT_M3U", "VAN_KNOOPN", "VAN_KNOOPN")
-    # join_field(POLYGON_LIS, STATS_DRINKWATER, "ZAK_RESULT", "SUM_ZAK_RESULT_M3U", "VAN_KNOOPN", "VAN_KNOOPN")
-    # join_field(POLYGON_LIS, STATS_DRINKWATER, "X_WON_GEB", "FREQUENCY", "VAN_KNOOPN", "VAN_KNOOPN")
-    # join_field(POLYGON_LIS, STATS_PLANCAP, "AW_15_24_G", "SUM_Extra_AFW_2015_tm_2024", "VAN_KNOOPN", "VAN_KNOOPN")
-    # join_field(POLYGON_LIS, STATS_PLANCAP, "AW_25_50_G", "SUM_Extra_AFW_2025_tm_2050", "VAN_KNOOPN", "VAN_KNOOPN")
-    # join_field(POLYGON_LIS, STATS_VE, "X_VE_GEB", "SUM_GRONDSLAG", "VAN_KNOOPN", "VAN_KNOOPN")
-    #
-    # # bereken drinkwater per gebied (input voor onderbemalingen)
-    # bereken_veld(POLYGON_LIS, "DWR_GEBIED", d_velden)
-    #
-    # # ##########################################################################
-    # # 4.) Bereken onderbemaling voor DRINKWATER en PLANCAP en VE's
-    # blokje_log("bereken onderbemalingen voor drinkwater, plancap en ve's...","i")
-    # bereken_onderbemaling(POLYGON_LIS)
-    #
-    # vervang_None_door_0_voor_velden_in_lijst(l_src_None_naar_0_omzetten, POLYGON_LIS)
-    #
-    # # ##########################################################################
-    # # 6.) berekeningen uitvoeren
-    # # bereken dwa prognose & drinkwater per gebied
-    # # "bereken": "b2a"
-    # bereken_veld_label(POLYGON_LIS, "04_ber", d_velden)
-    # bereken_veld_label(POLYGON_LIS, "04a_ber", d_velden)
-    #
-    # # Vergelijk geschat en gemeten zonder
-    # # "bereken": "b2b"
-    # bereken_veld_label(POLYGON_LIS, "05_ber", d_velden)
-    #
+    # join stat_fields to POLYGON_LIS
+    join_field(polygon_lis, stats_drinkwater, "PAR_RESULT", "SUMPAR_M3U", "VAN_KNOOPN", "VAN_KNOOPN")
+    join_field(polygon_lis, stats_drinkwater, "ZAK_RESULT", "SUMZAK_M3U", "VAN_KNOOPN", "VAN_KNOOPN")
+    join_field(polygon_lis, stats_drinkwater, "X_WON_GEB", "FREQUENCY", "VAN_KNOOPN", "VAN_KNOOPN")
+    join_field(polygon_lis, stats_plancap, "AW_15_24_G", "sumExtra_A", "VAN_KNOOPN", "VAN_KNOOPN") # SUM_Extra_AFW_2015_tm_2024
+    join_field(polygon_lis, stats_plancap, "AW_25_50_G", "sumExtra_1", "VAN_KNOOPN", "VAN_KNOOPN") # SUM_Extra_AFW_2025_tm_2050
+    join_field(polygon_lis, stats_ve, "X_VE_GEB", "sumGRONDSL", "VAN_KNOOPN", "VAN_KNOOPN")
+
+    # bereken drinkwater per gebied (input voor onderbemalingen)
+    bereken_veld(polygon_lis, "DWR_GEBIED", d_velden)
+
+    # ##########################################################################
+    # 4.) Bereken onderbemaling voor DRINKWATER en PLANCAP en VE's
+    blokje_log("bereken onderbemalingen voor drinkwater, plancap en ve's...","i")
+    bereken_onderbemaling(polygon_lis)
+
+    vervang_None_door_0_voor_velden_in_lijst(l_src_None_naar_0_omzetten, polygon_lis)
+
+    # ##########################################################################
+    # 6.) berekeningen uitvoeren
+    # bereken dwa prognose & drinkwater per gebied
+    # "bereken": "b2a"
+    bereken_veld_label(polygon_lis, "04_ber", d_velden)
+    bereken_veld_label(polygon_lis, "04a_ber", d_velden)
+
+    # Vergelijk geschat en gemeten zonder
+    # "bereken": "b2b"
+    bereken_veld_label(polygon_lis, "05_ber", d_velden)
+
     # # bereken verhard opp
     # blokje_log("Bepaal verhard oppervlak binnen bemalingsgebieden...","i")
     # bepaal_verhard_oppervlak()

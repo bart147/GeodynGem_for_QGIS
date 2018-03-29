@@ -18,7 +18,7 @@ from xlrd import open_workbook
 
 # QGIS
 from qgis.gui import QgsMessageBar, QgisInterface
-from qgis.core import QgsMessageLog, QgsVectorJoinInfo, QgsExpression, QgsField, QgsVectorLayer
+from qgis.core import * #QgsMessageLog, QgsVectorJoinInfo, QgsExpression, QgsField, QgsVectorLayer, QgsFeatureRequest
 
 from PyQt4.QtCore import QVariant
 
@@ -254,7 +254,7 @@ def join_field(input_table, join_table, field_to_calc, field_to_copy, joinfield_
             input_table.updateFeature(f)
         input_table.commitChanges()
 
-        ##input_table.removeJoin(joinObject.joinLayerId)
+        input_table.removeJoin(joinObject.joinLayerId)
 
     except Exception as e:
         print_log("problemen met join_field {}! {}".format(field_to_calc,e),"w")
