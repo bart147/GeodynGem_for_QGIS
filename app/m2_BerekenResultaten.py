@@ -164,52 +164,74 @@ def spjoin_bronbestanden_aan_bemalingsgebieden(polygon_lis, inp_drinkwater_bag, 
 
     return stats_drinkwater, stats_ve, stats_plancap
 
-def bepaal_verhard_oppervlak():
-    arcpy.FeatureClassToFeatureClass_conversion(INP_VERHARD_OPP, gdb, EXP_VERHARD_OPP)
-    print_log("Intersect {}...".format(";".join([POLYGON_LIS,EXP_VERHARD_OPP])),"i")
-    arcpy.Intersect_analysis(
-        in_features=";".join([POLYGON_LIS,EXP_VERHARD_OPP]),
-        out_feature_class=VERHARD_OPP_INTERSECT,
-        join_attributes= "ALL", #"ONLY_FID",
-        cluster_tolerance="#",
-        output_type="INPUT")
+def bepaal_verhard_oppervlak(polygon_lis, inp_verhard_opp, VERHARD_OPP_INTERSECT):
+    ##arcpy.FeatureClassToFeatureClass_conversion(INP_VERHARD_OPP, gdb, EXP_VERHARD_OPP)
+    print_log("Intersect {}...".format(";".join([polygon_lis.name(),inp_verhard_opp.name()])),"i")
 
-# niet nodig indien join_attributes= "ALL" van Intersect
-##    print_log("join fields...", "i")
-##    arcpy.AddField_management(VERHARD_OPP_INTERSECT, "VAN_KNOOPN", "TEXT")
-##    arcpy.AddField_management(VERHARD_OPP_INTERSECT, "AANGESL_OP", "TEXT")
-##    join_field(VERHARD_OPP_INTERSECT, POLYGON_LIS, "VAN_KNOOPN", "VAN_KNOOPN", "FID_{}".format(POLYGON_LIS), 'pk')
-##    join_field(VERHARD_OPP_INTERSECT, EXP_VERHARD_OPP, "AANGESL_OP", "AANGESL_OP", "FID_{}".format(EXP_VERHARD_OPP), 'pk')
+    # eerst totaal verhard opp (ha) bepalen per bemalingsgebied
+    ##processing.runalg("qgis:joinattributesbylocation", inp_verhard_opp, polygon_lis, u'intersects', 0, 0, '', 1, VERHARD_OPP_INTERSECT)
+    verhard_opp_intersect = QgsVectorLayer(VERHARD_OPP_INTERSECT, "verhard_opp_intersect", "ogr")
+    add_layer(verhard_opp_intersect)
+    add_field_from_dict(verhard_opp_intersect, "OPP_BEM_HA", d_velden_tmp)
+    ##bereken_veld(verhard_opp_intersect, "OPP_BEM_HA", d_velden_tmp)
 
-    print_log("summerize stats...", "i")
-    arcpy.Statistics_analysis(
-        in_table=VERHARD_OPP_INTERSECT,
-        out_table=STATS_VERHARD_OPP,
-        statistics_fields="SHAPE_Area SUM",
-        case_field="VAN_KNOOPN;AANGESL_OP")
+    print_log("bereken totaal opp ...", "i")
+    STATS_VERHARD_OPP_TOT = os.path.join(gdb, "STATS_VERHARD_OPP_TOT.csv")
+    ##processing.runalg("qgis:statisticsbycategories", VERHARD_OPP_INTERSECT, "SHAPE_AREA", "VAN_KNOOPN", STATS_VERHARD_OPP_TOT)
+    stats_verh_opp_tot = QgsVectorLayer(STATS_VERHARD_OPP_TOT, "stats_verh_opp_totaal", "ogr")
+    add_layer(stats_verh_opp_tot)
 
-    # Opp in ha berekenen
-    arcpy.AddField_management(STATS_VERHARD_OPP, "OPP_BEMGEBIED", "DOUBLE")
-    join_field(STATS_VERHARD_OPP, POLYGON_LIS, "OPP_BEMGEBIED", "SHAPE_Area", "VAN_KNOOPN", "VAN_KNOOPN")
-    add_field_from_dict(STATS_VERHARD_OPP, "OPP_BEMGEBIED_HA", d_velden_tmp)
-    bereken_veld(STATS_VERHARD_OPP, "OPP_BEMGEBIED_HA", d_velden_tmp)
-    add_field_from_dict(POLYGON_LIS, "HA_BEM_G", d_velden)
-    join_field(POLYGON_LIS, STATS_VERHARD_OPP, "HA_BEM_G", "OPP_BEMGEBIED_HA", "VAN_KNOOPN", "VAN_KNOOPN")
+    add_field_from_dict(stats_verh_opp_tot, "OPP_BEM_HA", d_velden_tmp)
+    bereken_veld(stats_verh_opp_tot, "OPP_BEM_HA", d_velden_tmp)
+    # overhalen verhard opp (ha) naar eindresultaat
+    ##join_field(polygon_lis, stats_verh_opp_tot, "HA_BEM_G", "OPP_BEM_HA", "VAN_KNOOPN", "VAN_KNOOPN")
 
-##    # bereken percentages
-##    add_field_from_dict(STATS_VERHARD_OPP, "PERCENTAGE", d_velden_tmp)
-##    bereken_veld(STATS_VERHARD_OPP, "PERCENTAGE", d_velden_tmp)
+    # add_field_from_dict_label(polygon_lis, "st3a", d_velden)
+    # # per categorie verhard opp (ha) bepalen per bemalingsgebied
+    # for aansluiting in ["GEM", "HWA", "NAG", "OBK", "VGS"]:
+    #     STAT_NAME = os.path.join(gdb, "{}_{}.csv".format("STATS_VERHARD_OPP", aansluiting))
+    #     where_clause = "\"AANGESL_OP\" = '{}'".format(aansluiting)
+    #     expr = QgsExpression(where_clause)
+    #     it = verhard_opp_intersect.getFeatures(QgsFeatureRequest(expr))
+    #     verhard_opp_intersect.setSelectedFeatures([i.id() for i in it])
+    #     ##processing.runalg("qgis:statisticsbycategories", verhard_opp_intersect, "SHAPE_AREA", "VAN_KNOOPN", STAT_NAME)
+    #     layer = QgsVectorLayer(STAT_NAME, "{}_{}".format("stats_verh_opp", aansluiting), "ogr")
+    #     add_layer(layer)
+    #     add_field_from_dict(layer, "OPP_BEM_HA", d_velden_tmp)
+    #     bereken_veld(layer, "OPP_BEM_HA", d_velden_tmp)
 
-    add_field_from_dict_label(POLYGON_LIS, "st3a", d_velden)
+        # velden overhalen naar eindresultaat en PI berekenen
+        # fld_ha = "HA_{}_G".format(aansluiting)
+        # join_field(polygon_lis, layer, fld_ha, "OPP_BEM_HA", "VAN_KNOOPN", "VAN_KNOOPN")
+        # fld_pi = "PI_{}_G".format(aansluiting)
+        # bereken_veld(polygon_lis, fld_pi, d_velden)
 
-    # velden overhalen uit STATS_VERHARD_OPP per type
-    for aansluiting in ["GEM", "HWA", "NAG", "OBK", "VGS"]:
-        expression = "AANGESL_OP = '{}'".format(aansluiting)
-        stat_name = "{}_{}".format(STATS_VERHARD_OPP,aansluiting)
-        fld_ha    = "HA_{}_G".format(aansluiting)
-        fld_pi    = "PI_{}_G".format(aansluiting)
-        arcpy.TableToTable_conversion(STATS_VERHARD_OPP, gdb, stat_name, expression)
-        join_field(POLYGON_LIS, stat_name, fld_ha, "OPP_BEMGEBIED_HA", "VAN_KNOOPN", "VAN_KNOOPN")
+    # # eerst totaal verhard opp (ha) bepalen per bemalingsgebied
+    # processing.runalg("qgis:joinattributesbylocation", polygon_lis, inp_verhard_opp, u'intersects', 0, 1, 'sum', 1, VERHARD_OPP_INTERSECT)
+    # stats_verh_opp_totaal = QgsVectorLayer(VERHARD_OPP_INTERSECT, "stats_verh_opp_totaal", "ogr")
+    # add_field_from_dict(stats_verh_opp_totaal, "OPP_BEM_HA", d_velden_tmp)
+    # bereken_veld(stats_verh_opp_totaal, "OPP_BEM_HA", d_velden_tmp)
+    # # overhalen verhard opp (ha) naar eindresultaat
+    # join_field(polygon_lis, stats_verh_opp_totaal, "HA_BEM_G", "OPP_BEM_HA", "VAN_KNOOPN", "VAN_KNOOPN")
+    #
+    # # per categorie verhard opp (ha) bepalen per bemalingsgebied
+    # for aansluiting in ["GEM", "HWA", "NAG", "OBK", "VGS"]:
+    #     STAT_NAME = os.path.join(gdb, "{}_{}.shp".format("STATS_VERHARD_OPP",aansluiting))
+    #     where_clause = "\"AANGESL_OP\" = '{}'".format(aansluiting)
+    #     expr = QgsExpression(where_clause)
+    #     it = inp_verhard_opp.getFeatures(QgsFeatureRequest(expr))
+    #     inp_verhard_opp.setSelectedFeatures([i.id() for i in it])
+    #     processing.runalg("qgis:joinattributesbylocation", polygon_lis, inp_verhard_opp, u'intersects', 0, 1, 'sum', 1, STAT_NAME)
+    #     layer = QgsVectorLayer(STAT_NAME, "{}_{}".format("stats_verh_opp",aansluiting), "ogr")
+    #     add_field_from_dict(layer, "OPP_BEM_HA", d_velden_tmp)
+    #     bereken_veld(layer, "OPP_BEM_HA", d_velden_tmp)
+    #
+    #     # velden overhalen naar eindresultaat en PI berekenen
+    #     fld_ha = "HA_{}_G".format(aansluiting)
+    #     join_field(polygon_lis, layer, fld_ha, "OPP_BEM_HA", "VAN_KNOOPN", "VAN_KNOOPN")
+    #     fld_pi = "PI_{}_G".format(aansluiting)
+    #     bereken_veld(polygon_lis, fld_pi, d_velden)
+
         # percentages worden achteraf berekend ##join_field(POLYGON_LIS, stat_name, fld_pi, "PERCENTAGE", "VAN_KNOOPN", "VAN_KNOOPN")
 
 
@@ -340,10 +362,10 @@ def main(iface, layers):
     # "bereken": "b2b"
     bereken_veld_label(polygon_lis, "05_ber", d_velden)
 
-    # # bereken verhard opp
-    # blokje_log("Bepaal verhard oppervlak binnen bemalingsgebieden...","i")
-    # bepaal_verhard_oppervlak()
-    #
+    # bereken verhard opp
+    blokje_log("Bepaal verhard oppervlak binnen bemalingsgebieden...","i")
+    bepaal_verhard_oppervlak(polygon_lis, inp_verhard_opp, VERHARD_OPP_INTERSECT)
+
     # vervang_None_door_0_voor_velden_in_lijst(
     #     ["HA_GEM_G", "HA_VGS_G", "HA_HWA_G","HA_OPW_G", "HA_NAG_G", "HA_OBK_G"],
     #     POLYGON_LIS)

@@ -188,16 +188,6 @@ def bereken_veld(fc, fld_name, d_fld):
             fc.updateFeature(f)
         fc.commitChanges()
 
-        # expression = d_fld[fld_name]["expression"]
-        # print_log("calculate {} = {}".format(fld_name,expression), "i" )
-        # print_log(d_fld[fld_name],"d")
-        # if "mag_niet_0_zijn" in d_fld[fld_name]:
-        #     l_fld = d_fld[fld_name]["mag_niet_0_zijn"]
-        #     where_clause = " and ".join(["{} <> 0".format(fld) for fld in l_fld]) # [FLD1,FLD2] -> "FLD1 <> 0 and FLD2 <> 0"
-        #     arcpy.MakeFeatureLayer_management(fc,"layer_sel_zonder_0",where_clause)
-        #     arcpy.CalculateField_management("layer_sel_zonder_0",fld_name,expression)
-        # else:
-        #     arcpy.CalculateField_management(fc,fld_name,expression)
     except Exception as e:
         print_log("probleem bij bereken veld {}! {}".format(fld_name,e),"w")
 
