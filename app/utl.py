@@ -109,7 +109,7 @@ def add_field_from_dict(fc, fld_name, d_fld):
         field_length = fld["field_length"]
     else:
         field_length = 0
-    print_log("veld lengte = {}".format(field_length), "i")
+    ##print_log("veld lengte = {}".format(field_length), "i")
 
     if not isinstance(fc, QgsVectorLayer): fc = QgsVectorLayer(fc, "layer", "ogr")
 
@@ -191,10 +191,11 @@ def join_field(input_table, join_table, field_to_calc, field_to_copy, joinfield_
        Het veld wat gevuld moet worden (field_to_calc) moet al wel bestaan en wordt in deze functie alleen gevuld.
        Vul "pk" in bij joinfield_join_table om de primary key te laten bepalen of kies een ander veld"""
     # voorbeeld: join_field(input_table="", join_table="", field_to_calc="", field_to_copy="", joinfield_input_table="", joinfield_join_table="")
-    try:
+    if 1==1:
 
         print_log("joining field {} from {}...".format(field_to_calc, os.path.basename(join_table.name())), "i")
 
+        input_table.setSelectedFeatures([])
         # add join
         joinObject = QgsVectorJoinInfo()
         joinObject.joinLayerId = join_table.id()
@@ -216,8 +217,8 @@ def join_field(input_table, join_table, field_to_calc, field_to_copy, joinfield_
 
         input_table.removeJoin(joinObject.joinLayerId)
 
-    except Exception as e:
-        print_log("problemen met join_field {}! {}".format(field_to_calc,e),"w")
+    # except Exception as e:
+    #     print_log("problemen met join_field {}! {}".format(field_to_calc,e),"w")
 
 
 def rename_fields(table_to_rename_field, d_rename):
