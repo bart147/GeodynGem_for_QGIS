@@ -160,7 +160,7 @@ def spjoin_bronbestanden_aan_bemalingsgebieden(polygon_lis, inp_drinkwater_bag, 
                                                    PLANCAP_OVERLAP, STATS_DRINKWATER, STATS_VE, STATS_PLANCAP):
     # joining DRINKWATER_BAG to POLYGONS
     print_log("spatialjoin DRINKWATER_BAG to POLYGONS...","i")
-    processing.runalg("qgis:joinattributesbylocation", inp_polygon, inp_drinkwater_bag, u'intersects', 0, 1, 'sum', 1, STATS_DRINKWATER)
+    processing.runalg("qgis:joinattributesbylocation", polygon_lis, inp_drinkwater_bag, u'intersects', 0, 1, 'sum', 1, STATS_DRINKWATER)
     stats_drinkwater = QgsVectorLayer(STATS_DRINKWATER, "stats_drinkwater", "ogr")
     add_layer(stats_drinkwater)
 
@@ -171,19 +171,19 @@ def spjoin_bronbestanden_aan_bemalingsgebieden(polygon_lis, inp_drinkwater_bag, 
 
     # check for overlap between PLANCAP_RIGO and inp_polygon
     print_log("spatialjoin PLANCAP_RIGO to POLYGONS...","i")
-    processing.runalg("qgis:joinattributesbylocation", inp_plancap, inp_polygon, u'intersects', 0, 1, 'sum', 1, PLANCAP_OVERLAP)
+    processing.runalg("qgis:joinattributesbylocation", inp_plancap, polygon_lis, u'intersects', 0, 1, 'sum', 1, PLANCAP_OVERLAP)
     plancap_overlap = QgsVectorLayer(PLANCAP_OVERLAP, "plancap_overlap", "ogr")
     add_layer(plancap_overlap)
     controleer_spjoin_plancap(plancap_overlap, "count")
 
     # joining PLANCAP_RIGO to POLYGONS
-    processing.runalg("qgis:joinattributesbylocation", inp_polygon, inp_plancap, u'intersects', 0, 1, 'sum', 1, STATS_PLANCAP)
+    processing.runalg("qgis:joinattributesbylocation", polygon_lis, inp_plancap, u'intersects', 0, 1, 'sum', 1, STATS_PLANCAP)
     stats_plancap = QgsVectorLayer(STATS_PLANCAP, "stats_plancap", "ogr")
     add_layer(stats_plancap)
 
     # joining VE to POLYGONS
     print_log("spatialjoin VE_BELASTING to POLYGONS...","i")
-    processing.runalg("qgis:joinattributesbylocation", inp_polygon, inp_ve_belasting, u'intersects', 0, 1, 'sum', 1, STATS_VE)
+    processing.runalg("qgis:joinattributesbylocation", polygon_lis, inp_ve_belasting, u'intersects', 0, 1, 'sum', 1, STATS_VE)
     stats_ve = QgsVectorLayer(STATS_VE, "stats_ve", "ogr")
     add_layer(stats_ve)
 
@@ -338,12 +338,12 @@ def main(iface, layers):
     blokje_log("Velden toevoegen en voorbereiden voor berekening onderbemaling...", "i")
 
     # join stat_fields to POLYGON_LIS
-    join_field(polygon_lis, stats_drinkwater, "PAR_RESULT", "SUMPAR_M3U", "VAN_KNOOPN", "VAN_KNOOPN")
-    join_field(polygon_lis, stats_drinkwater, "ZAK_RESULT", "SUMZAK_M3U", "VAN_KNOOPN", "VAN_KNOOPN")
-    join_field(polygon_lis, stats_drinkwater, "X_WON_GEB", "FREQUENCY", "VAN_KNOOPN", "VAN_KNOOPN")
-    join_field(polygon_lis, stats_plancap, "AW_15_24_G", "sumExtra_A", "VAN_KNOOPN", "VAN_KNOOPN") # SUM_Extra_AFW_2015_tm_2024
-    join_field(polygon_lis, stats_plancap, "AW_25_50_G", "sumExtra_1", "VAN_KNOOPN", "VAN_KNOOPN") # SUM_Extra_AFW_2025_tm_2050
-    join_field(polygon_lis, stats_ve, "X_VE_GEB", "sumGRONDSL", "VAN_KNOOPN", "VAN_KNOOPN")
+    join_field(polygon_lis, stats_drinkwater, "PAR_RESULT", "SUMPAR_M3U", "OBJECTID", "OBJECTID")
+    join_field(polygon_lis, stats_drinkwater, "ZAK_RESULT", "SUMZAK_M3U", "OBJECTID", "OBJECTID")
+    join_field(polygon_lis, stats_drinkwater, "X_WON_GEB", "FREQUENCY", "OBJECTID", "OBJECTID")
+    join_field(polygon_lis, stats_plancap, "AW_15_24_G", "sumExtra_A", "OBJECTID", "OBJECTID") # SUM_Extra_AFW_2015_tm_2024
+    join_field(polygon_lis, stats_plancap, "AW_25_50_G", "sumExtra_1", "OBJECTID", "OBJECTID") # SUM_Extra_AFW_2025_tm_2050
+    join_field(polygon_lis, stats_ve, "X_VE_GEB", "sumGRONDSL", "OBJECTID", "OBJECTID")
 
     # bereken drinkwater per gebied (input voor onderbemalingen)
     bereken_veld(polygon_lis, "DWR_GEBIED", d_velden)
