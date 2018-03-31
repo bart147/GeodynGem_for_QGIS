@@ -193,7 +193,8 @@ def bepaal_verhard_oppervlak(polygon_lis, inp_verhard_opp, VERHARD_OPP_INTERSECT
     print_log("Intersect {}...".format(";".join([polygon_lis.name(),inp_verhard_opp.name()])),"i")
 
     # eerst totaal verhard opp (ha) bepalen per bemalingsgebied
-    processing.runalg("saga:intersect", inp_verhard_opp, polygon_lis, True, VERHARD_OPP_INTERSECT)
+    if not INP_SKIP_SPJOIN:
+        processing.runalg("saga:intersect", inp_verhard_opp, polygon_lis, True, VERHARD_OPP_INTERSECT)
     verhard_opp_intersect = QgsVectorLayer(VERHARD_OPP_INTERSECT, "verhard_opp_intersect", "ogr")
     add_layer(verhard_opp_intersect)
     add_field_from_dict(verhard_opp_intersect, "HA_BEM_G", d_velden_tmp)
@@ -202,7 +203,7 @@ def bepaal_verhard_oppervlak(polygon_lis, inp_verhard_opp, VERHARD_OPP_INTERSECT
     for layer in [verhard_opp_intersect, polygon_lis]:
         print_log("opp ha berekenen voor {}...".format(layer.name()),"i")
         ##d = QgsDistanceArea()
-        provider = verhard_opp_intersect.dataProvider()
+        provider = layer.dataProvider()
         updateMap = {}
         fieldIdx = provider.fields().indexFromName('HA_BEM_G')
 
@@ -215,14 +216,17 @@ def bepaal_verhard_oppervlak(polygon_lis, inp_verhard_opp, VERHARD_OPP_INTERSECT
 
     print_log("bereken stats totaal opp ...", "i")
     STATS_VERHARD_OPP_TOT = os.path.join(gdb, "STATS_VERHARD_OPP_TOT.csv")
-    processing.runalg("qgis:statisticsbycategories", VERHARD_OPP_INTERSECT, "HA_BEM_G", "VAN_KNOOPN", STATS_VERHARD_OPP_TOT)
+    if not INP_SKIP_SPJOIN:
+        processing.runalg("qgis:statisticsbycategories", VERHARD_OPP_INTERSECT, "HA_BEM_G", "VAN_KNOOPN", STATS_VERHARD_OPP_TOT)
     stats_verh_opp_tot = QgsVectorLayer(STATS_VERHARD_OPP_TOT, "stats_verh_opp_totaal", "ogr")
     add_layer(stats_verh_opp_tot)
+
+    # toevoegen velden voor PI's
+    add_field_from_dict_label(polygon_lis, "st3a", d_velden)
 
     # overhalen verhard opp (ha) naar eindresultaat
     join_field(polygon_lis, stats_verh_opp_tot, "HA_VER_G", "sum", "VAN_KNOOPN", "category")
 
-    add_field_from_dict_label(polygon_lis, "st3a", d_velden)
     # per categorie verhard opp (ha) bepalen per bemalingsgebied
     for aansluiting in ["GEM", "HWA", "NAG", "OBK", "VGS"]:
         STAT_NAME = os.path.join(gdb, "{}_{}.csv".format("STATS_VERHARD_OPP", aansluiting))
@@ -273,7 +277,7 @@ def main(iface, layers):
     global g_iface, INP_SKIP_SPJOIN, gdb, l_src_None_naar_0_omzetten, d_velden_tmp, d_velden
     g_iface = iface
 
-    INP_SKIP_SPJOIN = True
+    INP_SKIP_SPJOIN = False
 
     # laod from settings
     gdb = settings.gdb

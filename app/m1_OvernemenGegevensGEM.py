@@ -7,7 +7,6 @@ from utl import start_timer, end_timer, blokje_log, print_log, add_field_from_di
 
 from Dijkstra import Graph, dijkstra, shortest_path
 
-
 import processing
 ##from processing.tools import *
 ##from qgis.core import QgsVectorLayer, QgsVectorFileWriter, QgsFeature, QgsField, QgsPoint, QgsGeometry, QgsMapLayerRegistry
@@ -22,9 +21,9 @@ log_dir                 = settings.log_dir
 ##d_rename_fields         = settings.d_rename_fields  # dictionary met velden om te hernoemen
 INP_FIELDS_XLS          = settings.INP_FIELDS_XLS
 INP_FIELDS_XLS_SHEET    = settings.INP_FIELDS_XLS_SHEET
-INP_POLYGON             = os.path.join(gdb,"medemblik_bemalingsgebieden.shp")
+# INP_POLYGON             = os.path.join(gdb,"medemblik_bemalingsgebieden.shp")
 # INP_KNOOPPUNTEN         = os.path.join(gdb,"medemblik_MLA_punt.shp")
-INP_AFVOERRELATIES      = os.path.join(gdb,"medemblik_MLA_lijn.shp")
+# INP_AFVOERRELATIES      = os.path.join(gdb,"medemblik_MLA_lijn.shp")
 #
 # # tussenresultaten
 KNOOPPUNTEN             = os.path.join(gdb,"knooppunten.shp")         # begin- en eindpunten van afvoerrelaties (lijn-bestand).
@@ -121,7 +120,6 @@ def genereer_knooppunten(iface, inp_polygon, sel_afvoerrelaties):
 
 def koppel_knooppunten_aan_bemalingsgebieden(iface, d_velden, inp_polygon, knooppunten):
     # knooppunten koppelen aan bemalingsgebieden / gebieden voorzien van code. (sp.join)
-    ##arcpy.MakeFeatureLayer_management(knooppunten,"VAN_KNOOPPUNTEN","BEGIN_EIND = 0") # selectie beginpunten
 
     expr = QgsExpression("\"BEGIN_EIND\" = {}".format(0))
     it = knooppunten.getFeatures(QgsFeatureRequest(expr)) # iterator object
@@ -129,8 +127,6 @@ def koppel_knooppunten_aan_bemalingsgebieden(iface, d_velden, inp_polygon, knoop
     print_log("{} selected".format(knooppunten.selectedFeatureCount()), "i")
     processing.runalg("qgis:joinattributesbylocation", inp_polygon, knooppunten, u'intersects', 0, 0, '', 1, POLYGON_LIS)
     processing.runalg("qgis:joinattributesbylocation", inp_polygon, knooppunten, u'intersects', 0, 1, 'sum', 1, POLYGON_LIS_SUM)
-
-    ## arcpy.SpatialJoin_analysis(INP_POLYGON, "VAN_KNOOPPUNTEN", POLYGON_LIS, "JOIN_ONE_TO_ONE", "KEEP_ALL")
 
     polygon_lis_sum = QgsVectorLayer(POLYGON_LIS_SUM, "polygon_lis_sum", "ogr")
     polygon_lis = QgsVectorLayer(POLYGON_LIS, "polygon_lis", "ogr")
@@ -160,7 +156,7 @@ def koppel_knooppunten_aan_bemalingsgebieden(iface, d_velden, inp_polygon, knoop
     it = knooppunten.getFeatures(QgsFeatureRequest(expr))  # iterator object
     knooppunten.setSelectedFeatures([i.id() for i in it])
     print_log("{} selected".format(knooppunten.selectedFeatureCount()), "i")
-    processing.runalg("qgis:joinattributesbylocation", knooppunten, POLYGON_LIS, u'intersects', 0, 0, '', 1, EINDKNOOPPUNTEN)
+    processing.runalg("qgis:joinattributesbylocation", knooppunten, polygon_lis, u'intersects', 0, 0, '', 1, EINDKNOOPPUNTEN)
 
     eindknooppunten = QgsVectorLayer(EINDKNOOPPUNTEN, "eindknooppunten", "ogr")
     QgsMapLayerRegistry.instance().addMapLayer(eindknooppunten)
@@ -168,18 +164,6 @@ def koppel_knooppunten_aan_bemalingsgebieden(iface, d_velden, inp_polygon, knoop
     # invullen veld LOOST_OP met code bemalingsgebied.
     add_field_from_dict_label(polygon_lis, "st1a", d_velden)
     join_field(polygon_lis, eindknooppunten, "K_LOOST_OP", "VAN_KNOO_1", "VAN_KNOOPN", "VAN_KNOOPN")
-
-    # eindpunten voorzien van bemalingsgebied (sp.join)
-    # arcpy.MakeFeatureLayer_management(KNOOPPUNTEN,"SEL_EINDKNOOPPUNTEN","BEGIN_EIND = 1") # 0 = beginpunt, 1 = eindpunt
-    # arcpy.SpatialJoin_analysis("SEL_EINDKNOOPPUNTEN", POLYGON_LIS, EINDKNOOPPUNTEN, "JOIN_ONE_TO_ONE", "KEEP_ALL")
-    #
-    # # invullen veld LOOST_OP met code bemalingsgebied.
-    # add_field_from_dict_label(POLYGON_LIS, "st1a", d_velden)
-    # join_field(POLYGON_LIS, EINDKNOOPPUNTEN, "K_LOOST_OP", "VAN_KNOOPN_1", "VAN_KNOOPN", "VAN_KNOOPN")
-    #
-    # # Eindbemalingsgebied /overnamepunt bepalen
-    # arcpy.MakeFeatureLayer_management(POLYGON_LIS,"SEL_POLYGON_LIS","Join_Count > 0 ") # selectie beginpunten
-    # where_clause = "Join_Count > 0 AND K_LOOST_OP IS NULL"
 
     return polygon_lis
 
@@ -299,7 +283,7 @@ def controleer_hoofdbemalingsgebieden(polygon_lis):
         print_log("geen overlap gevonden tussen bemalingsgebieden", "i")
         QgsMapLayerRegistry.instance().removeMapLayer(polygon_lis_overlap)
 
-    return POLYGON_LIS_OVERLAP
+    return polygon_lis_overlap
 
 
 def main(iface, layers):
@@ -320,10 +304,6 @@ def main(iface, layers):
     INP_FIELDS_XLS = settings.INP_FIELDS_XLS
     INP_FIELDS_XLS_SHEET = settings.INP_FIELDS_XLS_SHEET
 
-    # INP_POLYGON = os.path.join(gdb, "medemblik_bemalingsgebieden.shp")
-    # INP_KNOOPPUNTEN = os.path.join(gdb, "medemblik_MLA_punt.shp")
-    # INP_AFVOERRELATIES = os.path.join(gdb, "medemblik_MLA_lijn.shp")
-
     inp_knooppunten, inp_afvoerrelaties, inp_drinkwater_bag, inp_ve_belasting, inp_plancap, inp_verhard_opp, inp_polygon = layers
 
     for layer in layers:
@@ -342,7 +322,6 @@ def main(iface, layers):
 
     blokje_log("Knooppunten genereren...","i")
     # genereer knooppunten uit afvoerrelaties
-    ##KNOOPPUNTEN, EINDKNOOPPUNTEN = genereer_knooppunten(iface, INP_POLYGON, INP_AFVOERRELATIES)
     point_layer = genereer_knooppunten(iface, inp_polygon, inp_afvoerrelaties)
 
     blokje_log("Knooppunten koppelen aan bemalingsgebieden...","i")
@@ -352,13 +331,13 @@ def main(iface, layers):
     # 2.) Graph vullen met LIS [LOOST_OP], onderbemaling bepalen en wegschrijven in [ONTV_VAN]
 
     blokje_log("Bepaal onderbemaling en aantal keer oppompen...","i")
-    polygon_lis = lis2graph(polygon_lis)
+    lis2graph(polygon_lis)
 
     # ##########################################################################
     # 3.) Controleer overlap HOOFDBEMALINGSGEBIEDEN
     blokje_log("Controleer topologie bemalingsgebieden...","i")
     controleer_spjoin(polygon_lis,"count")
-    POLYGON_LIS_OVERLAP = controleer_hoofdbemalingsgebieden(polygon_lis)
+    polygon_lis_overlap = controleer_hoofdbemalingsgebieden(polygon_lis)
 
     # ##########################################################################
     # 4.) Velden overnemen uit Kikker
@@ -373,6 +352,7 @@ def main(iface, layers):
 
 if __name__ == '__main__':
 
+
     # Prepare the environment for standalone outside qgis
     import sys
     from qgis.core import *
@@ -383,7 +363,7 @@ if __name__ == '__main__':
     QgsApplication.initQgis()
 
     # Prepare processing framework
-    sys.path.append('C:/OSGEO4~1/apps/qgis/python/plugins') # Folder where Processing is located '/home/user/.qgis2/python/plugins'
+    sys.path.append('C:\OSGeo4W\apps\qgis\python\plugins') # Folder where Processing is located '/home/user/.qgis2/python/plugins'
     from processing.core.Processing import Processing
 
     Processing.initialize()
@@ -393,53 +373,51 @@ if __name__ == '__main__':
     QgsApplication.exitQgis()
     QApplication.exit()
 
-
-
-    # # laod from settings
-    gdb                     = settings.gdb
-    log_dir                 = settings.log_dir
-    ##d_rename_fields         = settings.d_rename_fields  # dictionary met velden om te hernoemen
-    INP_FIELDS_XLS          = settings.INP_FIELDS_XLS
-    INP_FIELDS_XLS_SHEET    = settings.INP_FIELDS_XLS_SHEET
-    INP_POLYGON             = os.path.join(gdb,"medemblik_bemalingsgebieden.shp")
-    INP_KNOOPPUNTEN         = os.path.join(gdb,"medemblik_MLA_punt.shp")
-    INP_AFVOERRELATIES      = os.path.join(gdb,"medemblik_MLA_lijn.shp")
-
-    # tussenresultaten
-    KNOOPPUNTEN             = "KNOOPPUNTEN"         # begin- en eindpunten van afvoerrelaties (lijn-bestand).
-    EINDKNOOPPUNTEN         = "EINDKNOOPPUNTEN"     # Alle knooppunten met daarbij het eindpunt
-    POLYGON_LIS_OVERLAP     = "POLYGON_LIS_OVERLAP" # bestand met gaten.
-
-    # eindresultaat
-    POLYGON_LIS             = "POLYGON_LIS"
-
-    # create data folder (if not exists)
-    if not os.path.exists(gdb): os.makedirs(gdb)
-
-    # set env
-
-    # logging
-    LOGGING_LEVEL = logging.INFO
-    if not os.path.exists(log_dir): os.mkdir(log_dir)
-    strftime = datetime.strftime(datetime.now(),"%Y%m%d-%H.%M")
-    logFileName = 'GeoDyn_{}.log'.format(strftime)
-    logFile = os.path.join(log_dir,logFileName)
-    logging.basicConfig(filename=logFile, level=LOGGING_LEVEL)
-    logging.getLogger().setLevel(LOGGING_LEVEL)
-
-    # start timer
-    fTimeStart = start_timer()
-
-    # print belangrijke informatie
-    print_log("\nworkspace = {}".format(gdb),"i")
-    print_log("logfile = {}".format(logFile),"i")
-    print_log("py-file: {}".format(sys.argv[0]),"i")
-
-    # run main
-    main()
-
-
-    # end timer
-    end_timer(fTimeStart)
+    # # # laod from settings
+    # gdb                     = settings.gdb
+    # log_dir                 = settings.log_dir
+    # ##d_rename_fields         = settings.d_rename_fields  # dictionary met velden om te hernoemen
+    # INP_FIELDS_XLS          = settings.INP_FIELDS_XLS
+    # INP_FIELDS_XLS_SHEET    = settings.INP_FIELDS_XLS_SHEET
+    # INP_POLYGON             = os.path.join(gdb,"medemblik_bemalingsgebieden.shp")
+    # INP_KNOOPPUNTEN         = os.path.join(gdb,"medemblik_MLA_punt.shp")
+    # INP_AFVOERRELATIES      = os.path.join(gdb,"medemblik_MLA_lijn.shp")
+    #
+    # # tussenresultaten
+    # KNOOPPUNTEN             = "KNOOPPUNTEN"         # begin- en eindpunten van afvoerrelaties (lijn-bestand).
+    # EINDKNOOPPUNTEN         = "EINDKNOOPPUNTEN"     # Alle knooppunten met daarbij het eindpunt
+    # POLYGON_LIS_OVERLAP     = "POLYGON_LIS_OVERLAP" # bestand met gaten.
+    #
+    # # eindresultaat
+    # POLYGON_LIS             = "POLYGON_LIS"
+    #
+    # # create data folder (if not exists)
+    # if not os.path.exists(gdb): os.makedirs(gdb)
+    #
+    # # set env
+    #
+    # # logging
+    # LOGGING_LEVEL = logging.INFO
+    # if not os.path.exists(log_dir): os.mkdir(log_dir)
+    # strftime = datetime.strftime(datetime.now(),"%Y%m%d-%H.%M")
+    # logFileName = 'GeoDyn_{}.log'.format(strftime)
+    # logFile = os.path.join(log_dir,logFileName)
+    # logging.basicConfig(filename=logFile, level=LOGGING_LEVEL)
+    # logging.getLogger().setLevel(LOGGING_LEVEL)
+    #
+    # # start timer
+    # fTimeStart = start_timer()
+    #
+    # # print belangrijke informatie
+    # print_log("\nworkspace = {}".format(gdb),"i")
+    # print_log("logfile = {}".format(logFile),"i")
+    # print_log("py-file: {}".format(sys.argv[0]),"i")
+    #
+    # # run main
+    # main()
+    #
+    #
+    # # end timer
+    # end_timer(fTimeStart)
 
 

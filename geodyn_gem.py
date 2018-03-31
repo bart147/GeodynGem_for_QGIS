@@ -240,14 +240,12 @@ class GeodynGem:
             global iface
             iface = self.iface
 
-            # self.iface.messageBar().pushMessage("titel", "Start module 1", QgsMessageBar.INFO, duration=5)
-            # m1.main(self.iface, sel_layers)
+            self.iface.messageBar().pushMessage("titel", "Start module 1", QgsMessageBar.INFO, duration=5)
+            m1.main(self.iface, sel_layers)
             self.iface.messageBar().pushMessage("titel", "Start module 2", QgsMessageBar.INFO, duration=5)
             m2.main(self.iface, sel_layers)
 
             self.iface.mainWindow().statusBar().showMessage("dit is de mainWindow")
             msg = QMessageBox()
-            ##QMessageBox.information(msg, "titel MessageBox", "tekst in messagebox")
+            QMessageBox.information(msg, "Info", "Script completed!")
             QgsMessageLog.logMessage("Script completed!", level=QgsMessageLog.INFO)
-
-            pass

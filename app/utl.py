@@ -126,14 +126,6 @@ def add_field_from_dict(fc, fld_name, d_fld):
     fc.dataProvider().addAttributes([QgsField(name=fld_name, type=fldtype_mapper.get(fld["field_type"],QVariant.String), len=field_length)])
     fc.updateFields()
 
-    # arcpy.AddField_management (
-    #     in_table=fc,
-    #     field_name=fld_name,
-    #     field_type=fld["field_type"],
-    #     field_length=field_length,
-    #     field_alias=fld["field_alias"],
-    #     )
-
 def add_field_from_dict_label(fc, add_fld_value, d_fld):
     """velden toevoegen op basis van dict.keys 'add_fld', 'order' en 'fc' in d_fld
        maakt gebuikt van functie add_field_from_dict() maar dan voor een verzameling velden
@@ -194,24 +186,6 @@ def bereken_veld_label(fc, bereken, d_fld):
         if not "bereken" in d_fld[fld].keys(): continue
         if bereken == d_fld[fld]["bereken"]: bereken_veld(fc, fld, d_fld)
 
-
-# def join_field_list(input_table, join_table, fields_to_calc, fields_to_copy, joinfield_input_table, joinfield_join_table):
-#     """Werkt net als join_field, maar dan voor een lijst met velden. misschien 1 funcie van maken die zowel met lijst-input als single werkt?"""
-#     try:
-#         for i, field_to_calc in enumerate(fields_to_calc):
-#             field_to_copy = fields_to_copy[i]
-#             print_log("joining field {} from {}...".format(field_to_calc,os.path.basename(join_table)),"i")
-#             if joinfield_join_table == "pk":
-#                 joinfield_join_table = arcpy.Describe(join_table).OIDFieldName
-#             arcpy.MakeFeatureLayer_management (input_table, "layer")
-#             arcpy.AddJoin_management("layer",joinfield_input_table,join_table,joinfield_join_table)
-#             calculation = '[{0}.{1}]'.format(arcpy.Describe(join_table).baseName, field_to_copy)
-#             print_log(calculation,"d")
-#             arcpy.CalculateField_management ("layer", field_to_calc, calculation)
-#     except Exception as e:
-#         print_log("problemen met join_field {}! {}".format(field_to_calc,e),"w")
-
-
 def join_field(input_table, join_table, field_to_calc, field_to_copy, joinfield_input_table, joinfield_join_table):
     """Veld overnemen uit andere tabel o.b.v. tablejoin.
        Het veld wat gevuld moet worden (field_to_calc) moet al wel bestaan en wordt in deze functie alleen gevuld.
@@ -244,6 +218,7 @@ def join_field(input_table, join_table, field_to_calc, field_to_copy, joinfield_
 
     except Exception as e:
         print_log("problemen met join_field {}! {}".format(field_to_calc,e),"w")
+
 
 def rename_fields(table_to_rename_field, d_rename):
     print_log("Hernoem velden van {}...".format(table_to_rename_field),"i")
