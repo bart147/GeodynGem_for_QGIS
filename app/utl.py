@@ -172,11 +172,6 @@ def bereken_veld(fc, fld_name, d_fld):
             it = fc.getFeatures(QgsFeatureRequest(expr))  # iterator object
             fc.setSelectedFeatures([i.id() for i in it])
 
-        #     arcpy.MakeFeatureLayer_management(fc, "layer_sel_zonder_0", where_clause)
-        #     arcpy.CalculateField_management("layer_sel_zonder_0", fld_name, expression)
-        # else:
-        #     arcpy.CalculateField_management(fc, fld_name, expression)
-
         # calculate field
         e = QgsExpression(expression)
         e.prepare(fc.pendingFields())
@@ -187,6 +182,7 @@ def bereken_veld(fc, fld_name, d_fld):
             f[idx] = e.evaluate(f)
             fc.updateFeature(f)
         fc.commitChanges()
+        fc.setSelectedFeatures([])
 
     except Exception as e:
         print_log("probleem bij bereken veld {}! {}".format(fld_name,e),"w")
@@ -199,21 +195,21 @@ def bereken_veld_label(fc, bereken, d_fld):
         if bereken == d_fld[fld]["bereken"]: bereken_veld(fc, fld, d_fld)
 
 
-def join_field_list(input_table, join_table, fields_to_calc, fields_to_copy, joinfield_input_table, joinfield_join_table):
-    """Werkt net als join_field, maar dan voor een lijst met velden. misschien 1 funcie van maken die zowel met lijst-input als single werkt?"""
-    try:
-        for i, field_to_calc in enumerate(fields_to_calc):
-            field_to_copy = fields_to_copy[i]
-            print_log("joining field {} from {}...".format(field_to_calc,os.path.basename(join_table)),"i")
-            if joinfield_join_table == "pk":
-                joinfield_join_table = arcpy.Describe(join_table).OIDFieldName
-            arcpy.MakeFeatureLayer_management (input_table, "layer")
-            arcpy.AddJoin_management("layer",joinfield_input_table,join_table,joinfield_join_table)
-            calculation = '[{0}.{1}]'.format(arcpy.Describe(join_table).baseName, field_to_copy)
-            print_log(calculation,"d")
-            arcpy.CalculateField_management ("layer", field_to_calc, calculation)
-    except Exception as e:
-        print_log("problemen met join_field {}! {}".format(field_to_calc,e),"w")
+# def join_field_list(input_table, join_table, fields_to_calc, fields_to_copy, joinfield_input_table, joinfield_join_table):
+#     """Werkt net als join_field, maar dan voor een lijst met velden. misschien 1 funcie van maken die zowel met lijst-input als single werkt?"""
+#     try:
+#         for i, field_to_calc in enumerate(fields_to_calc):
+#             field_to_copy = fields_to_copy[i]
+#             print_log("joining field {} from {}...".format(field_to_calc,os.path.basename(join_table)),"i")
+#             if joinfield_join_table == "pk":
+#                 joinfield_join_table = arcpy.Describe(join_table).OIDFieldName
+#             arcpy.MakeFeatureLayer_management (input_table, "layer")
+#             arcpy.AddJoin_management("layer",joinfield_input_table,join_table,joinfield_join_table)
+#             calculation = '[{0}.{1}]'.format(arcpy.Describe(join_table).baseName, field_to_copy)
+#             print_log(calculation,"d")
+#             arcpy.CalculateField_management ("layer", field_to_calc, calculation)
+#     except Exception as e:
+#         print_log("problemen met join_field {}! {}".format(field_to_calc,e),"w")
 
 
 def join_field(input_table, join_table, field_to_calc, field_to_copy, joinfield_input_table, joinfield_join_table):
@@ -330,6 +326,25 @@ def get_d_velden(INP_FIELDS_XLS, SHEETNR):
 #         d_velden[srow["fieldname"]] = fld
 #
 #     return d_velden
+
+# example fast calculate
+# https://gis.stackexchange.com/questions/97344/how-to-change-attributes-with-qgis-python
+# from qgis.utils import iface
+# from PyQt4.QtCore import *
+#
+# layers = iface.legendInterface().layers()
+#
+# for layer in layers:
+#     name = layer.name()
+#     if name.endswith('x'):
+#         provider = layer.dataProvider()
+#         updateMap = {}
+#         fieldIdx = p.fields().indexFromName( 'attr' )
+#         features = provider.getFeatures()
+#         for feature in features:
+#             updateMap[feature.id()] = { fieldIdx: 'a' }
+#
+#         provider.changeAttributeValues( updateMap )
 
 if __name__ == '__main__':
 

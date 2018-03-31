@@ -106,29 +106,54 @@ def bereken_onderbemaling(layer):
     # print_log("Onderbemalingen succesvol berekend voor Plancap, drinkwater, woningen en ve's", "i")
 
 
-def bereken_onderbemaling2(fc):
+def bereken_onderbemaling2(layer):
     """bereken onderbemalingen voor SUM_WAARDE, SUM_BLA, etc..
        Maakt selectie op basis van veld [ONTV_VAN] -> VAN_KNOOPN IN ('ZRE-123424', 'ZRE-234')"""
     # sum values op basis van selectie [ONTV_VAN]
 
-    update_fields = ["VAN_KNOOPN",  # row[0]
-                     "K_ONTV_VAN",  # row[1]
-                     "POC_B_M3_G",  # row[2]
-                     "POC_B_M3_O",  # row[3]
-                     "POC_O_M3_G",  # row[4]
-                     "POC_O_M3_O",  # row[5]
-                     ]
+    layer.startEditing()
+    for feature in layer.getFeatures():
+        VAN_KNOOPN = feature["VAN_KNOOPN"]
+        ONTV_VAN = feature["K_ONTV_VAN"]
+        if not str(ONTV_VAN) in ["NULL", "", " "]:  # check of sprake is van onderbemaling
+            print_log("K_ONTV_VAN = {}".format(ONTV_VAN), "i")
+            where_clause = '"VAN_KNOOPN" IN ({})'.format(ONTV_VAN)
+            ##where_clause = '"VAN_KNOOPN" = '+"'MERG10'"
+            print_log("where_clause = {}".format(where_clause), "i")
+            expr = QgsExpression(where_clause)
+            it = layer.getFeatures(QgsFeatureRequest(expr))  # iterator object
+            layer.setSelectedFeatures([i.id() for i in it])
+            print_log("sel = {}".format([i.id() for i in it]), "i")
+            POC_B_M3_O = sum([float(f["POC_B_M3_G"]) for f in layer.selectedFeatures() if
+                              str(f["POC_B_M3_G"]) not in ["NULL", "nan", "", " "]])    # POC_B_M3_O = sum(POC_B_M3_G)
+            POC_O_M3_O = sum([float(f["POC_O_M3_G"]) for f in layer.selectedFeatures() if
+                              str(f["POC_O_M3_G"]) not in ["NULL", "nan", "", " "]])    # POC_O_M3_O = sum(POC_O_M3_G)
 
-    with arcpy.da.UpdateCursor(fc, (update_fields)) as cursor:
-        for row in cursor:
-            VAN_KNOOPN, ONTV_VAN = row[0], row[1]
-            if not ONTV_VAN in [None,""," "]: # check of sprake is van onderbemaling
-                where_clause = "VAN_KNOOPN IN ({})".format(ONTV_VAN)
-                row[3] = sum([r[0] for r in arcpy.da.SearchCursor(fc,["POC_B_M3_G"],where_clause) if r[0] != None])    # POC_B_M3_O = sum(POC_B_M3_G)
-                row[5] = sum([r[0] for r in arcpy.da.SearchCursor(fc,["POC_O_M3_G"],where_clause) if r[0] != None])    # POC_O_M3_O = sum(POC_O_M3_G)
-                cursor.updateRow(row)
-    del cursor, row
+            layer.changeAttributeValue(feature.id(), layer.fieldNameIndex("POC_B_M3_O"), POC_B_M3_O)
+            layer.changeAttributeValue(feature.id(), layer.fieldNameIndex("POC_O_M3_O"), POC_O_M3_O)
+    layer.commitChanges()
+    layer.setSelectedFeatures([])
     print_log("Onderbemalingen succesvol berekend voor POC ontwerp en POC beschikbaar", "i")
+
+
+    # update_fields = ["VAN_KNOOPN",  # row[0]
+    #                  "K_ONTV_VAN",  # row[1]
+    #                  "POC_B_M3_G",  # row[2]
+    #                  "POC_B_M3_O",  # row[3]
+    #                  "POC_O_M3_G",  # row[4]
+    #                  "POC_O_M3_O",  # row[5]
+    #                  ]
+    #
+    # with arcpy.da.UpdateCursor(fc, (update_fields)) as cursor:
+    #     for row in cursor:
+    #         VAN_KNOOPN, ONTV_VAN = row[0], row[1]
+    #         if not ONTV_VAN in [None,""," "]: # check of sprake is van onderbemaling
+    #             where_clause = "VAN_KNOOPN IN ({})".format(ONTV_VAN)
+    #             row[3] = sum([r[0] for r in arcpy.da.SearchCursor(fc,["POC_B_M3_G"],where_clause) if r[0] != None])    # POC_B_M3_O = sum(POC_B_M3_G)
+    #             row[5] = sum([r[0] for r in arcpy.da.SearchCursor(fc,["POC_O_M3_G"],where_clause) if r[0] != None])    # POC_O_M3_O = sum(POC_O_M3_G)
+    #             cursor.updateRow(row)
+    # del cursor, row
+    # print_log("Onderbemalingen succesvol berekend voor POC ontwerp en POC beschikbaar", "i")
 
 
 def spjoin_bronbestanden_aan_bemalingsgebieden(polygon_lis, inp_drinkwater_bag, inp_ve_belasting, inp_plancap, inp_polygon,
@@ -165,74 +190,55 @@ def spjoin_bronbestanden_aan_bemalingsgebieden(polygon_lis, inp_drinkwater_bag, 
     return stats_drinkwater, stats_ve, stats_plancap
 
 def bepaal_verhard_oppervlak(polygon_lis, inp_verhard_opp, VERHARD_OPP_INTERSECT):
-    ##arcpy.FeatureClassToFeatureClass_conversion(INP_VERHARD_OPP, gdb, EXP_VERHARD_OPP)
     print_log("Intersect {}...".format(";".join([polygon_lis.name(),inp_verhard_opp.name()])),"i")
 
     # eerst totaal verhard opp (ha) bepalen per bemalingsgebied
-    ##processing.runalg("qgis:joinattributesbylocation", inp_verhard_opp, polygon_lis, u'intersects', 0, 0, '', 1, VERHARD_OPP_INTERSECT)
+    processing.runalg("saga:intersect", inp_verhard_opp, polygon_lis, True, VERHARD_OPP_INTERSECT)
     verhard_opp_intersect = QgsVectorLayer(VERHARD_OPP_INTERSECT, "verhard_opp_intersect", "ogr")
     add_layer(verhard_opp_intersect)
-    add_field_from_dict(verhard_opp_intersect, "OPP_BEM_HA", d_velden_tmp)
-    ##bereken_veld(verhard_opp_intersect, "OPP_BEM_HA", d_velden_tmp)
+    add_field_from_dict(verhard_opp_intersect, "HA_BEM_G", d_velden_tmp)
 
-    print_log("bereken totaal opp ...", "i")
+    # opp ha berekenen
+    for layer in [verhard_opp_intersect, polygon_lis]:
+        print_log("opp ha berekenen voor {}...".format(layer.name()),"i")
+        ##d = QgsDistanceArea()
+        provider = verhard_opp_intersect.dataProvider()
+        updateMap = {}
+        fieldIdx = provider.fields().indexFromName('HA_BEM_G')
+
+        for f in provider.getFeatures():
+            opp_ha = f.geometry().area()/10000
+            ##opp_ha = d.measurePolygon(f.geometry().asPolygon()[0])/10000
+            updateMap[f.id()] = {fieldIdx: opp_ha}
+
+        provider.changeAttributeValues(updateMap)
+
+    print_log("bereken stats totaal opp ...", "i")
     STATS_VERHARD_OPP_TOT = os.path.join(gdb, "STATS_VERHARD_OPP_TOT.csv")
-    ##processing.runalg("qgis:statisticsbycategories", VERHARD_OPP_INTERSECT, "SHAPE_AREA", "VAN_KNOOPN", STATS_VERHARD_OPP_TOT)
+    processing.runalg("qgis:statisticsbycategories", VERHARD_OPP_INTERSECT, "HA_BEM_G", "VAN_KNOOPN", STATS_VERHARD_OPP_TOT)
     stats_verh_opp_tot = QgsVectorLayer(STATS_VERHARD_OPP_TOT, "stats_verh_opp_totaal", "ogr")
     add_layer(stats_verh_opp_tot)
 
-    add_field_from_dict(stats_verh_opp_tot, "OPP_BEM_HA", d_velden_tmp)
-    bereken_veld(stats_verh_opp_tot, "OPP_BEM_HA", d_velden_tmp)
     # overhalen verhard opp (ha) naar eindresultaat
-    ##join_field(polygon_lis, stats_verh_opp_tot, "HA_BEM_G", "OPP_BEM_HA", "VAN_KNOOPN", "VAN_KNOOPN")
+    join_field(polygon_lis, stats_verh_opp_tot, "HA_VER_G", "sum", "VAN_KNOOPN", "category")
 
-    # add_field_from_dict_label(polygon_lis, "st3a", d_velden)
-    # # per categorie verhard opp (ha) bepalen per bemalingsgebied
-    # for aansluiting in ["GEM", "HWA", "NAG", "OBK", "VGS"]:
-    #     STAT_NAME = os.path.join(gdb, "{}_{}.csv".format("STATS_VERHARD_OPP", aansluiting))
-    #     where_clause = "\"AANGESL_OP\" = '{}'".format(aansluiting)
-    #     expr = QgsExpression(where_clause)
-    #     it = verhard_opp_intersect.getFeatures(QgsFeatureRequest(expr))
-    #     verhard_opp_intersect.setSelectedFeatures([i.id() for i in it])
-    #     ##processing.runalg("qgis:statisticsbycategories", verhard_opp_intersect, "SHAPE_AREA", "VAN_KNOOPN", STAT_NAME)
-    #     layer = QgsVectorLayer(STAT_NAME, "{}_{}".format("stats_verh_opp", aansluiting), "ogr")
-    #     add_layer(layer)
-    #     add_field_from_dict(layer, "OPP_BEM_HA", d_velden_tmp)
-    #     bereken_veld(layer, "OPP_BEM_HA", d_velden_tmp)
+    add_field_from_dict_label(polygon_lis, "st3a", d_velden)
+    # per categorie verhard opp (ha) bepalen per bemalingsgebied
+    for aansluiting in ["GEM", "HWA", "NAG", "OBK", "VGS"]:
+        STAT_NAME = os.path.join(gdb, "{}_{}.csv".format("STATS_VERHARD_OPP", aansluiting))
+        where_clause = "\"AANGESL_OP\" = '{}'".format(aansluiting)
+        expr = QgsExpression(where_clause)
+        it = verhard_opp_intersect.getFeatures(QgsFeatureRequest(expr))
+        verhard_opp_intersect.setSelectedFeatures([i.id() for i in it])
+        processing.runalg("qgis:statisticsbycategories", verhard_opp_intersect, "HA_BEM_G", "VAN_KNOOPN", STAT_NAME)
+        layer = QgsVectorLayer(STAT_NAME, "{}_{}".format("stats_verh_opp", aansluiting), "ogr")
+        add_layer(layer)
 
         # velden overhalen naar eindresultaat en PI berekenen
-        # fld_ha = "HA_{}_G".format(aansluiting)
-        # join_field(polygon_lis, layer, fld_ha, "OPP_BEM_HA", "VAN_KNOOPN", "VAN_KNOOPN")
+        fld_ha = "HA_{}_G".format(aansluiting)
+        join_field(polygon_lis, layer, fld_ha, "sum", "VAN_KNOOPN", "category")
         # fld_pi = "PI_{}_G".format(aansluiting)
         # bereken_veld(polygon_lis, fld_pi, d_velden)
-
-    # # eerst totaal verhard opp (ha) bepalen per bemalingsgebied
-    # processing.runalg("qgis:joinattributesbylocation", polygon_lis, inp_verhard_opp, u'intersects', 0, 1, 'sum', 1, VERHARD_OPP_INTERSECT)
-    # stats_verh_opp_totaal = QgsVectorLayer(VERHARD_OPP_INTERSECT, "stats_verh_opp_totaal", "ogr")
-    # add_field_from_dict(stats_verh_opp_totaal, "OPP_BEM_HA", d_velden_tmp)
-    # bereken_veld(stats_verh_opp_totaal, "OPP_BEM_HA", d_velden_tmp)
-    # # overhalen verhard opp (ha) naar eindresultaat
-    # join_field(polygon_lis, stats_verh_opp_totaal, "HA_BEM_G", "OPP_BEM_HA", "VAN_KNOOPN", "VAN_KNOOPN")
-    #
-    # # per categorie verhard opp (ha) bepalen per bemalingsgebied
-    # for aansluiting in ["GEM", "HWA", "NAG", "OBK", "VGS"]:
-    #     STAT_NAME = os.path.join(gdb, "{}_{}.shp".format("STATS_VERHARD_OPP",aansluiting))
-    #     where_clause = "\"AANGESL_OP\" = '{}'".format(aansluiting)
-    #     expr = QgsExpression(where_clause)
-    #     it = inp_verhard_opp.getFeatures(QgsFeatureRequest(expr))
-    #     inp_verhard_opp.setSelectedFeatures([i.id() for i in it])
-    #     processing.runalg("qgis:joinattributesbylocation", polygon_lis, inp_verhard_opp, u'intersects', 0, 1, 'sum', 1, STAT_NAME)
-    #     layer = QgsVectorLayer(STAT_NAME, "{}_{}".format("stats_verh_opp",aansluiting), "ogr")
-    #     add_field_from_dict(layer, "OPP_BEM_HA", d_velden_tmp)
-    #     bereken_veld(layer, "OPP_BEM_HA", d_velden_tmp)
-    #
-    #     # velden overhalen naar eindresultaat en PI berekenen
-    #     fld_ha = "HA_{}_G".format(aansluiting)
-    #     join_field(polygon_lis, layer, fld_ha, "OPP_BEM_HA", "VAN_KNOOPN", "VAN_KNOOPN")
-    #     fld_pi = "PI_{}_G".format(aansluiting)
-    #     bereken_veld(polygon_lis, fld_pi, d_velden)
-
-        # percentages worden achteraf berekend ##join_field(POLYGON_LIS, stat_name, fld_pi, "PERCENTAGE", "VAN_KNOOPN", "VAN_KNOOPN")
 
 
 def add_layer(layer_name):
@@ -301,12 +307,6 @@ def main(iface, layers):
 
     # ##########################################################################
     # 1.) export input INP_POLYGON_LIS to result POLYGON_LIS
-    ##arcpy.FeatureClassToFeatureClass_conversion(INP_POLYGON_LIS, gdb, POLYGON_LIS)
-    # # methode 2 layer maken
-    # for layer in iface.mapCanvas().layers():
-    #     if layer.name() == "polygon_lis":
-    #         sel_layer = layer
-
     tussenresultaat = QgsVectorLayer(os.path.join(gdb,"POLYGON_LIS.shp"), "tussenresultaat", "ogr")
     QgsVectorFileWriter.writeAsVectorFormat(tussenresultaat, POLYGON_LIS, "utf-8", None, "ESRI Shapefile")
     polygon_lis = QgsVectorLayer(POLYGON_LIS, "eindresultaat", "ogr")
@@ -366,21 +366,20 @@ def main(iface, layers):
     blokje_log("Bepaal verhard oppervlak binnen bemalingsgebieden...","i")
     bepaal_verhard_oppervlak(polygon_lis, inp_verhard_opp, VERHARD_OPP_INTERSECT)
 
-    # vervang_None_door_0_voor_velden_in_lijst(
-    #     ["HA_GEM_G", "HA_VGS_G", "HA_HWA_G","HA_OPW_G", "HA_NAG_G", "HA_OBK_G"],
-    #     POLYGON_LIS)
-    #
-    # # bereken velden afhankelijk van verhard opp
-    # bereken_veld_label(POLYGON_LIS, '06_ber', d_velden)
-    # bereken_veld_label(POLYGON_LIS, '07_ber', d_velden)
-    # bereken_veld_label(POLYGON_LIS, '08_ber', d_velden)
-    # bereken_veld_label(POLYGON_LIS, '08a_ber', d_velden)
-    #
-    # # bepaal onderbemaling2 afhankelijk van verhard opp
-    # bereken_onderbemaling2(POLYGON_LIS)
-    # vervang_None_door_0_voor_velden_in_lijst(
-    #         ["POC_B_M3_O", "POC_O_M3_O","POC_B_M3_G", "POC_O_M3_G"], POLYGON_LIS)
-    # bereken_veld_label(POLYGON_LIS, '10_ber', d_velden)
+    vervang_None_door_0_voor_velden_in_lijst(
+        ["HA_GEM_G", "HA_VGS_G", "HA_HWA_G","HA_OPW_G", "HA_NAG_G", "HA_OBK_G"],
+        polygon_lis)
+
+    # bereken velden afhankelijk van verhard opp
+    bereken_veld_label(polygon_lis, '07_ber', d_velden)
+    bereken_veld_label(polygon_lis, '08_ber', d_velden)
+
+    # bepaal onderbemaling2 afhankelijk van verhard opp
+    bereken_onderbemaling2(polygon_lis)
+    vervang_None_door_0_voor_velden_in_lijst(
+            ["POC_B_M3_O", "POC_O_M3_O","POC_B_M3_G", "POC_O_M3_G"], polygon_lis)
+    bereken_veld_label(polygon_lis, '10_ber', d_velden)
+    bereken_veld_label(polygon_lis, '11_ber', d_velden)
 
 
 if __name__ == '__main__':
