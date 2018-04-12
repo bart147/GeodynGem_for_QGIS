@@ -9,4 +9,6 @@ Tool for calculating wastewater prognoses based on
 - Install the plugin from QGIS repository https://plugins.qgis.org/plugins/GeodynGem/
 
 in settings.py set your output folder for results:
-- gdb = r"path\to\folder\for\results" 
+```
+gdb = r"path\to\folder\for\results" 
+```
