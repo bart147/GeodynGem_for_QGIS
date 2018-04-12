@@ -14,21 +14,21 @@ version=0.1
 author=BKGIS
 email=b.kropf@bkgis.nl
 
-about=Provide a brief description of the plugin and its purpose.
+about=Tool for calculating wastewater prognoses based on municipal sewage systems (Kikker riodesk), residental data and future wastewater regulation plans.
 
-tracker=http://bugs
-repository=http://repo
+tracker=https://github.com/bart147/GeodynGem_for_QGIS/issues
+repository=https://github.com/bart147/GeodynGem_for_QGIS
 # End of mandatory metadata
 
 # Recommended items:
 
 # Uncomment the following line and add your changelog:
-# changelog=
+changelog=first release
 
 # Tags are comma separated with spaces allowed
-tags=python
+tags=python, geodyn, afvalwaterprognose, kikker
 
-homepage=http://homepage
+homepage=https://github.com/bart147/GeodynGem_for_QGIS
 category=Plugins
 icon=icon.png
 # experimental flag
