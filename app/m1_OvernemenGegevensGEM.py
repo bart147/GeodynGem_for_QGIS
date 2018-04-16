@@ -16,24 +16,6 @@ from PyQt4.QtCore import QVariant
 # importeer settings
 import settings
 
-gdb                     = settings.gdb
-log_dir                 = settings.log_dir
-##d_rename_fields         = settings.d_rename_fields  # dictionary met velden om te hernoemen
-INP_FIELDS_XLS          = settings.INP_FIELDS_XLS
-INP_FIELDS_XLS_SHEET    = settings.INP_FIELDS_XLS_SHEET
-# INP_POLYGON             = os.path.join(gdb,"medemblik_bemalingsgebieden.shp")
-# INP_KNOOPPUNTEN         = os.path.join(gdb,"medemblik_MLA_punt.shp")
-# INP_AFVOERRELATIES      = os.path.join(gdb,"medemblik_MLA_lijn.shp")
-#
-# # tussenresultaten
-KNOOPPUNTEN             = os.path.join(gdb,"knooppunten.shp")         # begin- en eindpunten van afvoerrelaties (lijn-bestand).
-EINDKNOOPPUNTEN         = os.path.join(gdb,"EINDKNOOPPUNTEN.shp")     # Alle knooppunten met daarbij het eindpunt
-POLYGON_LIS_OVERLAP     = os.path.join(gdb,"POLYGON_LIS_OVERLAP.shp") # bestand met gaten.
-
-# eindresultaat
-POLYGON_LIS             = os.path.join(gdb,"POLYGON_LIS.shp")
-POLYGON_LIS_SUM         = os.path.join(gdb,"POLYGON_LIS_SUM.shp")
-
 def genereer_knooppunten(iface, inp_polygon, sel_afvoerrelaties):
     '''Genereert knooppunten op basis van afvoerrelaties (lijn-bestand) waarbij 1 knooppunt per bemalingsgebied is toegestaan.
        Alleen knooppunten die afvoeren naar een andere bemalingsgebied worden meegenomen.
@@ -286,7 +268,7 @@ def controleer_hoofdbemalingsgebieden(polygon_lis):
     return polygon_lis_overlap
 
 
-def main(iface, layers, gdb):
+def main(iface, layers, workspace):
     ''' 1.) Knooppunten exporteren, velden toevoegen.
     # relaties selecteren die naar ander bemalingsgebied afvoeren. (niet volledig binnen 1 polygoon vallen)
     # knooppunten selecteren die op ander bemalingsgebied afvoeren (op basis van selectie afvoerrelaties)
@@ -295,8 +277,19 @@ def main(iface, layers, gdb):
     # eindpunten voorzien van bemalingsgebied (sp.join)
     # invullen veld LOOST_OP met code bemalingsgebied. '''
 
-    global g_iface
+    global g_iface, gdb, KNOOPPUNTEN, EINDKNOOPPUNTEN, POLYGON_LIS_OVERLAP, POLYGON_LIS, POLYGON_LIS_SUM, log_dir, INP_FIELDS_XLS, INP_FIELDS_XLS_SHEET
+
     g_iface = iface
+    gdb = workspace
+
+    # tussenresultaten
+    KNOOPPUNTEN = os.path.join(gdb, "knooppunten.shp")  # begin- en eindpunten van afvoerrelaties (lijn-bestand).
+    EINDKNOOPPUNTEN = os.path.join(gdb, "EINDKNOOPPUNTEN.shp")  # Alle knooppunten met daarbij het eindpunt
+    POLYGON_LIS_OVERLAP = os.path.join(gdb, "POLYGON_LIS_OVERLAP.shp")  # bestand met gaten.
+
+    # eindresultaat
+    POLYGON_LIS = os.path.join(gdb, "POLYGON_LIS.shp")
+    POLYGON_LIS_SUM = os.path.join(gdb, "POLYGON_LIS_SUM.shp")
 
     # laod from settings
     log_dir = settings.log_dir
@@ -309,8 +302,6 @@ def main(iface, layers, gdb):
         print_log(layer.name(),"i")
 
     print_log("inp_afvoerrelatie = {}".format(inp_afvoerrelaties.name()),"i")
-
-
 
     blokje_log("Veld-info ophalen...","i")
     d_velden = get_d_velden(INP_FIELDS_XLS, 0)
