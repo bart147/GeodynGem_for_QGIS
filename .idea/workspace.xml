@@ -20,7 +20,7 @@
   <component name="ExecutionTargetManager" SELECTED_TARGET="default_target" />
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="m1_OvernemenGegevensGEM.py" pinned="false" current-in-tab="true">
+      <file leaf-file-name="m1_OvernemenGegevensGEM.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/app/m1_OvernemenGegevensGEM.py">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="317">
@@ -67,10 +67,10 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="geodyn_gem.py" pinned="false" current-in-tab="false">
+      <file leaf-file-name="geodyn_gem.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/geodyn_gem.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="402">
+            <state relative-caret-position="657">
               <caret line="256" column="47" lean-forward="false" selection-start-line="256" selection-start-column="47" selection-end-line="256" selection-end-column="47" />
               <folding>
                 <element signature="e#1118#1193#0" expanded="true" />
@@ -883,16 +883,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/geodyn_gem.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="402">
-          <caret line="256" column="47" lean-forward="false" selection-start-line="256" selection-start-column="47" selection-end-line="256" selection-end-column="47" />
-          <folding>
-            <element signature="e#1118#1193#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/app/m2_BerekenResultaten.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="424">
@@ -943,6 +933,16 @@
             <element signature="e#7051#11437#0" expanded="false" />
             <element signature="e#11489#12812#0" expanded="false" />
             <element signature="e#12871#14111#0" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/geodyn_gem.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="657">
+          <caret line="256" column="47" lean-forward="false" selection-start-line="256" selection-start-column="47" selection-end-line="256" selection-end-column="47" />
+          <folding>
+            <element signature="e#1118#1193#0" expanded="true" />
           </folding>
         </state>
       </provider>
