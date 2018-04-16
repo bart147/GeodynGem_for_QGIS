@@ -10,8 +10,8 @@
 name=Geodyn gemeente
 qgisMinimumVersion=2.0
 description=Geodyn voor gemeenten
-version=0.1
-author=BKGIS
+version=0.2
+author=http://www.bkgis.nl
 email=b.kropf@bkgis.nl
 
 about=Tool for calculating wastewater prognoses based on municipal sewage systems (Kikker riodesk), residental data and future wastewater regulation plans.
@@ -23,7 +23,9 @@ repository=https://github.com/bart147/GeodynGem_for_QGIS
 # Recommended items:
 
 # Uncomment the following line and add your changelog:
-changelog=first release
+changelog=
+v0.2 workspace no longer in settings.py but in gui, 2018-04-16 
+v0.1 first release, 2018-04-10 
 
 # Tags are comma separated with spaces allowed
 tags=python, geodyn, afvalwaterprognose, kikker

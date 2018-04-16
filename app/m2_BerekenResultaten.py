@@ -266,7 +266,7 @@ def setColumnVisibility( layer, columnName, visible ):
     layer.setAttributeTableConfig( config )
 
 
-def main(iface, layers):
+def main(iface, layers, workspace):
     """Hoofdmenu:
     1.) Kopie maken INPUT_POLYGON_LIS
     2.) Spatial joins tussen POLYGON_LIS en de externe gegevens bronnen.
@@ -280,10 +280,10 @@ def main(iface, layers):
     global g_iface, INP_SKIP_SPJOIN, gdb, l_src_None_naar_0_omzetten, d_velden_tmp, d_velden
     g_iface = iface
 
-    INP_SKIP_SPJOIN = True
+    INP_SKIP_SPJOIN = False
 
     # laod from settings
-    gdb = settings.gdb
+    gdb = workspace
     INP_FIELDS_XLS = settings.INP_FIELDS_XLS
     l_src_None_naar_0_omzetten = settings.l_fld_None_naar_0_omzetten  # velden waarvan waardes worden omgezet van None naar 0
     d_velden_tmp = settings.d_velden_tmp  # tijdelijke velden
@@ -387,100 +387,3 @@ def main(iface, layers):
             ["POC_B_M3_O", "POC_O_M3_O","POC_B_M3_G", "POC_O_M3_G"], polygon_lis)
     bereken_veld_label(polygon_lis, '10_ber', d_velden)
     bereken_veld_label(polygon_lis, '11_ber', d_velden)
-
-
-if __name__ == '__main__':
-
-    # setting for development: skip spatial join. boolean
-    INP_SKIP_SPJOIN             = True                  # skipp spatial join
-
-    # laod from settings
-
-    gdb                         = settings.gdb          # workspace
-    log_dir                     = settings.log_dir      # log_dir
-    l_src_None_naar_0_omzetten  = settings.l_fld_None_naar_0_omzetten # velden waarvan waardes worden omgezet van None naar 0
-    INP_FIELDS_XLS              = settings.INP_FIELDS_XLS
-    d_velden                    = get_d_velden(INP_FIELDS_XLS)  # dict for fields
-    d_velden_tmp                = settings.d_velden_tmp         # tijdelijke velden
-    ##d_velden.update(d_velden_tmp)                               # update met dict_tmp
-##    print_log(d_velden,"i")
-    # create data folder (if not exists)
-    if not os.path.exists(os.path.dirname(gdb)): os.makedirs(os.path.dirname(gdb))
-    # create database (if not exists)
-    if not arcpy.Exists(gdb): arcpy.CreateFileGDB_management(os.path.dirname(gdb),os.path.basename(gdb))
-
-    # set env
-    arcpy.env.overwriteOutput = True
-    arcpy.env.workspace = gdb
-
-    # INPUTS toolbox
-    INP_POLYGON_LIS         = sys.argv[1]
-    INP_DRINKWATER_BAG      = sys.argv[2] # LIS.GEODYN_DRINKWATER_BAG
-    INP_PLANCAP_RIGO        = sys.argv[3]
-    INP_VE_BELASTING        = sys.argv[4]
-    INP_VERHARD_OPP         = sys.argv[5]
-
-    # tussenresultaten
-    DRINKWATER_POLYGON_LIS  = "SpJoin_DRINKWATER2POLYGON_LIS"
-    PLANCAP_POLYGON_LIS     = "SpJoin_PLANCAP2POLYGON_LIS"
-    VE_POLYGON_LIS          = "SpJoin_VE2POLYGON_LIS"
-    STATS_DRINKWATER        = "STATS_DRINKWATER"
-    STATS_PLANCAP           = "STATS_PLANCAP"
-    STATS_VE                = "STATS_VE"
-    EXP_VERHARD_OPP         = 'EXP_VERHARD_OPP'
-    VERHARD_OPP_INTERSECT   = "VERHARD_OPP_INTERSECT"
-    STATS_VERHARD_OPP       = "STATS_VERHARD_OPP"
-
-##    STATS_VERHARD_OPP_GEM   = "STATS_VERHARD_OPP_GEM"
-##    STATS_VERHARD_OPP_HWA   = "STATS_VERHARD_OPP_HWA"
-##    STATS_VERHARD_OPP_NAG   = "STATS_VERHARD_OPP_NAG"
-##    STATS_VERHARD_OPP_OBK   = "STATS_VERHARD_OPP_OBK"
-##    STATS_VERHARD_OPP_VGS   = "STATS_VERHARD_OPP_VGS"
-
-    # eindresultaat
-    POLYGON_LIS             = sys.argv[6]
-
-    # logging
-    LOGGING_LEVEL = logging.INFO # toggle between INFO / DEBUG
-    if not os.path.exists(log_dir): os.mkdir(log_dir)
-    strftime = datetime.strftime(datetime.now(),"%Y%m%d-%H.%M")
-    logFileName = 'GeoDyn_{}.log'.format(strftime)
-    logFile = os.path.join(log_dir,logFileName)
-    logging.basicConfig(filename=logFile, level=LOGGING_LEVEL)
-    logging.getLogger().setLevel(LOGGING_LEVEL)
-
-    # start timer
-    fTimeStart = start_timer()
-
-##    # print belangrijke informatie
-##    b_VIEW = bepaal_b_VIEW(INP_POLYGON_LIS,"K_INST_TOT") # True als veld "K_INST_TOT" bestaat
-##    if b_VIEW:
-##        print_log("WINCCOA = True","i")
-##    else:
-##        print_log("WINCCOA = False. Berekeningen met gegevens uit WINCCOA worden overgeslagen","w")
-
-    print_log("\nworkspace = {}".format(gdb),"i")
-    print_log("logfile = {}".format(logFile),"i")
-    print_log("py-file: {}".format(sys.argv[0]),"i")
-    if INP_SKIP_SPJOIN: print_log("let op SKIP_SPJOIN = True! Spatial join wordt geskipped!. Zet of False om alles opnieuw te berekenen", "w")
-    for i, src in enumerate(sys.argv[1:]):
-        if arcpy.Exists(src):
-            desc = arcpy.Describe(src)
-            path = desc.catalogPath
-            del desc
-        else:
-            path = gdb
-        print_log("layer {0}: {1}, path: {2}".format(i+1,src,path),"i")
-
-
-    # check of template bestaat
-    if not arcpy.Exists("template"):
-        print_log("Geen template gevonden. Controleer of feature class 'template' voorkomt in data.gdb","w")
-
-
-    # run main
-    main(POLYGON_LIS)
-
-
-    # end timer
-    end_timer(fTimeStart)

@@ -3,7 +3,7 @@ import os, sys
 # settings
 root_dir        = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 log_dir         = os.path.join(root_dir, 'log')
-gdb             = r"G:\GISDATA\QGIS\geodyn_gem\data\results"
+##gdb             = r"G:\GISDATA\QGIS\geodyn_gem\data\results"
 INP_FIELDS_XLS  = os.path.join(root_dir, 'inp_fields.xls') ##, 'fields$')
 INP_FIELDS_XLS_SHEET    = "fields"
 

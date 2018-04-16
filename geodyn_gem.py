@@ -21,7 +21,7 @@
  ***************************************************************************/
 """
 from PyQt4.QtCore import QSettings, QTranslator, qVersion, QCoreApplication
-from PyQt4.QtGui import QAction, QIcon, QMessageBox
+from PyQt4.QtGui import QAction, QIcon, QMessageBox, QFileDialog
 from qgis.core import QgsMessageLog, QgsWKBTypes
 
 # Initialize Qt resources from file resources.py
@@ -166,6 +166,9 @@ class GeodynGem:
 
         self.actions.append(action)
 
+        self.dlg.lineEdit.clear()
+        self.dlg.pushButton.clicked.connect(self.select_output_folder)
+
         return action
 
     def initGui(self):
@@ -195,6 +198,12 @@ class GeodynGem:
         if len(index) > 0:
             l.insert(0, l.pop(index[0]))
         return l
+
+    def select_output_folder(self):
+        # filename = QFileDialog.getSaveFileName(self.dlg, "Select output folder ", "", '*.txt')
+        # outputFolder = QFileDialog.getExistingDirectory(self.dlg, "Select Output Folder", QDir.currentPath())
+        outputFolder = QFileDialog.getExistingDirectory(self.dlg, 'Select Output Folder')
+        self.dlg.lineEdit.setText(outputFolder)
 
     def run(self):
         """Run method that performs all the real work"""
@@ -240,10 +249,12 @@ class GeodynGem:
             global iface
             iface = self.iface
 
+            gdb = self.dlg.lineEdit.text()
+
             self.iface.messageBar().pushMessage("titel", "Start module 1", QgsMessageBar.INFO, duration=5)
-            m1.main(self.iface, sel_layers)
+            m1.main(self.iface, sel_layers, gdb)
             self.iface.messageBar().pushMessage("titel", "Start module 2", QgsMessageBar.INFO, duration=5)
-            m2.main(self.iface, sel_layers)
+            m2.main(self.iface, sel_layers, gdb)
 
             self.iface.mainWindow().statusBar().showMessage("dit is de mainWindow")
             msg = QMessageBox()

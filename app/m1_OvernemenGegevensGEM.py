@@ -286,7 +286,7 @@ def controleer_hoofdbemalingsgebieden(polygon_lis):
     return polygon_lis_overlap
 
 
-def main(iface, layers):
+def main(iface, layers, gdb):
     ''' 1.) Knooppunten exporteren, velden toevoegen.
     # relaties selecteren die naar ander bemalingsgebied afvoeren. (niet volledig binnen 1 polygoon vallen)
     # knooppunten selecteren die op ander bemalingsgebied afvoeren (op basis van selectie afvoerrelaties)
@@ -299,7 +299,6 @@ def main(iface, layers):
     g_iface = iface
 
     # laod from settings
-    gdb = settings.gdb
     log_dir = settings.log_dir
     INP_FIELDS_XLS = settings.INP_FIELDS_XLS
     INP_FIELDS_XLS_SHEET = settings.INP_FIELDS_XLS_SHEET
@@ -348,76 +347,4 @@ def main(iface, layers):
     join_field(polygon_lis,inp_knooppunten,"K_INST_TOT", "CAP_INST_M",  "VAN_KNOOPN", "VAN_KNOOPN")
     join_field(polygon_lis,inp_knooppunten,"K_BR_ST_M3", "BERGING_M3",  "VAN_KNOOPN", "VAN_KNOOPN")
     join_field(polygon_lis,inp_knooppunten,"K_OSH",      "LAAGSTE_OS",  "VAN_KNOOPN", "VAN_KNOOPN")
-
-
-if __name__ == '__main__':
-
-
-    # Prepare the environment for standalone outside qgis
-    import sys
-    from qgis.core import *
-    from PyQt4.QtGui import *
-
-    QgsApplication.setPrefixPath("C:/OSGeo4W64/apps/qgis", True)
-    app = QApplication([], True)
-    QgsApplication.initQgis()
-
-    # Prepare processing framework
-    sys.path.append('C:\OSGeo4W\apps\qgis\python\plugins') # Folder where Processing is located '/home/user/.qgis2/python/plugins'
-    from processing.core.Processing import Processing
-
-    Processing.initialize()
-    from processing.tools import *
-
-    # Exit applications
-    QgsApplication.exitQgis()
-    QApplication.exit()
-
-    # # # laod from settings
-    # gdb                     = settings.gdb
-    # log_dir                 = settings.log_dir
-    # ##d_rename_fields         = settings.d_rename_fields  # dictionary met velden om te hernoemen
-    # INP_FIELDS_XLS          = settings.INP_FIELDS_XLS
-    # INP_FIELDS_XLS_SHEET    = settings.INP_FIELDS_XLS_SHEET
-    # INP_POLYGON             = os.path.join(gdb,"medemblik_bemalingsgebieden.shp")
-    # INP_KNOOPPUNTEN         = os.path.join(gdb,"medemblik_MLA_punt.shp")
-    # INP_AFVOERRELATIES      = os.path.join(gdb,"medemblik_MLA_lijn.shp")
-    #
-    # # tussenresultaten
-    # KNOOPPUNTEN             = "KNOOPPUNTEN"         # begin- en eindpunten van afvoerrelaties (lijn-bestand).
-    # EINDKNOOPPUNTEN         = "EINDKNOOPPUNTEN"     # Alle knooppunten met daarbij het eindpunt
-    # POLYGON_LIS_OVERLAP     = "POLYGON_LIS_OVERLAP" # bestand met gaten.
-    #
-    # # eindresultaat
-    # POLYGON_LIS             = "POLYGON_LIS"
-    #
-    # # create data folder (if not exists)
-    # if not os.path.exists(gdb): os.makedirs(gdb)
-    #
-    # # set env
-    #
-    # # logging
-    # LOGGING_LEVEL = logging.INFO
-    # if not os.path.exists(log_dir): os.mkdir(log_dir)
-    # strftime = datetime.strftime(datetime.now(),"%Y%m%d-%H.%M")
-    # logFileName = 'GeoDyn_{}.log'.format(strftime)
-    # logFile = os.path.join(log_dir,logFileName)
-    # logging.basicConfig(filename=logFile, level=LOGGING_LEVEL)
-    # logging.getLogger().setLevel(LOGGING_LEVEL)
-    #
-    # # start timer
-    # fTimeStart = start_timer()
-    #
-    # # print belangrijke informatie
-    # print_log("\nworkspace = {}".format(gdb),"i")
-    # print_log("logfile = {}".format(logFile),"i")
-    # print_log("py-file: {}".format(sys.argv[0]),"i")
-    #
-    # # run main
-    # main()
-    #
-    #
-    # # end timer
-    # end_timer(fTimeStart)
-
 
