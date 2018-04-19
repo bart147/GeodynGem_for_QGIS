@@ -106,9 +106,14 @@ def koppel_knooppunten_aan_bemalingsgebieden(iface, d_velden, inp_polygon, knoop
     expr = QgsExpression("\"BEGIN_EIND\" = {}".format(0))
     it = knooppunten.getFeatures(QgsFeatureRequest(expr)) # iterator object
     knooppunten.setSelectedFeatures([i.id() for i in it])
+
     print_log("{} selected".format(knooppunten.selectedFeatureCount()), "i")
-    processing.runalg("qgis:joinattributesbylocation", inp_polygon, knooppunten, u'intersects', 0, 0, '', 1, POLYGON_LIS)
-    processing.runalg("qgis:joinattributesbylocation", inp_polygon, knooppunten, u'intersects', 0, 1, 'sum', 1, POLYGON_LIS_SUM)
+    QgsVectorFileWriter.writeAsVectorFormat(knooppunten, os.path.join(gdb,"knooppunten_sel.shp"), "utf-8",
+                                            knooppunten.crs(), "ESRI Shapefile", True)
+    knooppunten_sel = QgsVectorLayer(os.path.join(gdb,"knooppunten_sel.shp"), "knooppunten_sel", "ogr")
+
+    processing.runalg("qgis:joinattributesbylocation", inp_polygon, knooppunten_sel, u'intersects', 0, 0, '', 1, POLYGON_LIS)
+    processing.runalg("qgis:joinattributesbylocation", inp_polygon, knooppunten_sel, u'intersects', 0, 1, 'sum', 1, POLYGON_LIS_SUM)
 
     polygon_lis_sum = QgsVectorLayer(POLYGON_LIS_SUM, "polygon_lis_sum", "ogr")
     polygon_lis = QgsVectorLayer(POLYGON_LIS, "polygon_lis", "ogr")
