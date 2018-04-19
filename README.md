@@ -1,5 +1,7 @@
 # Geodyn voor gemeenten
 
+DISCLAIMER: this plugin is still in development!
+
 Tool for calculating wastewater prognoses based on
 - municipal sewage systems (Kikker riodesk) 
 - residental data (BAG)
