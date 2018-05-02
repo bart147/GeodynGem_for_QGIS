@@ -14,7 +14,6 @@ import sys, os, logging, time
 from datetime import datetime, date
 ##import pandas ##arcpy
 ##import numpy as np
-from xlrd import open_workbook
 
 # QGIS
 from qgis.gui import QgsMessageBar, QgisInterface
@@ -51,7 +50,7 @@ def blokje_log(txt,logType):
              "---------------------------------------------------------------------------------------------------------\n" + \
              "\n", logType)
 
-def print_log(message, logType, iface=False, **kwargs):
+def print_log(message, logType="i", iface=False, **kwargs):
 
     # if args:
     #     iface = args[0] if isinstance(args[0], QgisInterface) else False
@@ -59,10 +58,11 @@ def print_log(message, logType, iface=False, **kwargs):
     #     iface = False
 
     try:
-        print (message)  # print mag niet?
+        print (message)  # print mag niet in QGIS?
     except IOError:
         pass
 
+    ##QgsMessageLog.logMessage("log_lvl = {}".format(logging.getLogger().getEffectiveLevel()),level=QgsMessageLog.INFO)
     if logType == "d" and logging.getLogger().getEffectiveLevel() == logging.DEBUG:
         # alleen als logging level op DEBUG is ingesteld printen!
         logging.debug(message)
@@ -73,10 +73,11 @@ def print_log(message, logType, iface=False, **kwargs):
     elif logType == "w": # warning
         QgsMessageLog.logMessage(message, level=QgsMessageLog.WARNING)
         if iface: iface.messageBar().pushMessage("Warning", message, level=QgsMessageBar.WARNING)
-        ##logging.warning(message)
+        logging.warning(message)
     elif logType == "e": # error
         logging.error(message)
-        ##iface.messageBar().pushMessage("Error", txt, level=QgsMessageBar.CRITICAL)
+        QgsMessageLog.logMessage(message, level=QgsMessageLog.CRITICAL)
+        if iface: iface.messageBar().pushMessage("Error", message, level=QgsMessageBar.CRITICAL)
     elif logType == "c": # critical
         logging.critical(message)
         ##iface.messageBar().pushMessage("Error", txt, level=QgsMessageBar.CRITICAL)
@@ -101,7 +102,7 @@ def add_field_from_dict(fc, fld_name, d_fld):
             'field_type'    : 'TEXT',
             } """
 
-    print_log("veld {} toevoegen".format(fld_name), "i")
+    print_log("veld {} toevoegen".format(fld_name), "d")
     fld = d_fld[fld_name] # dict with field parameters
     if fld in [field.name() for field in fc.pendingFields()]:
         return
@@ -135,7 +136,7 @@ def add_field_from_dict_label(fc, add_fld_value, d_fld):
     # subselect with "order" == add_fld_value
     d_fld_order = {k:v for (k,v) in d_fld_order.items() if v["add_fld"] == add_fld_value}
     if len(d_fld_order) > 0:
-        print_log("velden met 'add_fld' : '{}' toevoegen op volgorde van 'order':".format(add_fld_value),"i")
+        print_log("velden met 'add_fld' : '{}' toevoegen op volgorde van 'order':".format(add_fld_value),"d")
         for fld, value in sorted(d_fld_order.iteritems(), key=lambda (k,v): (v["order"])): # sort by key "order"
             add_field_from_dict(fc, fld, d_fld)
     # select dict without "order" and "add_fld" keys
@@ -143,7 +144,7 @@ def add_field_from_dict_label(fc, add_fld_value, d_fld):
     # subselect with "order" == add_fld_value
     d_fld_no_order = {k:v for (k,v) in d_fld_no_order.items() if v["add_fld"] == add_fld_value}
     if len (d_fld_no_order) > 0:
-        print_log("geen 'order' gevonden in d_velden, velden met 'add_fld' : '{}' toevoegen in willekeurige volgorde:".format(add_fld_value),"i")
+        print_log("geen 'order' gevonden in d_velden, velden met 'add_fld' : '{}' toevoegen in willekeurige volgorde:".format(add_fld_value),"d")
         for fld in d_fld_no_order:
             add_field_from_dict(fc, fld, d_fld)
 
@@ -181,7 +182,7 @@ def bereken_veld(fc, fld_name, d_fld):
 
 def bereken_veld_label(fc, bereken, d_fld):
     """bereken velden op basis van label 'bereken' en fc in d_fld"""
-    print_log("\nvelden met label 'bereken' : '{}' uitrekenen:".format(bereken),"i")
+    print_log("\nvelden met label 'bereken' : '{}' uitrekenen:".format(bereken),"d")
     for fld in d_fld:
         if not "bereken" in d_fld[fld].keys(): continue
         if bereken == d_fld[fld]["bereken"]: bereken_veld(fc, fld, d_fld)
@@ -193,7 +194,7 @@ def join_field(input_table, join_table, field_to_calc, field_to_copy, joinfield_
     # voorbeeld: join_field(input_table="", join_table="", field_to_calc="", field_to_copy="", joinfield_input_table="", joinfield_join_table="")
     if 1==1:
 
-        print_log("joining field {} from {}...".format(field_to_calc, os.path.basename(join_table.name())), "i")
+        print_log("joining field {} from {}...".format(field_to_calc, os.path.basename(join_table.name())), "d")
 
         input_table.setSelectedFeatures([])
         # add join
@@ -206,7 +207,7 @@ def join_field(input_table, join_table, field_to_calc, field_to_copy, joinfield_
         # calculate field
         e = QgsExpression('"{}_{}"'.format(join_table.name(),field_to_copy))
         e.prepare(input_table.pendingFields())
-        print_log("expression = {}".format('"{}_{}"'.format(join_table.name(),field_to_copy)), "i")
+        print_log("expression = {}".format('"{}_{}"'.format(join_table.name(),field_to_copy)), "d")
 
         input_table.startEditing()
         idx = input_table.fieldNameIndex(field_to_calc)
@@ -222,19 +223,21 @@ def join_field(input_table, join_table, field_to_calc, field_to_copy, joinfield_
 
 
 def rename_fields(table_to_rename_field, d_rename):
-    print_log("Hernoem velden van {}...".format(table_to_rename_field),"i")
+    print_log("Hernoem velden van {}...".format(table_to_rename_field),"d")
     for f in d_rename:
         # f = field to rename
         try:
             in_table, new_field_name, new_field_alias = d_rename[f]
             if in_table == table_to_rename_field:
-                print_log("\t{} -> {} ({})".format(f,new_field_name,new_field_alias),"i")
+                print_log("\t{} -> {} ({})".format(f,new_field_name,new_field_alias),"d")
                 # AlterField_management (in_table, field, {new_field_name}, {new_field_alias})
                 arcpy.AlterField_management (in_table, f, new_field_name, new_field_alias)
         except Exception as e:
             print_log("kan veld {} niet hernoemen! {}".format(f,e),"w")
 
-def parse_xlsx(INP_FIELDS_XLS,SHEETNR):
+
+def parse_xlsx(INP_FIELDS_XLS, SHEETNR, open_workbook):
+
     workbook = open_workbook(INP_FIELDS_XLS)
     sheets = workbook.sheet_names()
     active_sheet = workbook.sheet_by_name(sheets[SHEETNR])
@@ -245,12 +248,12 @@ def parse_xlsx(INP_FIELDS_XLS,SHEETNR):
         row_cell = [active_sheet.cell_value(row_idx, col_idx) for col_idx in range(num_cols)]
         yield dict(zip(header, row_cell))
 
-def get_d_velden(INP_FIELDS_XLS, SHEETNR):
+def get_d_velden(INP_FIELDS_XLS, SHEETNR, open_workbook):
     """dictionary field-info ophalen uit excel zonder pandas met xlrd"""
 
     d_velden = {}
 
-    for srow in parse_xlsx(INP_FIELDS_XLS, SHEETNR):
+    for srow in parse_xlsx(INP_FIELDS_XLS, SHEETNR, open_workbook):
         fld = {}
 
         # verplichte keys
@@ -272,6 +275,50 @@ def get_d_velden(INP_FIELDS_XLS, SHEETNR):
         d_velden[srow["fieldname"]] = fld
 
     return d_velden
+
+
+def get_d_velden_csv(INP_FIELDS_CSV):
+    """dictionary field-info ophalen uit excel zonder pandas met xlrd"""
+    import csv
+    d_velden = {}
+
+    input_file = csv.DictReader(open(INP_FIELDS_CSV), delimiter=";")
+
+    for srow in input_file:
+        if not srow["fieldname"]:
+            continue
+
+        fld = {}
+
+        # verplichte keys
+        fld["order"] = srow["order"]
+        fld["field_type"] = srow["type"]
+        fld["field_alias"] = srow["alias"]
+        fld["add_fld"] = srow["stap_toevoegen"]
+        # optionele keys
+        if str(srow["mag_niet_0_zijn"]) != "nan": # np.nan, df.notna() werkt niet en np.isnan() not supported
+            fld["mag_niet_0_zijn"] = str(srow["mag_niet_0_zijn"]).split(";")
+        else:
+            print (type(srow["mag_niet_0_zijn"]),srow["mag_niet_0_zijn"])
+        if str(srow["lengte"]) not in ["nan", ""," "]:
+            fld["field_length"] = int(srow["lengte"])
+        if str(srow["expression"]) not in ["nan", ""," "]:
+            fld["expression"] = srow["expression"]
+        if str(srow["stap_bereken"]) not in ["nan", ""," "]:
+            fld["bereken"] = srow["stap_bereken"]
+        d_velden[srow["fieldname"]] = fld
+
+    return d_velden
+
+
+def add_layer(layer_name):
+    ins = QgsMapLayerRegistry.instance()
+    layers = ins.mapLayersByName(layer_name.name())
+    for layer_to_remove in layers:
+        print_log("remove layer {}".format(layer_to_remove),"d")
+        ins.removeMapLayer(layer_to_remove.id())
+    ins.addMapLayer(layer_name)
+
 
 # def pandas_get_d_velden(INP_FIELDS_XLS, INP_FIELDS_XLS_SHEET):
 #     """dictionary field-info ophalen uit excel met pandas"""

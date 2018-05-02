@@ -1,16 +1,10 @@
-
-import sys, os, logging
-from datetime import datetime
-
-# importeer utilities
-from utl import start_timer, end_timer, blokje_log, print_log, add_field_from_dict, add_field_from_dict_label, fld_exists, join_field, bereken_veld, get_d_velden, bereken_veld_label
-
-# importeer settings
-import settings
-
+import os
+# qgis imports
 import processing
 from qgis.core import *
-from PyQt4.QtCore import QVariant
+# custom imports
+from utl import blokje_log, print_log, add_field_from_dict, add_field_from_dict_label, join_field, bereken_veld, bereken_veld_label, add_layer
+import settings
 
 def bepaal_b_VIEW(fc,wildcard):
     """Bepaal of extra gemaal bron (Spoc_views) gebruikt is in stap 1.
@@ -248,13 +242,6 @@ def bepaal_verhard_oppervlak(polygon_lis, inp_verhard_opp, VERHARD_OPP_INTERSECT
         # bereken_veld(polygon_lis, fld_pi, d_velden)
 
 
-def add_layer(layer_name):
-    ins = QgsMapLayerRegistry.instance()
-    if ins.mapLayersByName(layer_name.name()):
-        ins.removeMapLayer(layer_name)
-    ins.addMapLayer(layer_name)
-
-
 def setColumnVisibility( layer, columnName, visible ):
     config = layer.attributeTableConfig()
     columns = config.columns()
@@ -284,7 +271,6 @@ def main(iface, layers, workspace):
 
     # laod from settings
     gdb = workspace
-    INP_FIELDS_XLS = settings.INP_FIELDS_XLS
     l_src_None_naar_0_omzetten = settings.l_fld_None_naar_0_omzetten  # velden waarvan waardes worden omgezet van None naar 0
     d_velden_tmp = settings.d_velden_tmp  # tijdelijke velden
 
@@ -305,12 +291,6 @@ def main(iface, layers, workspace):
     EXP_VERHARD_OPP         = os.path.join(gdb, "EXP_VERHARD_OPP.shp")
     VERHARD_OPP_INTERSECT   = os.path.join(gdb, "VERHARD_OPP_INTERSECT.shp")
     STATS_VERHARD_OPP       = os.path.join(gdb, "STATS_VERHARD_OPP.shp")
-
-    blokje_log("Veld-info ophalen...", "i")
-    d_velden = get_d_velden(INP_FIELDS_XLS, 0)
-    for fld in d_velden:
-        break
-        print_log("{}\n{}".format(fld, d_velden[fld]), "i")
 
     # ##########################################################################
     # 1.) export input INP_POLYGON_LIS to result POLYGON_LIS

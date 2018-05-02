@@ -1,4 +1,6 @@
 import os, sys
+import logging
+from datetime import datetime
 
 # settings
 root_dir        = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
@@ -6,6 +8,16 @@ log_dir         = os.path.join(root_dir, 'log')
 ##gdb             = r"G:\GISDATA\QGIS\geodyn_gem\data\results"
 INP_FIELDS_XLS  = os.path.join(root_dir, 'inp_fields.xls') ##, 'fields$')
 INP_FIELDS_XLS_SHEET    = "fields"
+INP_FIELDS_CSV  = os.path.join(root_dir, 'inp_fields.csv')
+
+# logging
+LOGGING_LEVEL = logging.INFO
+if not os.path.exists(log_dir): os.mkdir(log_dir)
+strftime = datetime.strftime(datetime.now(),"%Y%m%d-%H.%M")
+logFileName = 'GeoDyn_{}.log'.format(strftime)
+logFile = os.path.join(log_dir,logFileName)
+logging.basicConfig(filename=logFile, level=LOGGING_LEVEL)
+logging.getLogger().setLevel(LOGGING_LEVEL)
 
 # dict d_velden_tmp
 # purpose: dict d_velden_tmp is een aanvulling op d_velden (d_velden wordt uit de inp_fields.xlsx gegenereerd).

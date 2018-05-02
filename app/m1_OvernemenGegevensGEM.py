@@ -1,20 +1,15 @@
+import os
 
-import sys, os, logging
-from datetime import datetime
-
-# importeer utilities
-from utl import start_timer, end_timer, blokje_log, print_log, add_field_from_dict, add_field_from_dict_label, join_field, bereken_veld, rename_fields, get_count, get_d_velden, bereken_veld_label
-
-from Dijkstra import Graph, dijkstra, shortest_path
-
+# qgis modules
 import processing
-##from processing.tools import *
-##from qgis.core import QgsVectorLayer, QgsVectorFileWriter, QgsFeature, QgsField, QgsPoint, QgsGeometry, QgsMapLayerRegistry
 from qgis.core import *
 from PyQt4.QtCore import QVariant
 
-# importeer settings
+# custom modules
 import settings
+from utl import blokje_log, print_log, add_field_from_dict, add_field_from_dict_label, join_field, add_layer
+from Dijkstra import Graph, dijkstra
+
 
 def genereer_knooppunten(iface, inp_polygon, sel_afvoerrelaties):
     '''Genereert knooppunten op basis van afvoerrelaties (lijn-bestand) waarbij 1 knooppunt per bemalingsgebied is toegestaan.
@@ -94,8 +89,8 @@ def genereer_knooppunten(iface, inp_polygon, sel_afvoerrelaties):
         pr.addFeatures([feat])
     ##point_layer.updateFields()
 
-
-    QgsMapLayerRegistry.instance().addMapLayer(point_layer)
+    add_layer(point_layer)
+    ##QgsMapLayerRegistry.instance().addMapLayer(point_layer)
 
     return point_layer
 
@@ -120,8 +115,10 @@ def koppel_knooppunten_aan_bemalingsgebieden(iface, d_velden, inp_polygon, knoop
     polygon_lis.dataProvider().addAttributes([QgsField('count', QVariant.Int)])
     polygon_lis.updateFields()
 
-    QgsMapLayerRegistry.instance().addMapLayer(polygon_lis)
-    QgsMapLayerRegistry.instance().addMapLayer(polygon_lis_sum)
+    add_layer(polygon_lis)
+    add_layer(polygon_lis_sum)
+    ##QgsMapLayerRegistry.instance().addMapLayer(polygon_lis)
+    ##QgsMapLayerRegistry.instance().addMapLayer(polygon_lis_sum)
 
     # join field met summary gegevens
     join_field(input_table=polygon_lis,
@@ -131,7 +128,7 @@ def koppel_knooppunten_aan_bemalingsgebieden(iface, d_velden, inp_polygon, knoop
                joinfield_input_table="OBJECTID",
                joinfield_join_table="OBJECTID")
 
-    QgsMapLayerRegistry.instance().removeMapLayer(polygon_lis_sum)
+    QgsMapLayerRegistry.instance().removeMapLayer(polygon_lis_sum.name())
 
     # controleer spjoin
     controleer_spjoin(polygon_lis,"count")
@@ -146,7 +143,8 @@ def koppel_knooppunten_aan_bemalingsgebieden(iface, d_velden, inp_polygon, knoop
     processing.runalg("qgis:joinattributesbylocation", knooppunten, polygon_lis, u'intersects', 0, 0, '', 1, EINDKNOOPPUNTEN)
 
     eindknooppunten = QgsVectorLayer(EINDKNOOPPUNTEN, "eindknooppunten", "ogr")
-    QgsMapLayerRegistry.instance().addMapLayer(eindknooppunten)
+    add_layer(eindknooppunten)
+    ##QgsMapLayerRegistry.instance().addMapLayer(eindknooppunten)
 
     # invullen veld LOOST_OP met code bemalingsgebied.
     add_field_from_dict_label(polygon_lis, "st1a", d_velden)
@@ -234,7 +232,7 @@ def controleer_spjoin(layer,fld_join_count):
 
         JOIN_COUNT = feature[fld_join_count] if feature[fld_join_count] else 0
         VAN_KNOOPN = feature["VAN_KNOOPN"] if feature["VAN_KNOOPN"] else None
-        print_log("{} - {}".format(VAN_KNOOPN,JOIN_COUNT), "i")
+        print_log("{} - {}".format(VAN_KNOOPN,JOIN_COUNT), "d")
         if JOIN_COUNT >= 2:
             i_dubbel += 1
             print_log("polygon '{}' bevat {} objecten!".format(VAN_KNOOPN,JOIN_COUNT), "i")
@@ -257,7 +255,8 @@ def controleer_hoofdbemalingsgebieden(polygon_lis):
     ##arcpy.Intersect_analysis (POLYGON_LIS, POLYGON_LIS_OVERLAP)
     processing.runalg("saga:polygonselfintersection", polygon_lis, "VAN_KNOOPN", POLYGON_LIS_OVERLAP)
     polygon_lis_overlap = QgsVectorLayer(POLYGON_LIS_OVERLAP, "bemalingsgebieden overlap", "ogr")
-    QgsMapLayerRegistry.instance().addMapLayer(polygon_lis_overlap)
+    add_layer(polygon_lis_overlap)
+    ##QgsMapLayerRegistry.instance().addMapLayer(polygon_lis_overlap)
 
     expr = QgsExpression("\"VAN_KNOOPN\" {}".format("IS NULL"))
     it = polygon_lis_overlap.getFeatures(QgsFeatureRequest(expr))  # iterator object
@@ -268,12 +267,15 @@ def controleer_hoofdbemalingsgebieden(polygon_lis):
             print_log("\toverlap tussen bemalingsgebieden {}".format(feature["ID"]),"i")
     else:
         print_log("geen overlap gevonden tussen bemalingsgebieden", "i")
-        QgsMapLayerRegistry.instance().removeMapLayer(polygon_lis_overlap)
+        QgsMapLayerRegistry.instance().removeMapLayer(polygon_lis_overlap.name())
 
     return polygon_lis_overlap
 
 
-def main(iface, layers, workspace):
+
+
+
+def main(iface, layers, workspace, d_velden):
     ''' 1.) Knooppunten exporteren, velden toevoegen.
     # relaties selecteren die naar ander bemalingsgebied afvoeren. (niet volledig binnen 1 polygoon vallen)
     # knooppunten selecteren die op ander bemalingsgebied afvoeren (op basis van selectie afvoerrelaties)
@@ -282,7 +284,7 @@ def main(iface, layers, workspace):
     # eindpunten voorzien van bemalingsgebied (sp.join)
     # invullen veld LOOST_OP met code bemalingsgebied. '''
 
-    global g_iface, gdb, KNOOPPUNTEN, EINDKNOOPPUNTEN, POLYGON_LIS_OVERLAP, POLYGON_LIS, POLYGON_LIS_SUM, log_dir, INP_FIELDS_XLS, INP_FIELDS_XLS_SHEET
+    global g_iface, gdb, KNOOPPUNTEN, EINDKNOOPPUNTEN, POLYGON_LIS_OVERLAP, POLYGON_LIS, POLYGON_LIS_SUM, log_dir
 
     g_iface = iface
     gdb = workspace
@@ -298,8 +300,9 @@ def main(iface, layers, workspace):
 
     # laod from settings
     log_dir = settings.log_dir
-    INP_FIELDS_XLS = settings.INP_FIELDS_XLS
-    INP_FIELDS_XLS_SHEET = settings.INP_FIELDS_XLS_SHEET
+    ##INP_FIELDS_XLS = settings.INP_FIELDS_XLS
+    ##INP_FIELDS_XLS_SHEET = settings.INP_FIELDS_XLS_SHEET
+    INP_FIELDS_CSV = settings.INP_FIELDS_CSV
 
     inp_knooppunten, inp_afvoerrelaties, inp_drinkwater_bag, inp_ve_belasting, inp_plancap, inp_verhard_opp, inp_polygon = layers
 
@@ -307,13 +310,6 @@ def main(iface, layers, workspace):
         print_log(layer.name(),"i")
 
     print_log("inp_afvoerrelatie = {}".format(inp_afvoerrelaties.name()),"i")
-
-    blokje_log("Veld-info ophalen...","i")
-    d_velden = get_d_velden(INP_FIELDS_XLS, 0)
-    for fld in d_velden:
-        break
-        print_log("{}\n{}".format(fld,d_velden[fld]),"i")
-
 
     blokje_log("Knooppunten genereren...","i")
     # genereer knooppunten uit afvoerrelaties

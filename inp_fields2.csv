@@ -1,0 +1,121 @@
+order,sourcename,fieldname,stap_toevoegen,stap_bereken,type,lengte,alias,expression,mag_niet_0_zijn,Toelichting ,opmerking,Bron
+3,,K_ONTV_VAN,st1a,00_graph,TEXT,1000,Ontvangt van,,,lijst met knoopnummers,,Netwerk
+4,NAAR_KNOOP,K_LOOST_OP,st1a,00_graph,TEXT,50,Loost op,,,Naam of Code Rg uit Kikker,,Netwerk
+5,,K_KNP_EIND,st1a,00_graph,TEXT,60,Eindbemalingsgebied,,,Eindbemalingsgebied / overnamepunt,,Netwerk
+6,,X_OPPOMP,st1a,00_graph,LONG,,Aantal X op pompen,,,Aantal maal op te pompen tot aan overnamepunt,,Netwerk
+7,,X_OBEMAL,st1a,00_graph,LONG,,Aantal onderbemalingen,,,Aantal onderbemalingen die afvoeren op dit gebied,,Netwerk
+1,NAAM,K_BEM_GEB,st1a,01_kikker,TEXT,50,Naam Bem Gebied,,,Naam gebied uit Kikker,,Kikker
+2,VAN_KNOOPN,K_KNP_NR,st1a,01_kikker,TEXT,50,Knoopnummer,,,Knoopnummer,,Kikker
+8,CAP_INST_M,K_INST_TOT,st1b,01_kikker,DOUBLE,,Geïnstalleerde capaciteit Rg (m3/h),,,Geïnstalleerde capaciteit uit Kikker,,Kikker
+16,BERGING_M3,K_BR_ST_M3,st1b,01_kikker,DOUBLE,,Berging stelsel (m3),,,Inhoud stelsel uit Kikker,,Kikker
+17,LAAGSTE_OS,K_OSH,st1b,01_kikker,DOUBLE,,Laagste OSH (NAP),,,Laagste overstorthoogte van stelsel uit Kikker,,Kikker
+18,??? Zoek ik later uit maar wordt niet gebruit in berekening ??,K_BERG_VL,st1b,01_kikker,DOUBLE,,Verloren berging stelsel (m3),,,Verloren inhoud stelsel uit Kikker,,Kikker
+19,??? Zoek ik later uit maar wordt niet gebruit in berekening ??,K_BR_RZ_M3,st1b,01_kikker,DOUBLE,,Berging randvoorziening (m3),,,Inhoud randvoorzieningen stelsel uit Kikker,,Kikker
+33,,X_WON_GEB,st2a,01_spj,LONG,,Aantal woningen (G),,,Aantal percelen Gebied,,Berekend
+37,,X_VE_GEB,st2a,01_spj,DOUBLE,,Aantal ve's (G),,,Aantal ve's Gebied,,Berekend
+41,,AW_15_24_G,st2a,01_spj,DOUBLE,,X Afvw. t/m 2024 (G) (m3/u),,,Extra afvalwater uitbreidingsgebieden uit Gebied, t/m 2024,,Berekend
+44,,AW_25_50_G,st2a,01_spj,DOUBLE,,X Afvw. 25 t/m 50 (G) (m3/u),,,Extra afvalwater uitbreidingsgebieden uit Gebied, van 2025 t/m 2050,,Berekend
+46,,PAR_RESULT,st2a,01_spj,DOUBLE,,Part. drinkwaterv. (G) (m3/u),,,Particulier drinkwaterverbruik in Gebied,,Berekend
+47,,ZAK_RESULT,st2a,01_spj,DOUBLE,,Zak. drinkwaterv. (G)(m3/u),,,Zakelijk drinkwaterverbruik in Gebied,,Berekend
+24,,DWR_GEBIED,st2a,02_ber,DOUBLE,,DWA obv drwater (G) (m3/h),[PAR_RESULT]+[ZAK_RESULT],,Drinkwaterverbruik in Gebied,,Berekend
+25,,DWR_ONBG,st2a,03_obm,DOUBLE,,DWA obv drwater (O) (m3/h),onderbem(DWR_GEBIED),,Drinkwaterverbruik in Onderbemalingen,,BAG
+34,,X_WON_ONBG,st2a,03_obm,LONG,,Aantal woningen (O),onderbem(X_WON_GEB),,Aantal percelen Onderbemalingen,,VE
+38,,X_VE_ONBG,st2a,03_obm,DOUBLE,,Aantal ve's (O),onderbem(X_VE_GEB),,Aantal ve's Onderbemalingen,,PLANCAP
+42,,AW_15_24_O,st2a,03_obm,DOUBLE,,X Afvw. t/m 2024 (O) (m3/u),onderbem(AW_15_24_G),,Extra afvalwater uitbreidingsgebieden uit Onderbemalingen, t/m 2024,,PLANCAP
+45,,AW_25_50_O,st2a,03_obm,DOUBLE,,X Afvw. 25 t/m 50 (O) (m3/u),onderbem(AW_25_50_G),,Extra afvalwater uitbreidingsgebieden uit Onderbemalingen, van 2025 t/m 2050,,PWN
+11,,DWR_TOT,st1b,04_ber,DOUBLE,,DWA obv drwater (T) (m3/h),[DWR_GEBIED]+[DWR_ONBG],,Drinkwaterverbruik in Totaal,,PWN
+32,,X_WON_TOT,st2a,04_ber,LONG,,Aantal woningen (T),[X_WON_GEB] + [X_WON_ONBG],,Aantal percelen Totaal,,Berekend
+36,,X_VE_TOT,st2a,04_ber,DOUBLE,,Aantal ve's (T),[X_VE_GEB]+[X_VE_ONBG],,Aantal ve's Totaal,,O
+40,,AW_15_24_T,st2a,04_ber,DOUBLE,,X Afvw. t/m 2024 (T) (m3/u),[AW_15_24_G]+[AW_15_24_O],,Extra afvalwater uitbreidingsgebieden Totaal, t/m 2024,,BAG
+43,,AW_25_50_T,st2a,04_ber,DOUBLE,,X Afvw. 25 t/m 50 (T) (m3/u),[AW_25_50_G]+[AW_25_50_O],,Extra afvalwater uitbreidingsgebieden Totaal, van 2025 t/m 2050,,VE
+39,,DWA_VE_TOT,st2a,04a_ber,DOUBLE,,DWA obv ve's (T) (m3/u),[X_VE_TOT]*0.012,,DWA berekend op basis van aantal ve's Totaal,,PLANCAP
+35,,DWA_BAG,st2a,05_ber,DOUBLE,,DWA obv woningen (m3/u),[X_WON_TOT] * 2.5 * 0.012,,DWA berekend op basis van aantal percelen Totaal,,PLANCAP
+30,Uit layer vlakkenkaart, van attribuut 'AANSLUIT' neem 'gemengd' en bereken daar het totaal van en deel dat door 10000.,HA_GEM_G,st2a,06_stat_verh_opp,DOUBLE,,Oppervlak op Gemengd (G) (ha),,,Totaal aan verhard oppervlak aangesloten op Gemengd in gebied,,BAG
+31,Uit layer vlakkenkaart, van attribuut 'AANSLUIT' neem 'vgs' en bereken daar het totaal van en deel dat door 10000.,HA_VGS_G,st2a,06_stat_verh_opp,DOUBLE,,Oppervlak op VGS (G) (ha),,,Totaal aan verhard oppervlak aangesloten op VGS in gebied,,VE
+48,,HA_BEM_G,st2a,06_stat_verh_opp,DOUBLE,,Ha totaal opp bemalingsgebied,,,Totaal oppervlak van het bemalingsgebied (ha),,PLANCAP
+49,,HA_VER_G,st3a,06_stat_verh_opp,DOUBLE,,Ha verhard opp bemalingsgebied,[HA_GEM_G]+[HA_VGS_G]+[HA_HWA_G]+[HA_OPW_G]+[HA_NAG_G]+[HA_OBK_G],,Totaal aan verhard oppervlak van het bemalingsgebied (ha),,PLANCAP
+50,,HA_GEM_G,st3a,06_stat_verh_opp,DOUBLE,,Oppervlak Gemengd (G) (ha),,,Totaal aan verhard oppervlak aangesloten op Gemengd in gebied (ha),,VE
+51,,HA_VGS_G,st3a,06_stat_verh_opp,DOUBLE,,Oppervlak VGS (G) (ha),,,Totaal aan verhard oppervlak aangesloten op VGS in gebied (ha),,BAG
+52,,HA_HWA_G,st3a,06_stat_verh_opp,DOUBLE,,Ha HWA riool,,,Totaal aan verhard oppervlak aangesloten op HWA in gebied (ha),,BGT-GEM
+53,,HA_OPW_G,st3a,06_stat_verh_opp,DOUBLE,,Ha Oppervlaktewater,,,Totaal aan verhard oppervlak aangesloten op 'Niet aangesloten' in gebied (ha),,BGT-GEM
+54,,HA_NAG_G,st3a,06_stat_verh_opp,DOUBLE,,Ha Niet aangesloten,,,Totaal aan verhard oppervlak aangesloten op 'Oppervlaktewater' in gebied (ha),,Berekend
+55,,HA_OBK_G,st3a,06_stat_verh_opp,DOUBLE,,Ha Onbekend,,,"Totaal aan verhard oppervlak aangesloten op 'Onbekend"" in gebied (ha)",,Berekend
+15,,HA_TOT_G,st1b,07_ber,DOUBLE,,Totaal Afvoerend oppervlak (G) (ha),[HA_GEM_G]+[HA_VGS_G],,Totaal aangesloten verhard oppervlak,,Berekend
+56,,PI_VER_G,st3a,07_ber,DOUBLE,,% bemalingsgebied,[HA_VER_G]/[HA_BEM_G]*100 ,HA_BEM_G,Totaal aan verhard oppervlak van het bemalingsgebied (%),,Berekend
+57,,PI_GEM_G,st3a,07_ber,DOUBLE,,% Gemengd riool,[HA_GEM_G]/[HA_BEM_G]*100,HA_BEM_G,Totaal aan verhard oppervlak aangesloten op Gemengd in gebied (%),,
+58,,PI_VGS_G,st3a,07_ber,DOUBLE,,% HWA riool,[HA_VGS_G]/[HA_BEM_G]*100,HA_BEM_G,Totaal aan verhard oppervlak aangesloten op HWA in gebied (%),,Berekend
+59,,PI_HWA_G,st3a,07_ber,DOUBLE,,% VGS (HWA-riool),[HA_HWA_G]/[HA_BEM_G]*100,HA_BEM_G,Totaal aan verhard oppervlak aangesloten op VGS in gebied (%),,O
+60,,PI_OPW_G,st3a,07_ber,DOUBLE,,% Oppervlaktewater,[HA_OPW_G]/[HA_BEM_G]*100,HA_BEM_G,Totaal aan verhard oppervlak aangesloten op 'Oppervlaktewater' in gebied (%),,O
+61,,PI_NAG_G,st3a,07_ber,DOUBLE,,% Niet aangesloten,[HA_NAG_G]/[HA_BEM_G]*100,HA_BEM_G,Totaal aan verhard oppervlak aangesloten op 'Niet aangesloten' in gebied (%),,
+62,,PI_OBK_G,st3a,07_ber,DOUBLE,,% Onbekend,[HA_OBK_G]/[HA_BEM_G]*100,HA_BEM_G,"Totaal aan verhard oppervlak aangesloten op 'Onbekend"" in gebied (%)",,GEOM
+20,,BERG_ST_MM,st2a,08_ber,DOUBLE,,Berging stelsel (mm),[K_BR_ST_M3]/[HA_TOT_G]/10,HA_TOT_G,Berekend met FOLMULE berging,,BGT-GEM
+21,,BERG_RV_MM,st2a,08_ber,DOUBLE,,Berging randvoorziening (mm),[K_BERG_VL]/[HA_TOT_G]/10,HA_TOT_G,Berekend met FOLMULE berging,,BGT-GEM
+22,,OPP_PER_M2,st2a,08_ber,DOUBLE,,Oppervlak per perceel (m2),[HA_TOT_G]*10000/[X_WON_GEB],X_WON_GEB,Verhard oppervlak*10000/Aantal woningen,,BGT-GEM
+23,,VULTIJD_U,st2a,08_ber,DOUBLE,,Vultijd (uur, (tijdens droogweer)),[K_BR_ST_M3]/[DWR_TOT],DWR_TOT,Inhoud gedeeld door aanvoer (Berging / DWA) in uur,,BGT-GEM
+26,,POC_B_M3_G,st2a,08_ber,DOUBLE,,POC beschikbaar (B) (m3/h),[K_INST_TOT] - [DWR_TOT],,Capaciteit rioolgemaal - DWA,,BGT-GEM
+28,,POC_O_M3_G,st2a,08_ber,DOUBLE,,POC ontwerp (G) (m3/h),([HA_GEM_G]*10*0.7)+([HA_VGS_G]*10*0.3),,Ontwerp POC obv verhard oppervlak (gem=0,7 & vgs=0,3),,BGT-GEM
+27,,POC_B_M3_O,st2a,09_obm,DOUBLE,,POC beschikbaar (O) (m3/h),onderbem(POC_B_M3_G),,Som POC beschikbaar onderbemaling,,GEOM
+29,,POC_O_M3_O,st2a,09_obm,DOUBLE,,POC ontwerp (O) (m3/h),onderbem(POC_O_M3_G),,Som ontwerp POC uit onderbemaling,,BGT-GEM
+9,,POC_B_M3_T,st1b,10_ber,DOUBLE,,POC beschikbaar (T) (m3/h),[POC_B_M3_G] + [POC_B_M3_O],,Capaciteit rioolgemaal - DWA,,BGT-GEM
+10,,POC_B_MM_T,st1b,10_ber,DOUBLE,,POC beschikbaar (T) (mm/h),[POC_B_M3_T]/(10*[HA_TOT_G]),HA_TOT_G,Berekend met FOLMULE poc,,BGT-GEM
+13,,POC_O_M3_T,st1b,10_ber,DOUBLE,,POC ontwerp (T) (m3/h),[POC_O_M3_G]+[POC_O_M3_O],,Berekend met FOLMULE poc (POC = 0,7),,BGT-GEM
+12,,CAP_ONTW,st1b,11_ber,DOUBLE,,Ontwerp capaciteit Rg (m3/h),[DWR_TOT]+[POC_O_M3_T],,Geïnstalleerde capaciteit uitgaand van kentallen,,BGT-GEM
+14,,POC_O_MM_T,st1b,11_ber,DOUBLE,,POC ontwerp (T) (mm/h),[POC_O_M3_T]/(10*[HA_TOT_G]),HA_TOT_G,Berekend met FOLMULE poc,,BGT-GEM
+,,,,,,,,,,,,
+,,,,,,,,,,,,
+,,,,,,,,,,,,
+,,,,,,,,,,,,
+,,,,,,,,,,,,
+,,,,,,,,,,,,
+,,,,,,,,,,,,
+,,,,,,,,,,,,
+,,,,,,,,,,,,
+,,,,,,,,,,,,
+,,,,,,,,,,,,
+,,,,,,,,,,,,
+,,,,,,,,,,,,
+,,,,,,,,,,,,
+,,,,,,,,,,,,
+,,,,,,,,,,,,
+,,,,,,,,,,,,
+,,,,,,,,,,,,
+,,,,,,,,,,,,
+,,,,,,,,,,,,
+,,,,,,,,,,,,
+,,,,,,,,,,,,
+,,,,,,,,,,,,
+,,,,,,,,,,,,
+,,,,,,,,,,,,
+,,,,,,,,,,,,
+,,,,,,,,,,,,
+,,,,,,,,,,,,
+,,,,,,,,,,,,
+,,,,,,,,,,,,
+,,,,,,,,,,,,
+,,,,,,,,,,,,
+,,,,,,,,,,,,
+,,,,,,,,,,,,
+,,,,,,,,,,,,
+,,,,,,,,,,,,
+,,,,,,,,,,,,
+,,,,,,,,,,,,
+,,,,,,,,,,,,
+,,,,,,,,,,,,
+,,,,,,,,,,,,
+,,,,,,,,,,,,
+,,,,,,,,,,,,
+,,,,,,,,,,,,
+,,,,,,,,,,,,
+,,,,,,,,,,,,
+,,,,,,,,,,,,
+,,,,,,,,,,,,
+,,,,,,,,,,,,
+,,,,,,,,,,,,
+,,,,,,,,,,,,
+,,,,,,,,,,,,
+,,,,,,,,,,,,
+,,,,,,,,,,,,
+,,,,,,,,,,,,
+,,,,,,,,,,,,
+,,,,,,,,,,,,
+,,,,,,,,,,,,

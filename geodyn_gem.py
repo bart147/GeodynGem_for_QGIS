@@ -22,19 +22,25 @@
 """
 from PyQt4.QtCore import QSettings, QTranslator, qVersion, QCoreApplication
 from PyQt4.QtGui import QAction, QIcon, QMessageBox, QFileDialog
-from qgis.core import QgsMessageLog, QgsWKBTypes
+from qgis.core import QgsMessageLog
+from qgis.gui import QgsMessageBar
 
 # Initialize Qt resources from file resources.py
 import resources
 # Import the code for the dialog
 from geodyn_gem_dialog import GeodynGemDialog
 import os.path
-
+from app import settings
 from app import m1_OvernemenGegevensGEM as m1
 from app import m2_BerekenResultaten as m2
+from app.utl import print_log, blokje_log, get_d_velden, get_d_velden_csv
 
-from qgis.gui import QgsMessageBar
-
+# for backward compatibility with older QGIS versions (without QgsWKBTypes)
+try:
+    from qgis.core import QgsWKBTypes
+    b_QgsWKBTypes = True
+except ImportError:
+    b_QgsWKBTypes = False
 
 class GeodynGem:
     """QGIS Plugin Implementation."""
@@ -209,16 +215,23 @@ class GeodynGem:
         """Run method that performs all the real work"""
         layers = self.iface.legendInterface().layers()
         layer_points, layer_lines, layer_polygons = [], [], []
-        for i, layer in enumerate(layers):
-            # qgis.core.QgsWKBTypes.displayString(int(vl.wkbType()))
-            if "point" in QgsWKBTypes.displayString(int(layer.wkbType())).lower(): ## QGis.WKBPoint:
-                layer_points.append(layer)
-            elif "line" in QgsWKBTypes.displayString(int(layer.wkbType())).lower(): ##QGis.WKBLineString:
-                layer_lines.append(layer)
-            elif "polygon" in QgsWKBTypes.displayString(int(layer.wkbType())).lower(): ##QGis.WKBPolygon:
-                layer_polygons.append(layer)
-            else:
-                pass
+        if b_QgsWKBTypes:
+            for i, layer in enumerate(layers):
+                # qgis.core.QgsWKBTypes.displayString(int(vl.wkbType()))
+                if "point" in QgsWKBTypes.displayString(int(layer.wkbType())).lower(): ## QGis.WKBPoint:
+                    layer_points.append(layer)
+                elif "line" in QgsWKBTypes.displayString(int(layer.wkbType())).lower(): ##QGis.WKBLineString:
+                    layer_lines.append(layer)
+                elif "polygon" in QgsWKBTypes.displayString(int(layer.wkbType())).lower(): ##QGis.WKBPolygon:
+                    layer_polygons.append(layer)
+                else:
+                    pass
+        else:
+            print_log("ImportError for QgsWKBTypes. Kan geen geometrie herkennen voor layer inputs. \
+                        Controleer of juiste layers zijn geselecteerd of upgrade QGIS.",
+                "w", self.iface)
+            layer_points = layer_lines = layer_polygons = layers
+
 
         self.dlg.comboBox_1.addItems([i.name() for i in self.move_to_front(layer_points, "MLA")])   # knooppunt
         self.dlg.comboBox_2.addItems([i.name() for i in self.move_to_front(layer_lines, "MLA")])   # afvoerrelatie
@@ -250,11 +263,28 @@ class GeodynGem:
             iface = self.iface
 
             gdb = self.dlg.lineEdit.text()
+            if not gdb or not os.path.exists(gdb):
+                print_log("Script afgebroken! Geen geldige output map opgegeven ({}...)".format(gdb), "e", iface)
+                return
 
-            self.iface.messageBar().pushMessage("titel", "Start module 1", QgsMessageBar.INFO, duration=5)
-            m1.main(self.iface, sel_layers, gdb)
-            self.iface.messageBar().pushMessage("titel", "Start module 2", QgsMessageBar.INFO, duration=5)
-            m2.main(self.iface, sel_layers, gdb)
+            blokje_log("Veld-info ophalen...", "i")
+            INP_FIELDS_XLS = settings.INP_FIELDS_XLS
+            INP_FIELDS_CSV = settings.INP_FIELDS_CSV
+            try:
+                from xlrd import open_workbook
+                import jantje_smit
+                d_velden = get_d_velden(INP_FIELDS_XLS, 0, open_workbook)
+            except ImportError:     # for compatibility with iMac
+                print_log("import error 'xlrd': inp_fields.csv wordt gebruikt als input in plaats van inp_fields.xls!",
+                          "w", iface)
+                d_velden = get_d_velden_csv(INP_FIELDS_CSV)
+            for fld in d_velden:
+                print_log("{}\n{}".format(fld, d_velden[fld]), "d")
+
+            ##self.iface.messageBar().pushMessage("titel", "Start module 1", QgsMessageBar.INFO, duration=5)
+            m1.main(self.iface, sel_layers, gdb, d_velden)
+            ##self.iface.messageBar().pushMessage("titel", "Start module 2", QgsMessageBar.INFO, duration=5)
+            ##m2.main(self.iface, sel_layers, gdb, d_velden)
 
             self.iface.mainWindow().statusBar().showMessage("dit is de mainWindow")
             msg = QMessageBox()
