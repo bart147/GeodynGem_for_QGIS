@@ -1,18 +1,26 @@
-# Geodyn voor gemeenten
+# GeoDyn voor gemeenten
 
 DISCLAIMER: this plugin is still in development!
 
-Tool for calculating wastewater prognoses based on
-- municipal sewage systems (Kikker riodesk) 
-- residental data (BAG)
-- housing development plans RIGO (https://www.plancapaciteit.nl/)
+GeoDynGemeenten is develop by BKGIS, for the municipality of Medemblik and designed
+by Mark Lamers.
+
+Tool for calculating wastewater prognosis based on
+- Municipal sewage systems (Kikker riodesk) 
+- Residental data (BAG)
+- Housing development plans RIGO (https://www.plancapaciteit.nl/)
+- Household drinking water consumption
+
+This tool is based on GeoDynWaterschap. GeoDynWaterschap is an ArcGIS 10
+toolbox for the Dutch Water Authorities. GeoDynWaterschap is develop by BKGIS, for
+the water Authority HHNK and designed by Mark Lamers.
 
 # Installation
 - Install the plugin with Plugin Manager in QGIS or download here https://plugins.qgis.org/plugins/GeodynGem/
-- Requires QGIS 2.x 
+- Requires QGIS 2.x
 
 # Test
-Some imaginary sewage data for testing kan be downloaded from the repo:
+Some imaginary data for testing can be downloaded from the repo:
 https://github.com/bart147/GeodynGem_for_QGIS/blob/master/test_shapefiles/test_shapefiles.zip
 
 Add the shapefiles to your QGIS project and open the plugin. 
