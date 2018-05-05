@@ -18,49 +18,11 @@ def genereer_knooppunten(iface, inp_polygon, sel_afvoerrelaties):
        De knooppunten worden ruimtelijk gekoppeld aan bemalingsgebieden.
        resultaat: vlakkenbestand POLYGON_LIS met velden K_LOOST_OP en ONTVANGT_VAN.
        '''
-    # niet meer van toepassing
-    ##CreatePointsOnLines.Main("hydrovak_split_layer", "PERCENTAGE", "BEGINNING", "NO", "#", 0.5, "NO", "#", "NO", "MiddlePoints") #os.path.join(scratch_gdb,"MiddlePoints"))
 
-    # relaties selecteren die naar ander bemalingsgebied afvoeren. (niet volledig binnen 1 polygoon vallen)
-    # processing.alghelp("qgis:selectbylocation")
-
-    # methode 1 layer maken
-    # sel_afvoerrelaties = QgsVectorLayer(INP_AFVOERRELATIES, "SEL_AFVOERRELATIES", "ogr")
-    # QgsMapLayerRegistry.instance().addMapLayer(sel_afvoerrelaties)
-
-    # methode 2 layer maken
-    # mapcanvas = iface.mapCanvas()
-    # layers = mapcanvas.layers()
-    # for layer in layers:
-    #     print_log("{} == {}".format(layer.name(),inp_afvoerrelaties.name()),"i")
-    #     if os.path.basename(layer.source()) == os.path.basename(INP_AFVOERRELATIES):
-    #         sel_afvoerrelaties = layer
-
-    # methode 3 layer uit dialog
-
-    ##sel_afvoerrelaties = layers[0]
-    ##sel_afvoerrelaties = QgsVectorLayer(INP_AFVOERRELATIES, "SEL_AFVOERRELATIES", "ogr")
-    ##sel_afvoerrelaties = iface.addVectorLayer(INP_AFVOERRELATIES, "selectie", "ogr")
-
-    ##print_log(sel_afvoerrelaties.source(),"i")
 
     sel_afvoerrelaties.selectAll()
     processing.runalg("qgis:selectbylocation", sel_afvoerrelaties, inp_polygon, u'within', 0, 2)
     print_log("{} features selected".format(sel_afvoerrelaties.selectedFeatureCount()),'i')
-    # QgsVectorFileWriter.writeAsVectorFormat(sel_afvoerrelaties,
-    #                                         os.path.join(gdb,"exp_selection.shp"), "utf-8",
-    #                                         sel_afvoerrelaties.crs(), "ESRI Shapefile", True)
-
-#     arcpy.MakeFeatureLayer_management(INP_AFVOERRELATIES,"SEL_AFVOERRELATIES") # layer maken
-#     arcpy.SelectLayerByLocation_management ("SEL_AFVOERRELATIES", "COMPLETELY_WITHIN", INP_POLYGON, "#", "NEW_SELECTION")
-#     arcpy.SelectLayerByAttribute_management ("SEL_AFVOERRELATIES", "SWITCH_SELECTION")
-
-
-    # processing.runalg("grass7:v.to.points", sel_afvoerrelaties, "100000",
-    #                   0, False, "134943.95,136747.42,530403.39,531629.38", -1, 0.0001, 0, knooppunten)
-
-    # functie voor bepalen begin en eindpunt
-    ##line_layer = qgis.utils.iface.activeLayer()
 
     point_layer = QgsVectorLayer("Point?crs=epsg:28992", "knooppunten", "memory")
     pr = point_layer.dataProvider()
@@ -103,15 +65,16 @@ def koppel_knooppunten_aan_bemalingsgebieden(iface, d_velden, inp_polygon, knoop
     knooppunten.setSelectedFeatures([i.id() for i in it])
 
     print_log("{} selected".format(knooppunten.selectedFeatureCount()), "i")
-    QgsVectorFileWriter.writeAsVectorFormat(knooppunten, os.path.join(gdb,"knooppunten_sel.shp"), "utf-8",
+    # bug 26L error. executing algoritm spatial join #5: export selection to prevent
+    QgsVectorFileWriter.writeAsVectorFormat(knooppunten, os.path.join(gdb,"knooppunten_sel1.shp"), "utf-8",
                                             knooppunten.crs(), "ESRI Shapefile", True)
-    knooppunten_sel = QgsVectorLayer(os.path.join(gdb,"knooppunten_sel.shp"), "knooppunten_sel", "ogr")
+    knooppunten_sel = QgsVectorLayer(os.path.join(gdb,"knooppunten_sel1.shp"), "knooppunten_sel", "ogr")
 
     processing.runalg("qgis:joinattributesbylocation", inp_polygon, knooppunten_sel, u'intersects', 0, 0, '', 1, POLYGON_LIS)
     processing.runalg("qgis:joinattributesbylocation", inp_polygon, knooppunten_sel, u'intersects', 0, 1, 'sum', 1, POLYGON_LIS_SUM)
 
-    polygon_lis_sum = QgsVectorLayer(POLYGON_LIS_SUM, "polygon_lis_sum", "ogr")
-    polygon_lis = QgsVectorLayer(POLYGON_LIS, "polygon_lis", "ogr")
+    polygon_lis_sum = QgsVectorLayer(POLYGON_LIS_SUM, "polygon_kikker_sum", "ogr")
+    polygon_lis = QgsVectorLayer(POLYGON_LIS, "polygon_kikker", "ogr")
     polygon_lis.dataProvider().addAttributes([QgsField('count', QVariant.Int)])
     polygon_lis.updateFields()
 
@@ -140,7 +103,11 @@ def koppel_knooppunten_aan_bemalingsgebieden(iface, d_velden, inp_polygon, knoop
     it = knooppunten.getFeatures(QgsFeatureRequest(expr))  # iterator object
     knooppunten.setSelectedFeatures([i.id() for i in it])
     print_log("{} selected".format(knooppunten.selectedFeatureCount()), "i")
-    processing.runalg("qgis:joinattributesbylocation", knooppunten, polygon_lis, u'intersects', 0, 0, '', 1, EINDKNOOPPUNTEN)
+    # bug 26L error. executing algoritm spatial join #5: export selection to prevent
+    QgsVectorFileWriter.writeAsVectorFormat(knooppunten, os.path.join(gdb, "knooppunten_sel2.shp"), "utf-8",
+                                            knooppunten.crs(), "ESRI Shapefile", True)
+    knooppunten_sel = QgsVectorLayer(os.path.join(gdb, "knooppunten_sel2.shp"), "knooppunten_sel", "ogr")
+    processing.runalg("qgis:joinattributesbylocation", knooppunten_sel, polygon_lis, u'intersects', 0, 0, '', 1, EINDKNOOPPUNTEN)
 
     eindknooppunten = QgsVectorLayer(EINDKNOOPPUNTEN, "eindknooppunten", "ogr")
     add_layer(eindknooppunten)

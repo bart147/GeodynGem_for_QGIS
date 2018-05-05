@@ -263,6 +263,7 @@ class GeodynGem:
             iface = self.iface
 
             gdb = self.dlg.lineEdit.text()
+            gdb = r'G:\GISDATA\QGIS\geodyn_gem\data\results'
             if not gdb or not os.path.exists(gdb):
                 print_log("Script afgebroken! Geen geldige output map opgegeven ({}...)".format(gdb), "e", iface)
                 return

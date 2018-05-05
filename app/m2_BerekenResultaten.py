@@ -253,7 +253,7 @@ def setColumnVisibility( layer, columnName, visible ):
     layer.setAttributeTableConfig( config )
 
 
-def main(iface, layers, workspace):
+def main(iface, layers, workspace, d_velden_):
     """Hoofdmenu:
     1.) Kopie maken INPUT_POLYGON_LIS
     2.) Spatial joins tussen POLYGON_LIS en de externe gegevens bronnen.
@@ -265,6 +265,7 @@ def main(iface, layers, workspace):
     8.) add results to map
     """
     global g_iface, INP_SKIP_SPJOIN, gdb, l_src_None_naar_0_omzetten, d_velden_tmp, d_velden
+    d_velden = d_velden_
     g_iface = iface
 
     INP_SKIP_SPJOIN = False
