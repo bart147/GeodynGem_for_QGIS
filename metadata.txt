@@ -7,14 +7,20 @@
 # This file should be included when you package your plugin.# Mandatory items:
 
 [general]
-name=Geodyn gemeente
-qgisMinimumVersion=2.0
-description=Geodyn voor gemeenten
-version=0.4
+name=GeoDyn Gemeente
+qgisMinimumVersion=2.8
+description=Wastewater prognosis tool for municipal sewage systems
+    Geografisch Dynamisch afvalwater prognosetool voor gemeente
+version=0.5
 author=BKGIS
 email=b.kropf@bkgis.nl
 
-about=Tool for calculating wastewater prognoses based on municipal sewage systems (Kikker riodesk), residental data and future wastewater regulation plans.
+about=Tool for calculating wastewater prognosis based on
+    Municipal sewage systems (Kikker riodesk)
+    Residental data (BAG)
+    Housing development plans RIGO (https://www.plancapaciteit.nl/)
+    Household drinking water consumption
+    GeoDynWaterschap is develop by BKGIS, for the water Authority HHNK and designed by Mark Lamers.
 
 tracker=https://github.com/bart147/GeodynGem_for_QGIS/issues
 repository=https://github.com/bart147/GeodynGem_for_QGIS
@@ -24,6 +30,7 @@ repository=https://github.com/bart147/GeodynGem_for_QGIS
 
 # Uncomment the following line and add your changelog:
 changelog:
+    v0.5    (2018-05-06) fix issues: 1,2,3,4,5,8,9,10,11
 	v0.4 	(2018-04-17) bugfix 'module' object has no attribute gdb
 	v0.3 	(2018-04-16) bugfix 
 	v0.2 	(2018-04-16) moved workspace from settings.py to dialog 
