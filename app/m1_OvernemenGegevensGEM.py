@@ -51,7 +51,7 @@ def genereer_knooppunten(iface, inp_polygon, sel_afvoerrelaties):
         pr.addFeatures([feat])
     ##point_layer.updateFields()
 
-    add_layer(point_layer)
+    point_layer = add_layer(point_layer)
     ##QgsMapLayerRegistry.instance().addMapLayer(point_layer)
 
     return point_layer
@@ -68,18 +68,19 @@ def koppel_knooppunten_aan_bemalingsgebieden(iface, d_velden, inp_polygon, knoop
     # bug 26L error. executing algoritm spatial join #5: export selection to prevent
     QgsVectorFileWriter.writeAsVectorFormat(knooppunten, os.path.join(gdb,"knooppunten_sel1.shp"), "utf-8",
                                             knooppunten.crs(), "ESRI Shapefile", True)
-    knooppunten_sel = QgsVectorLayer(os.path.join(gdb,"knooppunten_sel1.shp"), "knooppunten_sel", "ogr")
+    knooppunten_sel1 = QgsVectorLayer(os.path.join(gdb,"knooppunten_sel1.shp"), "knooppunten_sel1", "ogr")
+    add_layer(knooppunten_sel1)
 
-    processing.runalg("qgis:joinattributesbylocation", inp_polygon, knooppunten_sel, u'intersects', 0, 0, '', 1, POLYGON_LIS)
-    processing.runalg("qgis:joinattributesbylocation", inp_polygon, knooppunten_sel, u'intersects', 0, 1, 'sum', 1, POLYGON_LIS_SUM)
+    processing.runalg("qgis:joinattributesbylocation", inp_polygon, knooppunten_sel1, u'intersects', 0, 0, '', 1, POLYGON_LIS)
+    processing.runalg("qgis:joinattributesbylocation", inp_polygon, knooppunten_sel1, u'intersects', 0, 1, 'sum', 1, POLYGON_LIS_SUM)
 
     polygon_lis_sum = QgsVectorLayer(POLYGON_LIS_SUM, "polygon_kikker_sum", "ogr")
     polygon_lis = QgsVectorLayer(POLYGON_LIS, "polygon_kikker", "ogr")
     polygon_lis.dataProvider().addAttributes([QgsField('count', QVariant.Int)])
     polygon_lis.updateFields()
 
-    add_layer(polygon_lis)
-    add_layer(polygon_lis_sum)
+    polygon_lis = add_layer(polygon_lis)
+    polygon_lis_sum = add_layer(polygon_lis_sum)
     ##QgsMapLayerRegistry.instance().addMapLayer(polygon_lis)
     ##QgsMapLayerRegistry.instance().addMapLayer(polygon_lis_sum)
 
@@ -94,7 +95,7 @@ def koppel_knooppunten_aan_bemalingsgebieden(iface, d_velden, inp_polygon, knoop
     QgsMapLayerRegistry.instance().removeMapLayer(polygon_lis_sum.name())
 
     # controleer spjoin
-    controleer_spjoin(polygon_lis,"count")
+    ##controleer_spjoin(polygon_lis,"count")
 
     print_log("Bepaal in welk bemalingsgebied het eindpunt van afvoerrelatie ligt...",'i')
 
@@ -106,11 +107,12 @@ def koppel_knooppunten_aan_bemalingsgebieden(iface, d_velden, inp_polygon, knoop
     # bug 26L error. executing algoritm spatial join #5: export selection to prevent
     QgsVectorFileWriter.writeAsVectorFormat(knooppunten, os.path.join(gdb, "knooppunten_sel2.shp"), "utf-8",
                                             knooppunten.crs(), "ESRI Shapefile", True)
-    knooppunten_sel = QgsVectorLayer(os.path.join(gdb, "knooppunten_sel2.shp"), "knooppunten_sel", "ogr")
-    processing.runalg("qgis:joinattributesbylocation", knooppunten_sel, polygon_lis, u'intersects', 0, 0, '', 1, EINDKNOOPPUNTEN)
+    knooppunten_sel2 = QgsVectorLayer(os.path.join(gdb, "knooppunten_sel2.shp"), "knooppunten_sel2", "ogr")
+    add_layer(knooppunten_sel2)
+    processing.runalg("qgis:joinattributesbylocation", knooppunten_sel2, polygon_lis, u'intersects', 0, 0, '', 1, EINDKNOOPPUNTEN)
 
     eindknooppunten = QgsVectorLayer(EINDKNOOPPUNTEN, "eindknooppunten", "ogr")
-    add_layer(eindknooppunten)
+    eindknooppunten = add_layer(eindknooppunten)
     ##QgsMapLayerRegistry.instance().addMapLayer(eindknooppunten)
 
     # invullen veld LOOST_OP met code bemalingsgebied.
@@ -209,8 +211,8 @@ def controleer_spjoin(layer,fld_join_count):
             layer.changeAttributeValue(feature.id(), layer.fieldNameIndex("VAN_KNOOPN"), "LEEG-{}".format(i))
     layer.commitChanges()
 
-    if i_dubbel == 1: print_log("\n{} polygoon bevat 2 of meer LIS-objecten".format(i_dubbel),"w")
-    if i_dubbel > 1: print_log("\n{} polygonen bevatten 2 of meer LIS-objecten".format(i_dubbel),"w")
+    if i_dubbel == 1: print_log("{} polygoon bevat 2 of meer LIS-objecten".format(i_dubbel),"w")
+    if i_dubbel > 1: print_log("{} polygonen bevatten 2 of meer LIS-objecten".format(i_dubbel),"w")
     if i_leeg == 1: print_log("{} polygoon is leeg\n".format(i_leeg),"w")
     if i_leeg > 1: print_log("{} polygonen zijn leeg\n".format(i_leeg),"w")
     if i_leeg >= 1: print_log("lege polygonen voorzien van VAN_KNOOPN-> 'LEEG-<OBJID>'","i")
@@ -222,7 +224,7 @@ def controleer_hoofdbemalingsgebieden(polygon_lis):
     ##arcpy.Intersect_analysis (POLYGON_LIS, POLYGON_LIS_OVERLAP)
     processing.runalg("saga:polygonselfintersection", polygon_lis, "VAN_KNOOPN", POLYGON_LIS_OVERLAP)
     polygon_lis_overlap = QgsVectorLayer(POLYGON_LIS_OVERLAP, "bemalingsgebieden overlap", "ogr")
-    add_layer(polygon_lis_overlap)
+    polygon_lis_overlap = add_layer(polygon_lis_overlap)
     ##QgsMapLayerRegistry.instance().addMapLayer(polygon_lis_overlap)
 
     expr = QgsExpression("\"VAN_KNOOPN\" {}".format("IS NULL"))

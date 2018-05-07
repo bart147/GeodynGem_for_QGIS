@@ -18,6 +18,29 @@ logFileName = 'GeoDyn_{}.log'.format(strftime)
 logFile = os.path.join(log_dir,logFileName)
 logging.basicConfig(filename=logFile, level=LOGGING_LEVEL)
 logging.getLogger().setLevel(LOGGING_LEVEL)
+qgis_warnings_log = os.path.join(log_dir,'qgis_warnings.log')
+
+# set to False to keep the result after run
+l_result_layers_to_remove = [
+    ("bemalingsgebieden overlap", False),
+    ("eindknooppunten", True),
+    ("polygon_kikker_sum", True),
+    ("polygon_kikker", True),
+    ("knooppunten_sel2", True),
+    ("knooppunten_sel1", True),
+    ("knooppunten", False),
+    ("stats_verh_opp_OBK", True),
+    ("stats_verh_opp_NAG", True),
+    ("stats_verh_opp_HWA", True),
+    ("stats_verh_opp_GEM", True),
+    ("stats_verh_opp_totaal", True),
+    ("verhard_opp_intersect", True),
+    ("stats_ve", True),
+    ("stats_plancap", True),
+    ("plancap_overlap", False),
+    ("stats_drinkwater", True),
+    ("eindresultaat", False),
+]
 
 # dict d_velden_tmp
 # purpose: dict d_velden_tmp is een aanvulling op d_velden (d_velden wordt uit de inp_fields.xlsx gegenereerd).

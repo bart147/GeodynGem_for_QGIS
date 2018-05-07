@@ -33,8 +33,8 @@ def controleer_spjoin_plancap(layer, fld_join_count):
             i_leeg += 1
     ##layer.commitChanges()
 
-    if i_dubbel == 1: print_log("\n{} plancap valt in meerdere hoofdbemalingsgebieden!".format(i_dubbel), "w")
-    if i_dubbel > 1: print_log("\n{} plancaps vallen in meerdere hoofdbemalingsgebieden!".format(i_dubbel), "w")
+    if i_dubbel == 1: print_log("{} plancap valt in meerdere hoofdbemalingsgebieden!".format(i_dubbel), "w")
+    if i_dubbel > 1: print_log("{} plancaps vallen in meerdere hoofdbemalingsgebieden!".format(i_dubbel), "w")
     if i_leeg == 1: print_log("{} plancaps valt niet in een hoofdbemalingsgebied\n".format(i_leeg), "w")
     if i_leeg > 1: print_log("{} plancaps vallen niet in een hoofdbemalingsgebied\n".format(i_leeg), "w")
 
@@ -156,7 +156,7 @@ def spjoin_bronbestanden_aan_bemalingsgebieden(polygon_lis, inp_drinkwater_bag, 
     print_log("spatialjoin DRINKWATER_BAG to POLYGONS...","i")
     processing.runalg("qgis:joinattributesbylocation", inp_polygon, inp_drinkwater_bag, u'intersects', 0, 1, 'sum', 1, STATS_DRINKWATER)
     stats_drinkwater = QgsVectorLayer(STATS_DRINKWATER, "stats_drinkwater", "ogr")
-    add_layer(stats_drinkwater)
+    stats_drinkwater = add_layer(stats_drinkwater)
 
     # extra stapje om om te reken van liter/hr naar m3/hr voor part. en zakelijk drinkwater in STAT-tabel.
     add_field_from_dict_label(stats_drinkwater, "stap2tmp", d_velden_tmp)
@@ -167,19 +167,23 @@ def spjoin_bronbestanden_aan_bemalingsgebieden(polygon_lis, inp_drinkwater_bag, 
     print_log("spatialjoin PLANCAP_RIGO to POLYGONS...","i")
     processing.runalg("qgis:joinattributesbylocation", inp_plancap, inp_polygon, u'intersects', 0, 1, 'sum', 1, PLANCAP_OVERLAP)
     plancap_overlap = QgsVectorLayer(PLANCAP_OVERLAP, "plancap_overlap", "ogr")
-    add_layer(plancap_overlap)
+    plancap_overlap = add_layer(plancap_overlap)
     controleer_spjoin_plancap(plancap_overlap, "count")
 
     # joining PLANCAP_RIGO to POLYGONS
     processing.runalg("qgis:joinattributesbylocation", inp_polygon, inp_plancap, u'intersects', 0, 1, 'sum', 1, STATS_PLANCAP)
     stats_plancap = QgsVectorLayer(STATS_PLANCAP, "stats_plancap", "ogr")
-    add_layer(stats_plancap)
+    stats_plancap = add_layer(stats_plancap)
 
     # joining VE to POLYGONS
-    print_log("spatialjoin VE_BELASTING to POLYGONS...","i")
-    processing.runalg("qgis:joinattributesbylocation", inp_polygon, inp_ve_belasting, u'intersects', 0, 1, 'sum', 1, STATS_VE)
-    stats_ve = QgsVectorLayer(STATS_VE, "stats_ve", "ogr")
-    add_layer(stats_ve)
+    if inp_ve_belasting.name() == "no data":
+        stats_ve = None
+        print_log("'no data' geselecteerd als input voor vervuilingseenheden. Berekeningen met VE's worden overgeslagen", "w", g_iface)
+    else:
+        print_log("spatialjoin VE_BELASTING to POLYGONS...","i")
+        processing.runalg("qgis:joinattributesbylocation", inp_polygon, inp_ve_belasting, u'intersects', 0, 1, 'sum', 1, STATS_VE)
+        stats_ve = QgsVectorLayer(STATS_VE, "stats_ve", "ogr")
+        stats_ve = add_layer(stats_ve)
 
     return stats_drinkwater, stats_ve, stats_plancap
 
@@ -190,7 +194,7 @@ def bepaal_verhard_oppervlak(polygon_lis, inp_verhard_opp, VERHARD_OPP_INTERSECT
     if not INP_SKIP_SPJOIN:
         processing.runalg("saga:intersect", inp_verhard_opp, polygon_lis, True, VERHARD_OPP_INTERSECT)
     verhard_opp_intersect = QgsVectorLayer(VERHARD_OPP_INTERSECT, "verhard_opp_intersect", "ogr")
-    add_layer(verhard_opp_intersect)
+    verhard_opp_intersect = add_layer(verhard_opp_intersect)
     add_field_from_dict(verhard_opp_intersect, "HA_BEM_G", d_velden_tmp)
 
     # opp ha berekenen
@@ -213,7 +217,7 @@ def bepaal_verhard_oppervlak(polygon_lis, inp_verhard_opp, VERHARD_OPP_INTERSECT
     if not INP_SKIP_SPJOIN:
         processing.runalg("qgis:statisticsbycategories", VERHARD_OPP_INTERSECT, "HA_BEM_G", "VAN_KNOOPN", STATS_VERHARD_OPP_TOT)
     stats_verh_opp_tot = QgsVectorLayer(STATS_VERHARD_OPP_TOT, "stats_verh_opp_totaal", "ogr")
-    add_layer(stats_verh_opp_tot)
+    stats_verh_opp_tot = add_layer(stats_verh_opp_tot)
 
     # toevoegen velden voor PI's
     add_field_from_dict_label(polygon_lis, "st3a", d_velden)
@@ -233,7 +237,7 @@ def bepaal_verhard_oppervlak(polygon_lis, inp_verhard_opp, VERHARD_OPP_INTERSECT
             continue
         processing.runalg("qgis:statisticsbycategories", verhard_opp_intersect, "HA_BEM_G", "VAN_KNOOPN", STAT_NAME)
         layer = QgsVectorLayer(STAT_NAME, "{}_{}".format("stats_verh_opp", aansluiting), "ogr")
-        add_layer(layer)
+        layer = add_layer(layer)
 
         # velden overhalen naar eindresultaat en PI berekenen
         fld_ha = "HA_{}_G".format(aansluiting)
@@ -281,7 +285,8 @@ def main(iface, layers, workspace, d_velden_):
         print_log(layer.name(), "i")
 
     # tussenresultaten
-    POLYGON_LIS             = os.path.join(gdb, "eindresultaat.shp")
+    EINDRESULTAAT           = os.path.join(gdb, "eindresultaat.shp")
+    POLYGON_LIS             = os.path.join(gdb, "POLYGON_LIS.shp")
     DRINKWATER_POLYGON_LIS  = os.path.join(gdb, "SpJoin_DRINKWATER2POLYGON_LIS.shp")
     PLANCAP_POLYGON_LIS     = os.path.join(gdb, "SpJoin_PLANCAP2POLYGON_LIS.shp")
     VE_POLYGON_LIS          = os.path.join(gdb, "SpJoin_VE2POLYGON_LIS.shp")
@@ -293,41 +298,48 @@ def main(iface, layers, workspace, d_velden_):
     VERHARD_OPP_INTERSECT   = os.path.join(gdb, "VERHARD_OPP_INTERSECT.shp")
     STATS_VERHARD_OPP       = os.path.join(gdb, "STATS_VERHARD_OPP.shp")
 
+
     # ##########################################################################
     # 1.) export input INP_POLYGON_LIS to result POLYGON_LIS
-    tussenresultaat = QgsVectorLayer(os.path.join(gdb,"POLYGON_LIS.shp"), "tussenresultaat", "ogr")
-    QgsVectorFileWriter.writeAsVectorFormat(tussenresultaat, POLYGON_LIS, "utf-8", None, "ESRI Shapefile")
-    polygon_lis = QgsVectorLayer(POLYGON_LIS, "eindresultaat", "ogr")
-    add_layer(polygon_lis)
+    tussenresultaat = QgsVectorLayer(POLYGON_LIS, "tussenresultaat", "ogr")
+    if EINDRESULTAAT:
+        QgsVectorFileWriter.deleteShapeFile(EINDRESULTAAT)
+    QgsVectorFileWriter.writeAsVectorFormat(tussenresultaat, EINDRESULTAAT, "utf-8", tussenresultaat.crs(), "ESRI Shapefile")
+    polygon_lis = QgsVectorLayer(EINDRESULTAAT, "eindresultaat", "ogr")
+    polygon_lis = add_layer(polygon_lis)
 
     # ##########################################################################
     # 2.) Velden toevoegen en gegevens overnemen
     add_field_from_dict_label(polygon_lis, "st2a", d_velden)
 
     # ##########################################################################
-    # 3.) Spatial joins tussen POLYGON_LIS en de externe gegevens bronnen
+    # 3.) Spatial joins tussen polygon_lis en de externe gegevens bronnen
     if INP_SKIP_SPJOIN:
         blokje_log("Skip SpatialJoin met externe inputs en gebruik bestaande STAT-tabellen.","i")
         stats_drinkwater    = QgsVectorLayer(STATS_DRINKWATER, "stats_drinkwater", "ogr")
         stats_ve            = QgsVectorLayer(STATS_VE, "stats_ve", "ogr")
         stats_plancap       = QgsVectorLayer(STATS_PLANCAP, "stats_plancap", "ogr")
-        for layer in [stats_drinkwater, stats_ve, stats_plancap]:
-            add_layer(layer)
+        stats_drinkwater    = add_layer(stats_drinkwater)
+        stats_ve            = add_layer(stats_ve)
+        stats_plancap       = add_layer(stats_plancap)
+        # for layer in [stats_drinkwater, stats_ve, stats_plancap]:
+        #     layer = add_layer(layer)
     else:
-        blokje_log("Start SpatialJoin externe bronnen met hoofdbemalingsgebieden... (5 tot 25 minuten)","i")
+        blokje_log("Start SpatialJoin externe bronnen met hoofdbemalingsgebieden... (1 tot 5 minuten)","i")
         stats_drinkwater, stats_ve, stats_plancap = spjoin_bronbestanden_aan_bemalingsgebieden(
                 polygon_lis, inp_drinkwater_bag, inp_ve_belasting, inp_plancap, inp_polygon,
                 PLANCAP_OVERLAP, STATS_DRINKWATER, STATS_VE, STATS_PLANCAP)
 
     blokje_log("Velden toevoegen en voorbereiden voor berekening onderbemaling...", "i")
 
-    # join stat_fields to POLYGON_LIS
+    # join stat_fields to polygon_lis
     join_field(polygon_lis, stats_drinkwater, "PAR_RESULT", "SUMPAR_M3U", "OBJECTID", "OBJECTID")
     join_field(polygon_lis, stats_drinkwater, "ZAK_RESULT", "SUMZAK_M3U", "OBJECTID", "OBJECTID")
     join_field(polygon_lis, stats_drinkwater, "X_WON_GEB", "count", "OBJECTID", "OBJECTID")
     join_field(polygon_lis, stats_plancap, "AW_15_24_G", "sumExtra_A", "OBJECTID", "OBJECTID") # SUM_Extra_AFW_2015_tm_2024
     join_field(polygon_lis, stats_plancap, "AW_25_50_G", "sumExtra_1", "OBJECTID", "OBJECTID") # SUM_Extra_AFW_2025_tm_2050
-    join_field(polygon_lis, stats_ve, "X_VE_GEB", "sumGRONDSL", "OBJECTID", "OBJECTID")
+    if stats_ve:
+        join_field(polygon_lis, stats_ve, "X_VE_GEB", "sumGRONDSL", "OBJECTID", "OBJECTID")
 
     # bereken drinkwater per gebied (input voor onderbemalingen)
     bereken_veld(polygon_lis, "DWR_GEBIED", d_velden)

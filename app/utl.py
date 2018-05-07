@@ -12,8 +12,10 @@
 # import system modules
 import sys, os, logging, time
 from datetime import datetime, date
+from settings import qgis_warnings_log
 ##import pandas ##arcpy
 ##import numpy as np
+
 
 # QGIS
 from qgis.gui import QgsMessageBar, QgisInterface
@@ -71,9 +73,12 @@ def print_log(message, logType="i", iface=False, **kwargs):
         QgsMessageLog.logMessage(message, level=QgsMessageLog.INFO)
         logging.info(message)
     elif logType == "w": # warning
-        QgsMessageLog.logMessage(message, level=QgsMessageLog.WARNING)
+        QgsMessageLog.logMessage("WARNING: {}".format(message), level=QgsMessageLog.WARNING)
         if iface: iface.messageBar().pushMessage("Warning", message, level=QgsMessageBar.WARNING)
         logging.warning(message)
+        with open(qgis_warnings_log, 'a') as logfile:
+            logfile.write('\n({level}): {message}'.format(level="WARNING", message=message))
+
     elif logType == "e": # error
         logging.error(message)
         QgsMessageLog.logMessage(message, level=QgsMessageLog.CRITICAL)
@@ -109,7 +114,7 @@ def add_field_from_dict(fc, fld_name, d_fld):
     if "field_length" in fld.keys():
         field_length = fld["field_length"]
     else:
-        field_length = 0
+        field_length = 10
     ##print_log("veld lengte = {}".format(field_length), "i")
 
     if not isinstance(fc, QgsVectorLayer): fc = QgsVectorLayer(fc, "layer", "ogr")
@@ -124,7 +129,7 @@ def add_field_from_dict(fc, fld_name, d_fld):
     }
 
 
-    fc.dataProvider().addAttributes([QgsField(name=fld_name, type=fldtype_mapper.get(fld["field_type"],QVariant.String), len=field_length)])
+    fc.dataProvider().addAttributes([QgsField(prec=2, name=fld_name, type=fldtype_mapper.get(fld["field_type"],QVariant.String), len=field_length)])
     fc.updateFields()
 
 def add_field_from_dict_label(fc, add_fld_value, d_fld):
@@ -311,13 +316,15 @@ def get_d_velden_csv(INP_FIELDS_CSV):
     return d_velden
 
 
-def add_layer(layer_name):
+def add_layer(layer):
     ins = QgsMapLayerRegistry.instance()
-    layers = ins.mapLayersByName(layer_name.name())
-    for layer_to_remove in layers:
-        print_log("remove layer {}".format(layer_to_remove),"d")
-        ins.removeMapLayer(layer_to_remove.id())
-    ins.addMapLayer(layer_name)
+    layers = ins.mapLayersByName(layer.name())
+    for old_layer in layers:
+        ##return old_layer
+        print_log("remove layer {}".format(old_layer),"d")
+        ins.removeMapLayer(old_layer.id())
+    ins.addMapLayer(layer)
+    return layer
 
 
 # def pandas_get_d_velden(INP_FIELDS_XLS, INP_FIELDS_XLS_SHEET):
