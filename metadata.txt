@@ -30,6 +30,7 @@ repository=https://github.com/bart147/GeodynGem_for_QGIS
 
 # Uncomment the following line and add your changelog:
 changelog:
+    v0.6    (2018-05-08) update icon in resources.py
     v0.5    (2018-05-08) fix issues: 1,2,3,4,5,8,9,10,11,12
 	v0.4 	(2018-04-17) bugfix 'module' object has no attribute gdb
 	v0.3 	(2018-04-16) bugfix 
