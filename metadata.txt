@@ -11,7 +11,7 @@ name=GeoDyn Gemeente
 qgisMinimumVersion=2.8
 description=Wastewater prognosis tool for municipal sewage systems
     Geografisch Dynamisch afvalwater prognosetool voor gemeente
-version=0.5
+version=0.6
 author=BKGIS
 email=b.kropf@bkgis.nl
 
