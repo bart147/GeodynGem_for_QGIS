@@ -258,33 +258,6 @@ class GeodynGem:
                 "w", self.iface)
             layer_points = layer_lines = layer_polygons = layers
 
-
-        # self.dlg.comboBox_1.addItems([i.name() for i in self.move_to_front(layer_points, "punt")])   # knooppunt
-        # self.dlg.comboBox_2.addItems([i.name() for i in self.move_to_front(layer_lines, "lijn")])   # afvoerrelatie
-        # self.dlg.comboBox_3.addItems([i.name() for i in self.move_to_front(layer_points, "BAG")])   # drinkwater BAG
-        # self.dlg.comboBox_4.addItems([i.name() for i in self.move_to_front(layer_points, "VE")])   # VE's
-        # self.dlg.comboBox_5.addItems([i.name() for i in self.move_to_front(layer_polygons, "RIGO")])   # plancap
-        # self.dlg.comboBox_6.addItems([i.name() for i in self.move_to_front(layer_polygons, "opp")])   # verhard opp
-        # self.dlg.comboBox_7.addItems([i.name() for i in self.move_to_front(layer_polygons, "bemaling")])   # bemalingsgebieden
-        #
-        # sel_layers = [
-        #     self.move_to_front(layer_points, "punt")[self.dlg.comboBox_1.currentIndex()],
-        #     self.move_to_front(layer_lines, "lijn")[self.dlg.comboBox_2.currentIndex()],
-        #     self.move_to_front(layer_points, "BAG")[self.dlg.comboBox_3.currentIndex()],
-        #     self.move_to_front(layer_points, "VE")[self.dlg.comboBox_4.currentIndex()],
-        #     self.move_to_front(layer_polygons, "RIGO")[self.dlg.comboBox_5.currentIndex()],
-        #     self.move_to_front(layer_polygons, "opp")[self.dlg.comboBox_6.currentIndex()],
-        #     self.move_to_front(layer_polygons, "bemaling")[self.dlg.comboBox_7.currentIndex()],
-        # ]
-
-        # l1 = self.move_to_front(layer_points, "punt")
-        # l2 = self.move_to_front(layer_lines, "lijn")
-        # l3 = self.move_to_front(layer_points, "BAG")
-        # l4 = self.move_to_front(layer_points, "VE")
-        # l5 = self.move_to_front(layer_polygons, "RIGO")
-        # l6 = self.move_to_front(layer_polygons, "opp")
-        # l7 = self.move_to_front(layer_polygons, "bemaling")
-
         self.dlg.comboBox_1.addItems([i.name() for i in self.move_to_front(layer_points, "punt")])  # knooppunt
         self.dlg.comboBox_2.addItems([i.name() for i in self.move_to_front(layer_lines, "lijn")])  # afvoerrelatie
         self.dlg.comboBox_3.addItems([i.name() for i in self.move_to_front(layer_points, "BAG")])  # drinkwater BAG
@@ -324,7 +297,6 @@ class GeodynGem:
             ##        sel_layers.append(layer)
 
             gdb = self.dlg.lineEdit.text()
-            gdb = r'G:\GISDATA\QGIS\geodyn_gem\data\results'
             if not gdb or not os.path.exists(gdb):
                 print_log("Script afgebroken! Geen geldige output map opgegeven ({}...)".format(gdb), "e", self.iface)
                 return
@@ -339,7 +311,6 @@ class GeodynGem:
             INP_FIELDS_CSV = settings.INP_FIELDS_CSV
             try:
                 from xlrd import open_workbook
-                import jantje_smit
                 d_velden = get_d_velden(INP_FIELDS_XLS, 0, open_workbook)
             except ImportError:     # for compatibility with iMac
                 print_log("import error 'xlrd': inp_fields.csv wordt gebruikt als input in plaats van inp_fields.xls!",
