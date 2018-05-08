@@ -22,7 +22,7 @@ def genereer_knooppunten(iface, inp_polygon, sel_afvoerrelaties):
 
     sel_afvoerrelaties.selectAll()
     processing.runalg("qgis:selectbylocation", sel_afvoerrelaties, inp_polygon, u'within', 0, 2)
-    print_log("{} features selected".format(sel_afvoerrelaties.selectedFeatureCount()),'i')
+    print_log("{} features selected".format(sel_afvoerrelaties.selectedFeatureCount()),'d')
 
     point_layer = QgsVectorLayer("Point?crs=epsg:28992", "knooppunten", "memory")
     pr = point_layer.dataProvider()
@@ -64,7 +64,7 @@ def koppel_knooppunten_aan_bemalingsgebieden(iface, d_velden, inp_polygon, knoop
     it = knooppunten.getFeatures(QgsFeatureRequest(expr)) # iterator object
     knooppunten.setSelectedFeatures([i.id() for i in it])
 
-    print_log("{} selected".format(knooppunten.selectedFeatureCount()), "i")
+    print_log("{} selected".format(knooppunten.selectedFeatureCount()), "d")
     # bug 26L error. executing algoritm spatial join #5: export selection to prevent
     QgsVectorFileWriter.writeAsVectorFormat(knooppunten, os.path.join(gdb,"knooppunten_sel1.shp"), "utf-8",
                                             knooppunten.crs(), "ESRI Shapefile", True)
@@ -103,7 +103,7 @@ def koppel_knooppunten_aan_bemalingsgebieden(iface, d_velden, inp_polygon, knoop
     expr = QgsExpression("\"BEGIN_EIND\" = {}".format(1))
     it = knooppunten.getFeatures(QgsFeatureRequest(expr))  # iterator object
     knooppunten.setSelectedFeatures([i.id() for i in it])
-    print_log("{} selected".format(knooppunten.selectedFeatureCount()), "i")
+    print_log("{} selected".format(knooppunten.selectedFeatureCount()), "d")
     # bug 26L error. executing algoritm spatial join #5: export selection to prevent
     QgsVectorFileWriter.writeAsVectorFormat(knooppunten, os.path.join(gdb, "knooppunten_sel2.shp"), "utf-8",
                                             knooppunten.crs(), "ESRI Shapefile", True)
@@ -224,7 +224,7 @@ def controleer_hoofdbemalingsgebieden(polygon_lis):
     ##arcpy.Intersect_analysis (POLYGON_LIS, POLYGON_LIS_OVERLAP)
     processing.runalg("saga:polygonselfintersection", polygon_lis, "VAN_KNOOPN", POLYGON_LIS_OVERLAP)
     polygon_lis_overlap = QgsVectorLayer(POLYGON_LIS_OVERLAP, "bemalingsgebieden overlap", "ogr")
-    polygon_lis_overlap = add_layer(polygon_lis_overlap)
+    polygon_lis_overlap = add_layer(polygon_lis_overlap, False)
     ##QgsMapLayerRegistry.instance().addMapLayer(polygon_lis_overlap)
 
     expr = QgsExpression("\"VAN_KNOOPN\" {}".format("IS NULL"))
@@ -275,8 +275,8 @@ def main(iface, layers, workspace, d_velden):
 
     inp_knooppunten, inp_afvoerrelaties, inp_drinkwater_bag, inp_ve_belasting, inp_plancap, inp_verhard_opp, inp_polygon = layers
 
-    for layer in layers:
-        print_log(layer.name(),"i")
+    for i, layer in enumerate(layers):
+        print_log("input {}:\t{}".format(i, layer.name()), "d")
 
     print_log("inp_afvoerrelatie = {}".format(inp_afvoerrelaties.name()),"i")
 

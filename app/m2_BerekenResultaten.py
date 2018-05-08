@@ -2,8 +2,9 @@ import os
 # qgis imports
 import processing
 from qgis.core import *
+from PyQt4.QtCore import QVariant
 # custom imports
-from utl import blokje_log, print_log, add_field_from_dict, add_field_from_dict_label, join_field, bereken_veld, bereken_veld_label, add_layer
+from utl import blokje_log, print_log, add_field_from_dict, add_field_from_dict_label, join_field, bereken_veld, bereken_veld_label, add_layer, update_datetime
 import settings
 
 def bepaal_b_VIEW(fc,wildcard):
@@ -63,14 +64,14 @@ def bereken_onderbemaling(layer):
         VAN_KNOOPN = feature["VAN_KNOOPN"]
         ONTV_VAN = feature["K_ONTV_VAN"]
         if not str(ONTV_VAN) in ["NULL", ""," "]: # check of sprake is van onderbemaling
-            print_log("K_ONTV_VAN = {}".format(ONTV_VAN),"i")
+            print_log("K_ONTV_VAN = {}".format(ONTV_VAN),"d")
             where_clause = '"VAN_KNOOPN" IN ({})'.format(ONTV_VAN)
             ##where_clause = '"VAN_KNOOPN" = '+"'MERG10'"
-            print_log("where_clause = {}".format(where_clause), "i")
+            print_log("where_clause = {}".format(where_clause), "d")
             expr = QgsExpression(where_clause)
             it = layer.getFeatures(QgsFeatureRequest(expr))  # iterator object
             layer.setSelectedFeatures([i.id() for i in it])
-            print_log("sel = {}".format([i.id() for i in it]),"i")
+            print_log("sel = {}".format([i.id() for i in it]),"d")
             AW_15_24_O  = sum([float(f["AW_15_24_G"]) for f in layer.selectedFeatures() if str(f["AW_15_24_G"]) not in ["NULL","nan",""," "]])
             AW_25_50_O  = sum([float(f["AW_25_50_G"]) for f in layer.selectedFeatures() if str(f["AW_25_50_G"]) not in ["NULL","nan",""," "]])
             DWR_ONBG    = sum([float(f["DWR_GEBIED"]) for f in layer.selectedFeatures() if str(f["DWR_GEBIED"]) not in ["NULL","nan",""," "]])
@@ -84,20 +85,6 @@ def bereken_onderbemaling(layer):
     layer.commitChanges()
     layer.setSelectedFeatures([])
     print_log("Onderbemalingen succesvol berekend voor Plancap, drinkwater, woningen en ve's", "i")
-
-    # with arcpy.da.UpdateCursor(fc, (update_fields)) as cursor:
-    #     for row in cursor:
-    #         VAN_KNOOPN, ONTV_VAN = row[0], row[1]
-    #         if not ONTV_VAN in [None,""," "]: # check of sprake is van onderbemaling
-    #             where_clause = "VAN_KNOOPN IN ({})".format(ONTV_VAN)
-    #             row[3] = sum([r[0] for r in arcpy.da.SearchCursor(fc,["AW_15_24_G"],where_clause) if r[0] != None])    # AW_15_24_O = sum(AW_15_24_G)
-    #             row[5] = sum([r[0] for r in arcpy.da.SearchCursor(fc,["AW_25_50_G"],where_clause) if r[0] != None])    # AW_25_50_O = sum(AW_25_50_G)
-    #             row[7] = sum([r[0] for r in arcpy.da.SearchCursor(fc,["DWR_GEBIED"],where_clause) if r[0] != None])    # DWR_ONBG = sum(DWR_GEBIED)
-    #             row[9] = sum([r[0] for r in arcpy.da.SearchCursor(fc,["X_WON_GEB"],where_clause) if r[0] != None])     # X_WON_ONBG = sum(X_WON_GEB)
-    #             row[11]= sum([r[0] for r in arcpy.da.SearchCursor(fc,["X_VE_GEB"],where_clause) if r[0] != None])     # X_VE_ONBG = sum(X_VE_GEB)
-    #             cursor.updateRow(row)
-    # del cursor, row
-    # print_log("Onderbemalingen succesvol berekend voor Plancap, drinkwater, woningen en ve's", "i")
 
 
 def bereken_onderbemaling2(layer):
@@ -167,7 +154,7 @@ def spjoin_bronbestanden_aan_bemalingsgebieden(polygon_lis, inp_drinkwater_bag, 
     print_log("spatialjoin PLANCAP_RIGO to POLYGONS...","i")
     processing.runalg("qgis:joinattributesbylocation", inp_plancap, inp_polygon, u'intersects', 0, 1, 'sum', 1, PLANCAP_OVERLAP)
     plancap_overlap = QgsVectorLayer(PLANCAP_OVERLAP, "plancap_overlap", "ogr")
-    plancap_overlap = add_layer(plancap_overlap)
+    plancap_overlap = add_layer(plancap_overlap, False)
     controleer_spjoin_plancap(plancap_overlap, "count")
 
     # joining PLANCAP_RIGO to POLYGONS
@@ -281,8 +268,8 @@ def main(iface, layers, workspace, d_velden_):
 
     # layers
     inp_knooppunten, inp_afvoerrelaties, inp_drinkwater_bag, inp_ve_belasting, inp_plancap, inp_verhard_opp, inp_polygon = layers
-    for layer in layers:
-        print_log(layer.name(), "i")
+    for i, layer in enumerate(layers):
+        print_log("input {}:\t{}".format(i, layer.name()), "d")
 
     # tussenresultaten
     EINDRESULTAAT           = os.path.join(gdb, "eindresultaat.shp")
@@ -341,8 +328,9 @@ def main(iface, layers, workspace, d_velden_):
     if stats_ve:
         join_field(polygon_lis, stats_ve, "X_VE_GEB", "sumGRONDSL", "OBJECTID", "OBJECTID")
 
-    # bereken drinkwater per gebied (input voor onderbemalingen)
-    bereken_veld(polygon_lis, "DWR_GEBIED", d_velden)
+    # bereken drinkwater per gebied (input voor onderbemalingen) en LEDIG_U (ledigingstijd)
+    ##bereken_veld(polygon_lis, "DWR_GEBIED", d_velden)
+    bereken_veld_label(polygon_lis, "02_ber", d_velden)
 
     # ##########################################################################
     # 4.) Bereken onderbemaling voor DRINKWATER en PLANCAP en VE's
@@ -380,3 +368,7 @@ def main(iface, layers, workspace, d_velden_):
             ["POC_B_M3_O", "POC_O_M3_O","POC_B_M3_G", "POC_O_M3_G"], polygon_lis)
     bereken_veld_label(polygon_lis, '10_ber', d_velden)
     bereken_veld_label(polygon_lis, '11_ber', d_velden)
+
+    # update_datetime UPDATED
+    update_datetime(polygon_lis, "UPDATED")
+

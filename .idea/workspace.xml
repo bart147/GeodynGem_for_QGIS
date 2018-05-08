@@ -23,16 +23,15 @@
       <file leaf-file-name="m2_BerekenResultaten.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/app/m2_BerekenResultaten.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="277">
-              <caret line="259" column="46" lean-forward="true" selection-start-line="259" selection-start-column="46" selection-end-line="259" selection-end-column="46" />
+            <state relative-caret-position="192">
+              <caret line="156" column="54" lean-forward="false" selection-start-line="156" selection-start-column="49" selection-end-line="156" selection-end-column="54" />
               <folding>
                 <element signature="e#0#9#0" expanded="true" />
-                <element signature="e#650#1741#0" expanded="false" />
-                <element signature="e#1803#2428#0" expanded="false" />
-                <element signature="e#2469#6011#0" expanded="false" />
-                <element signature="e#6053#8864#0" expanded="false" />
-                <element signature="e#11194#14162#0" expanded="false" />
-                <element signature="e#14224#14492#0" expanded="false" />
+                <element signature="e#701#1792#0" expanded="false" />
+                <element signature="e#1854#2479#0" expanded="false" />
+                <element signature="e#4882#7693#0" expanded="false" />
+                <element signature="e#10030#12998#0" expanded="false" />
+                <element signature="e#13060#13328#0" expanded="false" />
               </folding>
             </state>
           </provider>
@@ -41,15 +40,14 @@
       <file leaf-file-name="m1_OvernemenGegevensGEM.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/app/m1_OvernemenGegevensGEM.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="447">
-              <caret line="278" column="35" lean-forward="false" selection-start-line="278" selection-start-column="35" selection-end-line="278" selection-end-column="35" />
+            <state relative-caret-position="192">
+              <caret line="110" column="9" lean-forward="false" selection-start-line="110" selection-start-column="4" selection-end-line="110" selection-end-column="9" />
               <folding>
                 <element signature="e#0#9#0" expanded="true" />
                 <element signature="e#354#2287#0" expanded="false" />
-                <element signature="e#2383#5730#0" expanded="false" />
                 <element signature="e#5759#10145#0" expanded="false" />
                 <element signature="e#10197#11516#0" expanded="false" />
-                <element signature="e#11575#12881#0" expanded="false" />
+                <element signature="e#11575#12888#0" expanded="false" />
               </folding>
             </state>
           </provider>
@@ -58,8 +56,8 @@
       <file leaf-file-name="settings.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/app/settings.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="748">
-              <caret line="44" column="0" lean-forward="false" selection-start-line="44" selection-start-column="0" selection-end-line="44" selection-end-column="0" />
+            <state relative-caret-position="119">
+              <caret line="16" column="33" lean-forward="false" selection-start-line="16" selection-start-column="33" selection-end-line="16" selection-end-column="33" />
               <folding>
                 <element signature="e#0#14#0" expanded="true" />
               </folding>
@@ -87,7 +85,7 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="geodyn_gem.py" pinned="false" current-in-tab="true">
+      <file leaf-file-name="geodyn_gem.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/geodyn_gem.py">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="407">
@@ -99,16 +97,16 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="utl.py" pinned="false" current-in-tab="false">
+      <file leaf-file-name="utl.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/app/utl.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="288">
-              <caret line="322" column="10" lean-forward="false" selection-start-line="322" selection-start-column="10" selection-end-line="322" selection-end-column="10" />
+            <state relative-caret-position="459">
+              <caret line="324" column="6" lean-forward="false" selection-start-line="324" selection-start-column="6" selection-end-line="324" selection-end-column="6" />
               <folding>
                 <element signature="e#354#383#0" expanded="true" />
-                <element signature="e#740#919#0" expanded="false" />
-                <element signature="e#952#1572#0" expanded="false" />
-                <element signature="e#13630#13694#0" expanded="false" />
+                <element signature="e#739#918#0" expanded="false" />
+                <element signature="e#951#1571#0" expanded="false" />
+                <element signature="e#14223#14287#0" expanded="false" />
               </folding>
             </state>
           </provider>
@@ -145,12 +143,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>parse_xlsx</find>
-      <find>lis</find>
-      <find>LI</find>
-      <find>POLYGON_KIKKER.shp</find>
-      <find>QgsVectorLayer</find>
-      <find>joinat</find>
       <find>joinattributesbylocation</find>
       <find>PyQt</find>
       <find>bug 26L error</find>
@@ -163,7 +155,6 @@
       <find>prec=</find>
       <find>add_layer(</find>
       <find>add_la</find>
-      <find>add_l</find>
       <find>QgsMapLayerRegistry</find>
       <find>add_lay</find>
       <find>eindresult</find>
@@ -173,8 +164,15 @@
       <find>_sel</find>
       <find>stats_ve</find>
       <find>inp_ve_be</find>
-      <find>remove_result_layers</find>
       <find>inp_ve_belasting</find>
+      <find>selected</find>
+      <find>sel</find>
+      <find>DWR</find>
+      <find>{} sele</find>
+      <find>add_fiel</find>
+      <find>remove_result_layers</find>
+      <find>bereken</find>
+      <find>add_l</find>
     </findStrings>
     <replaceStrings>
       <replace>[</replace>
@@ -197,12 +195,12 @@
         <option value="$PROJECT_DIR$/py/utl.py" />
         <option value="$PROJECT_DIR$/py/__init__.py" />
         <option value="$PROJECT_DIR$/geodyn_gem_dialog.py" />
-        <option value="$PROJECT_DIR$/app/utl.py" />
-        <option value="$PROJECT_DIR$/app/settings.py" />
         <option value="$PROJECT_DIR$/metadata.txt" />
-        <option value="$PROJECT_DIR$/app/m2_BerekenResultaten.py" />
-        <option value="$PROJECT_DIR$/app/m1_OvernemenGegevensGEM.py" />
         <option value="$PROJECT_DIR$/geodyn_gem.py" />
+        <option value="$PROJECT_DIR$/app/settings.py" />
+        <option value="$PROJECT_DIR$/app/m1_OvernemenGegevensGEM.py" />
+        <option value="$PROJECT_DIR$/app/m2_BerekenResultaten.py" />
+        <option value="$PROJECT_DIR$/app/utl.py" />
       </list>
     </option>
   </component>
@@ -648,9 +646,9 @@
           <caret line="28" column="0" lean-forward="false" selection-start-line="28" selection-start-column="0" selection-end-line="28" selection-end-column="0" />
           <folding>
             <element signature="e#354#383#0" expanded="true" />
-            <element signature="e#740#919#0" expanded="false" />
-            <element signature="e#952#1572#0" expanded="false" />
-            <element signature="e#13630#13694#0" expanded="false" />
+            <element signature="e#739#918#0" expanded="false" />
+            <element signature="e#951#1571#0" expanded="false" />
+            <element signature="e#14223#14287#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -662,10 +660,9 @@
           <folding>
             <element signature="e#0#9#0" expanded="true" />
             <element signature="e#354#2287#0" expanded="false" />
-            <element signature="e#2383#5730#0" expanded="false" />
             <element signature="e#5759#10145#0" expanded="false" />
             <element signature="e#10197#11516#0" expanded="false" />
-            <element signature="e#11575#12881#0" expanded="false" />
+            <element signature="e#11575#12888#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -712,9 +709,9 @@
           <caret line="28" column="0" lean-forward="true" selection-start-line="28" selection-start-column="0" selection-end-line="28" selection-end-column="0" />
           <folding>
             <element signature="e#354#383#0" expanded="true" />
-            <element signature="e#740#919#0" expanded="false" />
-            <element signature="e#952#1572#0" expanded="false" />
-            <element signature="e#13630#13694#0" expanded="false" />
+            <element signature="e#739#918#0" expanded="false" />
+            <element signature="e#951#1571#0" expanded="false" />
+            <element signature="e#14223#14287#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -726,10 +723,9 @@
           <folding>
             <element signature="e#0#9#0" expanded="true" />
             <element signature="e#354#2287#0" expanded="false" />
-            <element signature="e#2383#5730#0" expanded="false" />
             <element signature="e#5759#10145#0" expanded="false" />
             <element signature="e#10197#11516#0" expanded="false" />
-            <element signature="e#11575#12881#0" expanded="false" />
+            <element signature="e#11575#12888#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -913,29 +909,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/app/utl.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="288">
-          <caret line="322" column="10" lean-forward="false" selection-start-line="322" selection-start-column="10" selection-end-line="322" selection-end-column="10" />
-          <folding>
-            <element signature="e#354#383#0" expanded="true" />
-            <element signature="e#740#919#0" expanded="false" />
-            <element signature="e#952#1572#0" expanded="false" />
-            <element signature="e#13630#13694#0" expanded="false" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/app/settings.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="748">
-          <caret line="44" column="0" lean-forward="false" selection-start-line="44" selection-start-column="0" selection-end-line="44" selection-end-column="0" />
-          <folding>
-            <element signature="e#0#14#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/metadata.txt">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="442">
@@ -944,33 +917,12 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/app/m2_BerekenResultaten.py">
+    <entry file="file://$PROJECT_DIR$/app/settings.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="277">
-          <caret line="259" column="46" lean-forward="true" selection-start-line="259" selection-start-column="46" selection-end-line="259" selection-end-column="46" />
+        <state relative-caret-position="119">
+          <caret line="16" column="33" lean-forward="false" selection-start-line="16" selection-start-column="33" selection-end-line="16" selection-end-column="33" />
           <folding>
-            <element signature="e#0#9#0" expanded="true" />
-            <element signature="e#650#1741#0" expanded="false" />
-            <element signature="e#1803#2428#0" expanded="false" />
-            <element signature="e#2469#6011#0" expanded="false" />
-            <element signature="e#6053#8864#0" expanded="false" />
-            <element signature="e#11194#14162#0" expanded="false" />
-            <element signature="e#14224#14492#0" expanded="false" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/app/m1_OvernemenGegevensGEM.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="447">
-          <caret line="278" column="35" lean-forward="false" selection-start-line="278" selection-start-column="35" selection-end-line="278" selection-end-column="35" />
-          <folding>
-            <element signature="e#0#9#0" expanded="true" />
-            <element signature="e#354#2287#0" expanded="false" />
-            <element signature="e#2383#5730#0" expanded="false" />
-            <element signature="e#5759#10145#0" expanded="false" />
-            <element signature="e#10197#11516#0" expanded="false" />
-            <element signature="e#11575#12881#0" expanded="false" />
+            <element signature="e#0#14#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -981,6 +933,48 @@
           <caret line="353" column="12" lean-forward="false" selection-start-line="353" selection-start-column="12" selection-end-line="353" selection-end-column="12" />
           <folding>
             <element signature="e#1118#1193#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/app/m1_OvernemenGegevensGEM.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="192">
+          <caret line="110" column="9" lean-forward="false" selection-start-line="110" selection-start-column="4" selection-end-line="110" selection-end-column="9" />
+          <folding>
+            <element signature="e#0#9#0" expanded="true" />
+            <element signature="e#354#2287#0" expanded="false" />
+            <element signature="e#5759#10145#0" expanded="false" />
+            <element signature="e#10197#11516#0" expanded="false" />
+            <element signature="e#11575#12888#0" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/app/m2_BerekenResultaten.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="192">
+          <caret line="156" column="54" lean-forward="false" selection-start-line="156" selection-start-column="49" selection-end-line="156" selection-end-column="54" />
+          <folding>
+            <element signature="e#0#9#0" expanded="true" />
+            <element signature="e#701#1792#0" expanded="false" />
+            <element signature="e#1854#2479#0" expanded="false" />
+            <element signature="e#4882#7693#0" expanded="false" />
+            <element signature="e#10030#12998#0" expanded="false" />
+            <element signature="e#13060#13328#0" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/app/utl.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="459">
+          <caret line="324" column="6" lean-forward="false" selection-start-line="324" selection-start-column="6" selection-end-line="324" selection-end-column="6" />
+          <folding>
+            <element signature="e#354#383#0" expanded="true" />
+            <element signature="e#739#918#0" expanded="false" />
+            <element signature="e#951#1571#0" expanded="false" />
+            <element signature="e#14223#14287#0" expanded="false" />
           </folding>
         </state>
       </provider>

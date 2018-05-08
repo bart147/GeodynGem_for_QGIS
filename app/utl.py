@@ -20,7 +20,6 @@ from settings import qgis_warnings_log
 # QGIS
 from qgis.gui import QgsMessageBar, QgisInterface
 from qgis.core import * #QgsMessageLog, QgsVectorJoinInfo, QgsExpression, QgsField, QgsVectorLayer, QgsFeatureRequest
-
 from PyQt4.QtCore import QVariant
 
 def start_timer():
@@ -128,9 +127,9 @@ def add_field_from_dict(fc, fld_name, d_fld):
         "DATE" : QVariant.DateTime,
     }
 
-
-    fc.dataProvider().addAttributes([QgsField(prec=2, name=fld_name, type=fldtype_mapper.get(fld["field_type"],QVariant.String), len=field_length)])
-    fc.updateFields()
+    if fc.fieldNameIndex(fld_name) == -1:
+        fc.dataProvider().addAttributes([QgsField(prec=2, name=fld_name, type=fldtype_mapper.get(fld["field_type"],QVariant.String), len=field_length)])
+        fc.updateFields()
 
 def add_field_from_dict_label(fc, add_fld_value, d_fld):
     """velden toevoegen op basis van dict.keys 'add_fld', 'order' en 'fc' in d_fld
@@ -187,7 +186,7 @@ def bereken_veld(fc, fld_name, d_fld):
 
 def bereken_veld_label(fc, bereken, d_fld):
     """bereken velden op basis van label 'bereken' en fc in d_fld"""
-    print_log("\nvelden met label 'bereken' : '{}' uitrekenen:".format(bereken),"d")
+    print_log("\nvelden met label 'bereken' : '{}' uitrekenen:".format(bereken),"i")
     for fld in d_fld:
         if not "bereken" in d_fld[fld].keys(): continue
         if bereken == d_fld[fld]["bereken"]: bereken_veld(fc, fld, d_fld)
@@ -316,16 +315,30 @@ def get_d_velden_csv(INP_FIELDS_CSV):
     return d_velden
 
 
-def add_layer(layer):
+def add_layer(layer, visible=True):
     ins = QgsMapLayerRegistry.instance()
     layers = ins.mapLayersByName(layer.name())
     for old_layer in layers:
         ##return old_layer
         print_log("remove layer {}".format(old_layer),"d")
         ins.removeMapLayer(old_layer.id())
+    ##layer.setVisible = visible
     ins.addMapLayer(layer)
     return layer
 
+
+def update_datetime(layer, fieldname):
+    if layer.fieldNameIndex(fieldname) == -1:
+        layer.dataProvider().addAttributes([QgsField(name=fieldname, type=QVariant.String, len=19)])
+        layer.updateFields()
+    field = layer.fieldNameIndex(fieldname)
+    e = QgsExpression( " $now " )
+    e.prepare( layer.pendingFields() )
+    layer.startEditing()
+    for feat in layer.getFeatures():
+        feat[field] = e.evaluate( feat )
+        layer.updateFeature( feat )
+    layer.commitChanges()
 
 # def pandas_get_d_velden(INP_FIELDS_XLS, INP_FIELDS_XLS_SHEET):
 #     """dictionary field-info ophalen uit excel met pandas"""
