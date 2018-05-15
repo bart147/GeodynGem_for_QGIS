@@ -192,7 +192,7 @@ class GeodynGem:
         """Removes the plugin menu item and icon from QGIS GUI."""
         for action in self.actions:
             self.iface.removePluginMenu(
-                self.tr(u'&GeoDyn Gemeente'),
+                self.tr(u'&Geodyn gemeente'),
                 action)
             self.iface.removeToolBarIcon(action)
         # remove the toolbar
