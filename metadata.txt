@@ -11,7 +11,7 @@ name=GeoDyn Gemeente
 qgisMinimumVersion=2.8
 description=Wastewater prognosis tool for municipal sewage systems
     Geografisch Dynamisch afvalwater prognosetool voor gemeente
-version=0.8
+version=0.9
 author=BKGIS
 email=b.kropf@bkgis.nl
 
@@ -30,6 +30,7 @@ repository=https://github.com/bart147/GeodynGem_for_QGIS
 
 # Uncomment the following line and add your changelog:
 changelog:
+    v0.9    (2018-05-15) bug in combobox fixed. kept adding layers to input menu on rerun.
     v0.8    (2018-05-15) problem with updating. bug in function upload because of name change
     v0.7    (2018-05-15) fixed issues: 13,14,15,16
     v0.6    (2018-05-08) update icon in resources.py

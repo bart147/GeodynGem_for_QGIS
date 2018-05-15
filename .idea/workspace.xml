@@ -74,11 +74,11 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="geodyn_gem.py" pinned="false" current-in-tab="false">
+      <file leaf-file-name="geodyn_gem.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/geodyn_gem.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="2776">
-              <caret line="198" column="24" lean-forward="true" selection-start-line="198" selection-start-column="24" selection-end-line="198" selection-end-column="24" />
+            <state relative-caret-position="237">
+              <caret line="195" column="22" lean-forward="false" selection-start-line="195" selection-start-column="16" selection-end-line="195" selection-end-column="22" />
               <folding>
                 <element signature="e#1118#1193#0" expanded="true" />
               </folding>
@@ -101,11 +101,11 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="metadata.txt" pinned="false" current-in-tab="true">
+      <file leaf-file-name="metadata.txt" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/metadata.txt">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="442">
-              <caret line="32" column="93" lean-forward="false" selection-start-line="32" selection-start-column="93" selection-end-line="32" selection-end-column="93" />
+              <caret line="32" column="90" lean-forward="false" selection-start-line="32" selection-start-column="90" selection-end-line="32" selection-end-column="90" />
               <folding />
             </state>
           </provider>
@@ -557,7 +557,7 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="-8" y="-8" width="1936" height="1056" extended-state="1" />
+    <frame x="-8" y="-8" width="1936" height="1056" extended-state="0" />
     <editor active="true" />
     <layout>
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.2171875" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
@@ -947,21 +947,21 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/geodyn_gem.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="2776">
-          <caret line="198" column="24" lean-forward="true" selection-start-line="198" selection-start-column="24" selection-end-line="198" selection-end-column="24" />
-          <folding>
-            <element signature="e#1118#1193#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/metadata.txt">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="442">
-          <caret line="32" column="93" lean-forward="false" selection-start-line="32" selection-start-column="93" selection-end-line="32" selection-end-column="93" />
+          <caret line="32" column="90" lean-forward="false" selection-start-line="32" selection-start-column="90" selection-end-line="32" selection-end-column="90" />
           <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/geodyn_gem.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="237">
+          <caret line="195" column="22" lean-forward="false" selection-start-line="195" selection-start-column="16" selection-end-line="195" selection-end-column="22" />
+          <folding>
+            <element signature="e#1118#1193#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>

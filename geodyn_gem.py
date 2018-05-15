@@ -260,6 +260,13 @@ class GeodynGem:
                 "w", self.iface)
             layer_points = layer_lines = layer_polygons = layers
 
+        self.dlg.comboBox_1.clear()
+        self.dlg.comboBox_2.clear()
+        self.dlg.comboBox_3.clear()
+        self.dlg.comboBox_4.clear()
+        self.dlg.comboBox_5.clear()
+        self.dlg.comboBox_6.clear()
+        self.dlg.comboBox_7.clear()
         self.dlg.comboBox_1.addItems([i.name() for i in self.move_to_front(layer_points, "punt")])  # knooppunt
         self.dlg.comboBox_2.addItems([i.name() for i in self.move_to_front(layer_lines, "lijn")])  # afvoerrelatie
         self.dlg.comboBox_3.addItems([i.name() for i in self.move_to_front(layer_points, "BAG")])  # drinkwater BAG
