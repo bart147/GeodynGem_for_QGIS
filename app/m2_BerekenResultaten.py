@@ -34,8 +34,8 @@ def controleer_spjoin_plancap(layer, fld_join_count):
             i_leeg += 1
     ##layer.commitChanges()
 
-    if i_dubbel == 1: print_log("{} plancap valt in meerdere hoofdbemalingsgebieden!".format(i_dubbel), "w")
-    if i_dubbel > 1: print_log("{} plancaps vallen in meerdere hoofdbemalingsgebieden!".format(i_dubbel), "w")
+    if i_dubbel == 1: print_log("{} plancap valt in meerdere hoofdbemalingsgebieden! Zie selectie in layer 'plancap overlap'".format(i_dubbel), "w")
+    if i_dubbel > 1: print_log("{} plancaps vallen in meerdere hoofdbemalingsgebieden! Zie selectie in layer 'plancap overlap'".format(i_dubbel), "w")
     if i_leeg == 1: print_log("{} plancaps valt niet in een hoofdbemalingsgebied\n".format(i_leeg), "w")
     if i_leeg > 1: print_log("{} plancaps vallen niet in een hoofdbemalingsgebied\n".format(i_leeg), "w")
 
@@ -175,17 +175,23 @@ def spjoin_bronbestanden_aan_bemalingsgebieden(polygon_lis, inp_drinkwater_bag, 
     return stats_drinkwater, stats_ve, stats_plancap
 
 def bepaal_verhard_oppervlak(polygon_lis, inp_verhard_opp, VERHARD_OPP_INTERSECT):
-    print_log("Intersect {}...".format(";".join([polygon_lis.name(),inp_verhard_opp.name()])),"i")
 
-    # eerst totaal verhard opp (ha) bepalen per bemalingsgebied
-    if not INP_SKIP_SPJOIN:
-        processing.runalg("saga:intersect", inp_verhard_opp, polygon_lis, True, VERHARD_OPP_INTERSECT)
-    verhard_opp_intersect = QgsVectorLayer(VERHARD_OPP_INTERSECT, "verhard_opp_intersect", "ogr")
-    verhard_opp_intersect = add_layer(verhard_opp_intersect)
-    add_field_from_dict(verhard_opp_intersect, "HA_BEM_G", d_velden_tmp)
+    layers = [polygon_lis]
+    if inp_verhard_opp.name() == "no data":
+        verhard_opp_intersect = None
+        print_log("'no data' geselecteerd als input voor verhard oppervlak opgegeven. Berekeningen verhard opp. worden overgeslagen", "w", g_iface)
+    else:
+        print_log("Intersect {}...".format(";".join([polygon_lis.name(),inp_verhard_opp.name()])),"i")
+        # eerst totaal verhard opp (ha) bepalen per bemalingsgebied
+        if not INP_SKIP_SPJOIN:
+            processing.runalg("saga:intersect", inp_verhard_opp, polygon_lis, True, VERHARD_OPP_INTERSECT)
+        verhard_opp_intersect = QgsVectorLayer(VERHARD_OPP_INTERSECT, "verhard_opp_intersect", "ogr")
+        verhard_opp_intersect = add_layer(verhard_opp_intersect)
+        layers.append(verhard_opp_intersect)
+        add_field_from_dict(verhard_opp_intersect, "HA_BEM_G", d_velden_tmp)
 
     # opp ha berekenen
-    for layer in [verhard_opp_intersect, polygon_lis]:
+    for layer in layers:
         print_log("opp ha berekenen voor {}...".format(layer.name()),"i")
         ##d = QgsDistanceArea()
         provider = layer.dataProvider()
@@ -199,15 +205,18 @@ def bepaal_verhard_oppervlak(polygon_lis, inp_verhard_opp, VERHARD_OPP_INTERSECT
 
         provider.changeAttributeValues(updateMap)
 
+    # toevoegen velden voor PI's
+    add_field_from_dict_label(polygon_lis, "st3a", d_velden)
+
+    if verhard_opp_intersect == None:
+        return      # berekeningen overslaan
+
     print_log("bereken stats totaal opp ...", "i")
     STATS_VERHARD_OPP_TOT = os.path.join(gdb, "STATS_VERHARD_OPP_TOT.csv")
     if not INP_SKIP_SPJOIN:
         processing.runalg("qgis:statisticsbycategories", VERHARD_OPP_INTERSECT, "HA_BEM_G", "VAN_KNOOPN", STATS_VERHARD_OPP_TOT)
     stats_verh_opp_tot = QgsVectorLayer(STATS_VERHARD_OPP_TOT, "stats_verh_opp_totaal", "ogr")
     stats_verh_opp_tot = add_layer(stats_verh_opp_tot)
-
-    # toevoegen velden voor PI's
-    add_field_from_dict_label(polygon_lis, "st3a", d_velden)
 
     # overhalen verhard opp (ha) naar eindresultaat
     join_field(polygon_lis, stats_verh_opp_tot, "HA_VER_G", "sum", "VAN_KNOOPN", "category")
@@ -371,4 +380,11 @@ def main(iface, layers, workspace, d_velden_):
 
     # update_datetime UPDATED
     update_datetime(polygon_lis, "UPDATED")
+
+    # add field aliasses
+    for fld in d_velden:
+        index = polygon_lis.fieldNameIndex(fld)
+        if index != -1:
+            ##pprint_log("update {} with alias '{}'".format(fld, d_velden[fld]["field_alias"]), "i")
+            polygon_lis.addAttributeAlias(index, d_velden[fld]["field_alias"])
 

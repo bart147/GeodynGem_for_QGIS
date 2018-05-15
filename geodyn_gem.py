@@ -192,7 +192,7 @@ class GeodynGem:
         """Removes the plugin menu item and icon from QGIS GUI."""
         for action in self.actions:
             self.iface.removePluginMenu(
-                self.tr(u'&Geodyn gemeente'),
+                self.tr(u'&GeoDyn Gemeente'),
                 action)
             self.iface.removeToolBarIcon(action)
         # remove the toolbar
@@ -203,7 +203,7 @@ class GeodynGem:
         index = [l.index(i) for i in l if txt.lower() in i.name().lower()]
         if len(index) > 0:
             l.insert(0, l.pop(index[0]))
-        if txt == "VE":
+        if txt in ["VE", "opp"]:
             l.append(QgsVectorLayer(baseName="no data"))
         return l
 
@@ -243,15 +243,17 @@ class GeodynGem:
         layer_points, layer_lines, layer_polygons = [], [], []
         if b_QgsWKBTypes:
             for i, layer in enumerate(layers):
-                # qgis.core.QgsWKBTypes.displayString(int(vl.wkbType()))
-                if "point" in QgsWKBTypes.displayString(int(layer.wkbType())).lower(): ## QGis.WKBPoint:
-                    layer_points.append(layer)
-                elif "line" in QgsWKBTypes.displayString(int(layer.wkbType())).lower(): ##QGis.WKBLineString:
-                    layer_lines.append(layer)
-                elif "polygon" in QgsWKBTypes.displayString(int(layer.wkbType())).lower(): ##QGis.WKBPolygon:
-                    layer_polygons.append(layer)
-                else:
-                    pass
+                if hasattr(layer, "wkbType"):
+                    # qgis.core.QgsWKBTypes.displayString(int(vl.wkbType()))
+                    if "point" in QgsWKBTypes.displayString(int(layer.wkbType())).lower(): ## QGis.WKBPoint:
+                        layer_points.append(layer)
+                    elif "line" in QgsWKBTypes.displayString(int(layer.wkbType())).lower(): ##QGis.WKBLineString:
+                        layer_lines.append(layer)
+                    elif "polygon" in QgsWKBTypes.displayString(int(layer.wkbType())).lower(): ##QGis.WKBPolygon:
+                        layer_polygons.append(layer)
+                    else:
+                        pass
+
         else:
             print_log("ImportError for QgsWKBTypes. Kan geen geometrie herkennen voor layer inputs. \
                         Controleer of juiste layers zijn geselecteerd of upgrade QGIS.",

@@ -211,8 +211,8 @@ def controleer_spjoin(layer,fld_join_count):
             layer.changeAttributeValue(feature.id(), layer.fieldNameIndex("VAN_KNOOPN"), "LEEG-{}".format(i))
     layer.commitChanges()
 
-    if i_dubbel == 1: print_log("{} polygoon bevat 2 of meer LIS-objecten".format(i_dubbel),"w")
-    if i_dubbel > 1: print_log("{} polygonen bevatten 2 of meer LIS-objecten".format(i_dubbel),"w")
+    if i_dubbel == 1: print_log("{} polygoon bevat 2 of meer knooppunten".format(i_dubbel),"w")
+    if i_dubbel > 1: print_log("{} polygonen bevatten 2 of meer knooppunten".format(i_dubbel),"w")
     if i_leeg == 1: print_log("{} polygoon is leeg\n".format(i_leeg),"w")
     if i_leeg > 1: print_log("{} polygonen zijn leeg\n".format(i_leeg),"w")
     if i_leeg >= 1: print_log("lege polygonen voorzien van VAN_KNOOPN-> 'LEEG-<OBJID>'","i")
@@ -231,7 +231,7 @@ def controleer_hoofdbemalingsgebieden(polygon_lis):
     it = polygon_lis_overlap.getFeatures(QgsFeatureRequest(expr))  # iterator object
     polygon_lis_overlap.setSelectedFeatures([i.id() for i in it])
     if polygon_lis_overlap.selectedFeatureCount() > 0:
-        print_log("{} bemalingsgebieden met overlap!".format(polygon_lis_overlap.selectedFeatureCount()*2),'w',iface=g_iface)
+        print_log("{} bemalingsgebieden met overlap! Zie selectie in layer 'bemalingsgebieden overlap'".format(polygon_lis_overlap.selectedFeatureCount()*2),'w',iface=g_iface)
         for feature in polygon_lis_overlap.selectedFeatures():
             print_log("\toverlap tussen bemalingsgebieden {}".format(feature["ID"]),"i")
     else:
