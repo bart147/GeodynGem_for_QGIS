@@ -3,9 +3,6 @@
   <component name="ChangeListManager">
     <list default="true" id="f1facf6c-5ab9-4a81-ac6f-df3540cba4fa" name="Default" comment="">
       <change beforePath="$PROJECT_DIR$/app/m1_OvernemenGegevensGEM.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/m1_OvernemenGegevensGEM.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/m2_BerekenResultaten.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/m2_BerekenResultaten.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/settings.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/settings.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/inp_fields.xls" beforeDir="false" afterPath="$PROJECT_DIR$/inp_fields.xls" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -61,10 +58,10 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="geodyn_gem.py" pinned="false" current-in-tab="true">
+      <file leaf-file-name="geodyn_gem.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/geodyn_gem.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="133">
+            <state relative-caret-position="439">
               <caret line="336" column="12" selection-start-line="336" selection-start-column="12" selection-end-line="336" selection-end-column="12" />
               <folding>
                 <element signature="e#1118#1193#0" expanded="true" />
@@ -76,8 +73,8 @@
       <file leaf-file-name="utl.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/app/utl.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="371">
-              <caret line="178" column="34" lean-forward="true" selection-start-line="171" selection-start-column="8" selection-end-line="178" selection-end-column="34" />
+            <state relative-caret-position="456">
+              <caret line="129" column="41" lean-forward="true" selection-start-line="129" selection-start-column="4" selection-end-line="129" selection-end-column="41" />
               <folding>
                 <element signature="e#354#383#0" expanded="true" />
                 <element signature="e#739#918#0" />
@@ -106,14 +103,13 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="m1_OvernemenGegevensGEM.py" pinned="false" current-in-tab="false">
+      <file leaf-file-name="m1_OvernemenGegevensGEM.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/app/m1_OvernemenGegevensGEM.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="286">
-              <caret line="310" column="53" selection-start-line="310" selection-start-column="53" selection-end-line="310" selection-end-column="53" />
+            <state relative-caret-position="235">
+              <caret line="26" column="54" selection-start-line="26" selection-start-column="54" selection-end-line="26" selection-end-column="54" />
               <folding>
                 <element signature="e#0#9#0" expanded="true" />
-                <element signature="e#329#1270#0" />
               </folding>
             </state>
           </provider>
@@ -133,12 +129,12 @@
       <find>add_l</find>
       <find>eindresul</find>
       <find>bepaal_verhard_oppervlak</find>
-      <find />
-      <find />
+      <find>no data</find>
+      <find>met overla</find>
       <find>plancap</find>
       <find>zie</find>
-      <find />
-      <find />
+      <find>valt in</find>
+      <find>selecteer map</find>
       <find>select_output_folder</find>
       <find>K_KNP_NR</find>
       <find>HA_GEM_G</find>
@@ -155,11 +151,11 @@
       <find>OBJECT</find>
       <find>inp_polygon</find>
       <find>esri</find>
-      <find />
-      <find>create_new_inp_polygon</find>
-      <find>b_QgsWKBTypes</find>
       <find>l_result_layers_to_remove</find>
       <find>create_new_</find>
+      <find>create_new_inp_polygon</find>
+      <find>add fi</find>
+      <find>b_QgsWKBTypes</find>
     </findStrings>
     <replaceStrings>
       <replace>[</replace>
@@ -184,10 +180,10 @@
         <option value="$PROJECT_DIR$/geodyn_gem_dialog.py" />
         <option value="$PROJECT_DIR$/metadata.txt" />
         <option value="$PROJECT_DIR$/app/utl.py" />
-        <option value="$PROJECT_DIR$/app/m1_OvernemenGegevensGEM.py" />
         <option value="$PROJECT_DIR$/app/settings.py" />
         <option value="$PROJECT_DIR$/app/m2_BerekenResultaten.py" />
         <option value="$PROJECT_DIR$/geodyn_gem.py" />
+        <option value="$PROJECT_DIR$/app/m1_OvernemenGegevensGEM.py" />
       </list>
     </option>
   </component>
@@ -200,7 +196,7 @@
   <component name="NodePackageJsonFileManager">
     <packageJsonPaths />
   </component>
-  <component name="ProjectFrameBounds" extendedState="7">
+  <component name="ProjectFrameBounds" extendedState="6">
     <option name="x" value="83" />
     <option name="y" value="112" />
     <option name="width" value="1693" />
@@ -413,7 +409,6 @@
         <state>
           <folding>
             <element signature="e#0#9#0" expanded="true" />
-            <element signature="e#329#1270#0" />
           </folding>
         </state>
       </provider>
@@ -462,7 +457,6 @@
         <state>
           <folding>
             <element signature="e#0#9#0" expanded="true" />
-            <element signature="e#329#1270#0" />
           </folding>
         </state>
       </provider>
@@ -611,30 +605,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/app/utl.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="371">
-          <caret line="178" column="34" lean-forward="true" selection-start-line="171" selection-start-column="8" selection-end-line="178" selection-end-column="34" />
-          <folding>
-            <element signature="e#354#383#0" expanded="true" />
-            <element signature="e#739#918#0" />
-            <element signature="e#951#1571#0" />
-            <element signature="e#14223#14287#0" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/app/m1_OvernemenGegevensGEM.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="286">
-          <caret line="310" column="53" selection-start-line="310" selection-start-column="53" selection-end-line="310" selection-end-column="53" />
-          <folding>
-            <element signature="e#0#9#0" expanded="true" />
-            <element signature="e#329#1270#0" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/app/settings.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="248">
@@ -659,12 +629,35 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/app/utl.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="456">
+          <caret line="129" column="41" lean-forward="true" selection-start-line="129" selection-start-column="4" selection-end-line="129" selection-end-column="41" />
+          <folding>
+            <element signature="e#354#383#0" expanded="true" />
+            <element signature="e#739#918#0" />
+            <element signature="e#951#1571#0" />
+            <element signature="e#14223#14287#0" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/geodyn_gem.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="133">
+        <state relative-caret-position="439">
           <caret line="336" column="12" selection-start-line="336" selection-start-column="12" selection-end-line="336" selection-end-column="12" />
           <folding>
             <element signature="e#1118#1193#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/app/m1_OvernemenGegevensGEM.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="235">
+          <caret line="26" column="54" selection-start-line="26" selection-start-column="54" selection-end-line="26" selection-end-column="54" />
+          <folding>
+            <element signature="e#0#9#0" expanded="true" />
           </folding>
         </state>
       </provider>

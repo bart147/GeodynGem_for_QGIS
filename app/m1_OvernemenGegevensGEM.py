@@ -19,24 +19,29 @@ def create_new_inp_polygon(inp_polygon):
     vl = QgsVectorLayer(INP_POLYGON_COPY, "inp_polygon_copy", "ogr")
     add_layer(vl)
 
-    # remove old fields
+    # remove old fields except OBJECTID
     fields = vl.dataProvider().fields()
-    fList = range(len(fields))
+    fList = []
+    for fld in fields:
+        if fld.name() <> 'OBJECTID':
+            fList.append(vl.fieldNameIndex( fld.name() )) # hoe index opvragen?
+    ##fList = range(len(fields))
     vl.dataProvider().deleteAttributes(fList)
     vl.updateFields()
 
-    # add OBJECTID
-    myField = QgsField('OBJECTID', QVariant.Int)
-    vl.dataProvider().addAttributes([myField])
-    vl.updateFields()
+    if vl.fieldNameIndex('OBJECTID') == -1:
+        # add OBJECTID
+        fld = QgsField('OBJECTID', QVariant.Int)
+        vl.dataProvider().addAttributes([fld])
+        vl.updateFields()
 
-    # set OBJECTID
-    vl.startEditing()
-    for i, feature in enumerate(vl.getFeatures()):
-        feature['OBJECTID'] = i
-        vl.updateFeature(feature)
-        ##pr.changeAttributeValues({feature.id(): {pr.fieldNameMap()['OBJECTID']: 1}})
-    vl.commitChanges()
+        # set OBJECTID
+        vl.startEditing()
+        for i, feature in enumerate(vl.getFeatures()):
+            feature['OBJECTID'] = i
+            vl.updateFeature(feature)
+            ##pr.changeAttributeValues({feature.id(): {pr.fieldNameMap()['OBJECTID']: 1}})
+        vl.commitChanges()
 
     return vl
 
