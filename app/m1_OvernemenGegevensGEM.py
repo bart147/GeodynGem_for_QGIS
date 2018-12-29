@@ -241,9 +241,6 @@ def controleer_hoofdbemalingsgebieden(polygon_lis):
     return polygon_lis_overlap
 
 
-
-
-
 def main(iface, layers, workspace, d_velden):
     ''' 1.) Knooppunten exporteren, velden toevoegen.
     # relaties selecteren die naar ander bemalingsgebied afvoeren. (niet volledig binnen 1 polygoon vallen)

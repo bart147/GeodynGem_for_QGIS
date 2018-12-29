@@ -305,7 +305,8 @@ class GeodynGem:
             ##    if layer.name() in sel_layernames:
             ##        sel_layers.append(layer)
 
-            gdb = self.dlg.lineEdit.text()
+            ##gdb = self.dlg.lineEdit.text()
+            gdb = r'G:\GISDATA\QGIS\geodyn_gem\data\results'
             if not gdb or not os.path.exists(gdb):
                 print_log("Script afgebroken! Geen geldige output map opgegeven ({}...)".format(gdb), "e", self.iface)
                 return
