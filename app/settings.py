@@ -29,6 +29,7 @@ l_result_layers_to_remove = [
     ("knooppunten_sel2", True),
     ("knooppunten_sel1", True),
     ("knooppunten", False),
+    ("stats_verh_opp_VGS", True),
     ("stats_verh_opp_OBK", True),
     ("stats_verh_opp_NAG", True),
     ("stats_verh_opp_HWA", True),
@@ -40,6 +41,7 @@ l_result_layers_to_remove = [
     ("plancap_overlap", False),
     ("stats_drinkwater", True),
     ("eindresultaat", False),
+    ("inp_polygon_copy", True),
 ]
 
 # dict d_velden_tmp

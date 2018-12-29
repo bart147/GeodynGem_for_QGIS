@@ -10,6 +10,36 @@ import settings
 from utl import blokje_log, print_log, add_field_from_dict, add_field_from_dict_label, join_field, add_layer
 from Dijkstra import Graph, dijkstra
 
+def create_new_inp_polygon(inp_polygon):
+
+    # copy shapefile
+    INP_POLYGON_COPY = os.path.join(gdb, "inp_polygon_copy.shp")
+    QgsVectorFileWriter.writeAsVectorFormat(inp_polygon, INP_POLYGON_COPY, "utf-8", QgsCoordinateReferenceSystem(28992),
+                                            "ESRI Shapefile")
+    vl = QgsVectorLayer(INP_POLYGON_COPY, "inp_polygon_copy", "ogr")
+    add_layer(vl)
+
+    # remove old fields
+    fields = vl.dataProvider().fields()
+    fList = range(len(fields))
+    vl.dataProvider().deleteAttributes(fList)
+    vl.updateFields()
+
+    # add OBJECTID
+    myField = QgsField('OBJECTID', QVariant.Int)
+    vl.dataProvider().addAttributes([myField])
+    vl.updateFields()
+
+    # set OBJECTID
+    vl.startEditing()
+    for i, feature in enumerate(vl.getFeatures()):
+        feature['OBJECTID'] = i
+        vl.updateFeature(feature)
+        ##pr.changeAttributeValues({feature.id(): {pr.fieldNameMap()['OBJECTID']: 1}})
+    vl.commitChanges()
+
+    return vl
+
 
 def genereer_knooppunten(iface, inp_polygon, sel_afvoerrelaties):
     '''Genereert knooppunten op basis van afvoerrelaties (lijn-bestand) waarbij 1 knooppunt per bemalingsgebied is toegestaan.
@@ -224,13 +254,13 @@ def controleer_hoofdbemalingsgebieden(polygon_lis):
     ##arcpy.Intersect_analysis (POLYGON_LIS, POLYGON_LIS_OVERLAP)
     processing.runalg("saga:polygonselfintersection", polygon_lis, "VAN_KNOOPN", POLYGON_LIS_OVERLAP)
     polygon_lis_overlap = QgsVectorLayer(POLYGON_LIS_OVERLAP, "bemalingsgebieden overlap", "ogr")
-    polygon_lis_overlap = add_layer(polygon_lis_overlap, False)
     ##QgsMapLayerRegistry.instance().addMapLayer(polygon_lis_overlap)
 
     expr = QgsExpression("\"VAN_KNOOPN\" {}".format("IS NULL"))
     it = polygon_lis_overlap.getFeatures(QgsFeatureRequest(expr))  # iterator object
     polygon_lis_overlap.setSelectedFeatures([i.id() for i in it])
     if polygon_lis_overlap.selectedFeatureCount() > 0:
+        polygon_lis_overlap = add_layer(polygon_lis_overlap, False)
         print_log("{} bemalingsgebieden met overlap! Zie selectie in layer 'bemalingsgebieden overlap'".format(polygon_lis_overlap.selectedFeatureCount()*2),'w',iface=g_iface)
         for feature in polygon_lis_overlap.selectedFeatures():
             print_log("\toverlap tussen bemalingsgebieden {}".format(feature["ID"]),"i")
@@ -277,6 +307,9 @@ def main(iface, layers, workspace, d_velden):
 
     print_log("inp_afvoerrelatie = {}".format(inp_afvoerrelaties.name()),"i")
 
+    # inp_polygon kopieren naar lege shapefile met objectid
+    inp_polygon = create_new_inp_polygon(inp_polygon)
+
     blokje_log("Knooppunten genereren...","i")
     # genereer knooppunten uit afvoerrelaties
     point_layer = genereer_knooppunten(iface, inp_polygon, inp_afvoerrelaties)
@@ -299,8 +332,7 @@ def main(iface, layers, workspace, d_velden):
     # ##########################################################################
     # 4.) Velden overnemen uit Kikker
     blokje_log("Overige velden overnemen uit knooppunten Kikker...","i")
-    add_field_from_dict_label(polygon_lis, "st1b", d_velden)
-    join_field(polygon_lis,inp_knooppunten,"K_KNP_NR",   "VAN_KNOOPN",  "VAN_KNOOPN", "VAN_KNOOPN")
+    ##add_field_from_dict_label(polygon_lis, "st1b", d_velden)
     join_field(polygon_lis,inp_knooppunten,"K_BEM_GEB",  "NAAM",        "VAN_KNOOPN", "VAN_KNOOPN")
     join_field(polygon_lis,inp_knooppunten,"K_INST_TOT", "CAP_INST_M",  "VAN_KNOOPN", "VAN_KNOOPN")
     join_field(polygon_lis,inp_knooppunten,"K_BR_ST_M3", "BERGING_M3",  "VAN_KNOOPN", "VAN_KNOOPN")

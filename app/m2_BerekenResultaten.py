@@ -7,15 +7,6 @@ from PyQt4.QtCore import QVariant
 from utl import blokje_log, print_log, add_field_from_dict, add_field_from_dict_label, join_field, bereken_veld, bereken_veld_label, add_layer, update_datetime
 import settings
 
-def bepaal_b_VIEW(fc,wildcard):
-    """Bepaal of extra gemaal bron (Spoc_views) gebruikt is in stap 1.
-       Dat gebeurt door te controleren of de extra velden zijn aangemaakt"""
-    if len(arcpy.ListFields(fc,wildcard))>0:
-        return True
-    else:
-        print_log("geen [{}] gevonden in {}".format(wildcard,fc),"i")
-        return False
-
 
 def controleer_spjoin_plancap(layer, fld_join_count):
     """Controleer of spjoin geslaagd is (Join_Count moet in principe overal 1 zijn) voor plancap"""
@@ -206,7 +197,7 @@ def bepaal_verhard_oppervlak(polygon_lis, inp_verhard_opp, VERHARD_OPP_INTERSECT
         provider.changeAttributeValues(updateMap)
 
     # toevoegen velden voor PI's
-    add_field_from_dict_label(polygon_lis, "st3a", d_velden)
+    ##add_field_from_dict_label(polygon_lis, "st3a", d_velden)
 
     if verhard_opp_intersect == None:
         return      # berekeningen overslaan
@@ -307,6 +298,11 @@ def main(iface, layers, workspace, d_velden_):
     # ##########################################################################
     # 2.) Velden toevoegen en gegevens overnemen
     add_field_from_dict_label(polygon_lis, "st2a", d_velden)
+    # copy VAN_KNOOPN -> K_KNP_NR
+    bereken_veld(polygon_lis, "K_KNP_NR", {"K_KNP_NR":{"expression":"[VAN_KNOOPN]"}})
+    # overige velden kikker toevoegen
+    join_field(polygon_lis, inp_knooppunten, "K_BERG_VL", "BERGV_KNP_", "VAN_KNOOPN", "VAN_KNOOPN") # Verloren berging stelsel (m3)
+    join_field(polygon_lis, inp_knooppunten, "K_BR_RZ_M3", "BERG_STR_M", "VAN_KNOOPN", "VAN_KNOOPN")  # Berging randvoorziening (G) (m3)
 
     # ##########################################################################
     # 3.) Spatial joins tussen polygon_lis en de externe gegevens bronnen
@@ -385,6 +381,6 @@ def main(iface, layers, workspace, d_velden_):
     for fld in d_velden:
         index = polygon_lis.fieldNameIndex(fld)
         if index != -1:
-            ##pprint_log("update {} with alias '{}'".format(fld, d_velden[fld]["field_alias"]), "i")
+            ##print_log("update {} with alias '{}'".format(fld, d_velden[fld]["field_alias"]), "i")
             polygon_lis.addAttributeAlias(index, d_velden[fld]["field_alias"])
 
