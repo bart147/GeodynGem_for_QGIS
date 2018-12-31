@@ -259,7 +259,7 @@ def main(iface, layers, workspace, d_velden_):
     d_velden = d_velden_
     g_iface = iface
 
-    INP_SKIP_SPJOIN = False
+    INP_SKIP_SPJOIN = True
 
     # laod from settings
     gdb = workspace

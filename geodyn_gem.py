@@ -267,13 +267,13 @@ class GeodynGem:
         self.dlg.comboBox_5.clear()
         self.dlg.comboBox_6.clear()
         self.dlg.comboBox_7.clear()
-        self.dlg.comboBox_1.addItems([i.name() for i in self.move_to_front(layer_points, "punt")])  # knooppunt
-        self.dlg.comboBox_2.addItems([i.name() for i in self.move_to_front(layer_lines, "lijn")])  # afvoerrelatie
+        self.dlg.comboBox_1.addItems([i.name() for i in self.move_to_front(layer_points, "kikker")])  # knooppunt
+        self.dlg.comboBox_2.addItems([i.name() for i in self.move_to_front(layer_lines, "kikker")])  # afvoerrelatie
         self.dlg.comboBox_3.addItems([i.name() for i in self.move_to_front(layer_points, "BAG")])  # drinkwater BAG
         self.dlg.comboBox_4.addItems([i.name() for i in self.move_to_front(layer_points, "VE")])  # VE's
         self.dlg.comboBox_5.addItems([i.name() for i in self.move_to_front(layer_polygons, "RIGO")])  # plancap
         self.dlg.comboBox_6.addItems([i.name() for i in self.move_to_front(layer_polygons, "opp")])  # verhard opp
-        self.dlg.comboBox_7.addItems([i.name() for i in self.move_to_front(layer_polygons, "bemaling")])  # bemalingsgebieden
+        self.dlg.comboBox_7.addItems([i.name() for i in self.move_to_front(layer_polygons, "bem")])  # bemalingsgebieden
 
         # show the dialog
         self.dlg.show()
@@ -287,13 +287,13 @@ class GeodynGem:
             ##QgsMessageLog.logMessage("layer4 = {}".format([i.name() for i in l4]), level=QgsMessageLog.INFO)
 
             sel_layers = [
-                self.move_to_front(layer_points, "punt")[self.dlg.comboBox_1.currentIndex()],
-                self.move_to_front(layer_lines, "lijn")[self.dlg.comboBox_2.currentIndex()],
+                self.move_to_front(layer_points, "kikker")[self.dlg.comboBox_1.currentIndex()],
+                self.move_to_front(layer_lines, "kikker")[self.dlg.comboBox_2.currentIndex()],
                 self.move_to_front(layer_points, "BAG")[self.dlg.comboBox_3.currentIndex()],
                 self.move_to_front(layer_points, "VE")[self.dlg.comboBox_4.currentIndex()],
                 self.move_to_front(layer_polygons, "RIGO")[self.dlg.comboBox_5.currentIndex()],
                 self.move_to_front(layer_polygons, "opp")[self.dlg.comboBox_6.currentIndex()],
-                self.move_to_front(layer_polygons, "bemaling")[self.dlg.comboBox_7.currentIndex()],
+                self.move_to_front(layer_polygons, "bem")[self.dlg.comboBox_7.currentIndex()],
             ]
 
             # refresh input layers, werkt niet... voorlopig dan maar handmatig weggooien.
@@ -305,8 +305,8 @@ class GeodynGem:
             ##    if layer.name() in sel_layernames:
             ##        sel_layers.append(layer)
 
-            ##gdb = self.dlg.lineEdit.text()
-            gdb = r'G:\GISDATA\QGIS\geodyn_gem\data\results'
+            ##gdb = self.dlg.lineEdit.text() #
+            gdb = r'G:\GISDATA\QGIS\geodyn_gem\data\results' # voor developen
             if not gdb or not os.path.exists(gdb):
                 print_log("Script afgebroken! Geen geldige output map opgegeven ({}...)".format(gdb), "e", self.iface)
                 return
@@ -329,12 +329,18 @@ class GeodynGem:
             for fld in d_velden:
                 print_log("{}\n{}".format(fld, d_velden[fld]), "d")
 
+            # check for required fields
+            vl = sel_layers[1] # afvoerrelatie
+            if vl.fieldNameIndex('VAN_KNOOPN') == -1:
+                print_log("Script afgebroken! Verplicht veld 'VAN_KNOOPN' niet gevonden in kaartlaag '{}'".format(vl.name()), "e", self.iface)
+                return
+
             ##self.iface.messageBar().pushMessage("titel", "Start module 1", QgsMessageBar.INFO, duration=5)
             m1.main(self.iface, sel_layers, gdb, d_velden)
             ##self.iface.messageBar().pushMessage("titel", "Start module 2", QgsMessageBar.INFO, duration=5)
             m2.main(self.iface, sel_layers, gdb, d_velden)
 
-            self.remove_result_layers(remove_all=False, delete_source=False)
+            ##self.remove_result_layers(remove_all=False, delete_source=False)
 
             ##self.iface.mainWindow().statusBar().showMessage("dit is de mainWindow")
             warnings = []
@@ -351,6 +357,7 @@ class GeodynGem:
                 msg.setInformativeText("For more information see details below or view log panel")
                 msg.setDetailedText("The details are as follows:")
                 msg.setDetailedText("\n".join(warnings))
+                ##msg.setStyleSheet("QLabel{min-width: 300px;}")
                 # for line in warnings:
                 #     msg.setDetailedText(line)
             else:

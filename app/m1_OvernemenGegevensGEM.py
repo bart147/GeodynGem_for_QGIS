@@ -11,7 +11,8 @@ from utl import blokje_log, print_log, add_field_from_dict, add_field_from_dict_
 from Dijkstra import Graph, dijkstra
 
 def create_new_inp_polygon(inp_polygon):
-
+    '''Copy shapefile, delete all fields except OBJECTID.
+    If OBJECTID does not excist: add field and calculate.'''
     # copy shapefile
     INP_POLYGON_COPY = os.path.join(gdb, "inp_polygon_copy.shp")
     QgsVectorFileWriter.writeAsVectorFormat(inp_polygon, INP_POLYGON_COPY, "utf-8", QgsCoordinateReferenceSystem(28992),
@@ -46,6 +47,24 @@ def create_new_inp_polygon(inp_polygon):
     return vl
 
 
+def controleer_bemalingsgebieden(inp_polygon, inp_knooppunten):
+    '''Controleer of knoopunten in bemalingsgebied liggen.'''
+
+    processing.runalg("qgis:selectbylocation", inp_knooppunten, inp_polygon, u'intersects', 0, 0)
+    inp_knooppunten.invertSelection()
+    ids = []
+    if inp_knooppunten.fields().indexFromName('VAN_KNOOPN') == -1:
+        field = 0
+    else:
+        field = 'VAN_KNOOPN'
+    for feature in inp_knooppunten.selectedFeatures():
+        ids.append(feature[field])
+    if len(ids) == 1:
+        print_log("1 knooppunt ligt niet in een bemalingsgebied {}".format(ids), "w")
+    elif len(ids) > 1:
+        print_log("{} knooppunten liggen niet in een bemalingsgebied {}".format(len(ids),ids), "w")
+    inp_knooppunten.setSelectedFeatures([])
+
 def genereer_knooppunten(iface, inp_polygon, sel_afvoerrelaties):
     '''Genereert knooppunten op basis van afvoerrelaties (lijn-bestand) waarbij 1 knooppunt per bemalingsgebied is toegestaan.
        Alleen knooppunten die afvoeren naar een andere bemalingsgebied worden meegenomen.
@@ -54,7 +73,7 @@ def genereer_knooppunten(iface, inp_polygon, sel_afvoerrelaties):
        resultaat: vlakkenbestand POLYGON_LIS met velden K_LOOST_OP en ONTVANGT_VAN.
        '''
 
-
+    # afvoerrelaties selecteren die niet binnen 1 bemalingsgebied vallen
     sel_afvoerrelaties.selectAll()
     processing.runalg("qgis:selectbylocation", sel_afvoerrelaties, inp_polygon, u'within', 0, 2)
     print_log("{} features selected".format(sel_afvoerrelaties.selectedFeatureCount()),'d')
@@ -194,63 +213,33 @@ def lis2graph(layer):
         layer.changeAttributeValue(feature.id(), layer.fieldNameIndex("K_KNP_EIND"), K_KNP_EIND)              # eindbemalingsgebied / overnamepunt. bepaald uit netwerk.
     layer.commitChanges()
 
-    # with arcpy.da.SearchCursor(POLYGON_LIS, (search_fields)) as cursor: # sql_clause=(None, 'ORDER BY {}'.format("VAN_KNOOPN")))
-    #     for row in cursor:
-    #         VAN_KNOOPN, LOOST_OP = row
-    #         graph.add_node(VAN_KNOOPN)
-    #         graph_rev.add_node(VAN_KNOOPN)
-    #         if LOOST_OP != None:
-    #             graph.add_edge(VAN_KNOOPN, LOOST_OP, 1) # richting behouden voor bovenliggende gebied
-    #             graph_rev.add_edge(LOOST_OP, VAN_KNOOPN, 1) # richting omdraaien voor onderliggende gebied
-    # del cursor, row
-
-    # print_log ("onderbemaling bepalen voor rioolgemalen en zuiveringen...","i")
-    # where_clause = "Join_Count > 0"
-    # with arcpy.da.UpdateCursor(POLYGON_LIS, (update_fields), where_clause) as cursor: # sql_clause=(None, 'ORDER BY {}'.format("VAN_KNOOPN")))
-    #     for row in cursor:
-    #         VAN_KNOOPN = row[0]
-    #         nodes = dijkstra(graph, VAN_KNOOPN)[0]
-    #         ##arcpy.AddMessage("nodes for {}: {}".format(VAN_KNOOPN,nodes))
-    #         K_KNP_EIND, X_OPPOMP  = [(key, value) for key, value in sorted(nodes.iteritems(), key=lambda (k,v): (v,k))][-1]
-    #         ##arcpy.AddMessage("endnode for {}: {},{}".format(VAN_KNOOPN,K_KNP_EIND, X_OPPOMP))
-    #         d_edges = dijkstra(graph_rev,VAN_KNOOPN)[1]  # {'B': 'A', 'C': 'B', 'D': 'C'}
-    #         l_onderliggende_gemalen = str(list(d_edges)) # [u'ZRE-123',u'ZRE-234']
-    #         l_onderliggende_gemalen = l_onderliggende_gemalen.replace("u'","'").replace("[","").replace("]","")
-    #         row[1] = l_onderliggende_gemalen             # ONTV_VAN = 'ZRE-1','ZRE-2'
-    #         row[2] = len(list(d_edges))                  # X_OBEMAL = 2 (aantal onderbemalingen)
-    #         row[3] = X_OPPOMP + 1                        # X_OPPOMP = 1 (aantal keer oppompen tot rwzi) met shortestPath ('RWZI','ZRE-4')
-    #         row[4] = K_KNP_EIND                          # eindbemalingsgebied / overnamepunt. bepaald uit netwerk.
-    #         cursor.updateRow(row)
-    # del cursor, row
-
     return layer
 
 
 def controleer_spjoin(layer,fld_join_count):
     """Controleer of spjoin geslaagd is (Join_Count moet in principe overal 1 zijn).
-       Vult VAN_KNOOPN voor lege polygonen met 'LEEG-<OBJID>'."""
+       Vult VAN_KNOOPN voor lege bemalingsgebieden met 'LEEG-<OBJID>'."""
     i_dubbel, i_leeg = 0, 0
 
     layer.startEditing()
     for i, feature in enumerate(layer.getFeatures()):
-
         JOIN_COUNT = feature[fld_join_count] if feature[fld_join_count] else 0
         VAN_KNOOPN = feature["VAN_KNOOPN"] if feature["VAN_KNOOPN"] else None
         print_log("{} - {}".format(VAN_KNOOPN,JOIN_COUNT), "d")
         if JOIN_COUNT >= 2:
             i_dubbel += 1
-            print_log("polygon '{}' bevat {} objecten!".format(VAN_KNOOPN,JOIN_COUNT), "i")
+            print_log("bemalingsgebied '{}' bevat {} rioolgemalen!".format(VAN_KNOOPN,JOIN_COUNT), "i")
         if JOIN_COUNT == 0:
             i_leeg += 1
             feature.setAttribute("VAN_KNOOPN", "LEEG-{}".format(i))
             layer.changeAttributeValue(feature.id(), layer.fieldNameIndex("VAN_KNOOPN"), "LEEG-{}".format(i))
     layer.commitChanges()
 
-    if i_dubbel == 1: print_log("{} polygoon bevat 2 of meer knooppunten".format(i_dubbel),"w")
-    if i_dubbel > 1: print_log("{} polygonen bevatten 2 of meer knooppunten".format(i_dubbel),"w")
-    if i_leeg == 1: print_log("{} polygoon is leeg\n".format(i_leeg),"w")
-    if i_leeg > 1: print_log("{} polygonen zijn leeg\n".format(i_leeg),"w")
-    if i_leeg >= 1: print_log("lege polygonen voorzien van VAN_KNOOPN-> 'LEEG-<OBJID>'","i")
+    if i_dubbel == 1: print_log("{} bemalingsgebied bevat 2 of meer knooppunten".format(i_dubbel),"w")
+    if i_dubbel > 1: print_log("{} bemalingsgebieden bevatten 2 of meer knooppunten".format(i_dubbel),"w")
+    if i_leeg == 1: print_log("{} bemalingsgebied is leeg\n".format(i_leeg),"w")
+    if i_leeg > 1: print_log("{} bemalingsgebieden zijn leeg\n".format(i_leeg),"w")
+    if i_leeg >= 1: print_log("lege bemalingsgebieden voorzien van VAN_KNOOPN-> 'LEEG-<OBJID>'","i")
 
 
 def controleer_hoofdbemalingsgebieden(polygon_lis):
@@ -278,7 +267,7 @@ def controleer_hoofdbemalingsgebieden(polygon_lis):
 
 def main(iface, layers, workspace, d_velden):
     ''' 1.) Knooppunten exporteren, velden toevoegen.
-    # relaties selecteren die naar ander bemalingsgebied afvoeren. (niet volledig binnen 1 polygoon vallen)
+    # relaties selecteren die naar ander bemalingsgebied afvoeren. (niet volledig binnen 1 bemalingsgebied vallen)
     # knooppunten selecteren die op ander bemalingsgebied afvoeren (op basis van selectie afvoerrelaties)
     # knooppunten koppelen aan bemalingsgebieden / gebieden voorzien van code. (sp.join)
     # eindpunten genereren van afvoerrelatie (line_to_point, select if not intersect with knooppunt)
@@ -314,6 +303,9 @@ def main(iface, layers, workspace, d_velden):
 
     # inp_polygon kopieren naar lege shapefile met objectid
     inp_polygon = create_new_inp_polygon(inp_polygon)
+
+    # bemalingsgebieden controleren
+    controleer_bemalingsgebieden(inp_polygon, inp_knooppunten)
 
     blokje_log("Knooppunten genereren...","i")
     # genereer knooppunten uit afvoerrelaties
