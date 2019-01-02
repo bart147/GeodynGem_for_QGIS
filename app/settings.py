@@ -11,7 +11,7 @@ INP_FIELDS_XLS_SHEET    = "fields"
 INP_FIELDS_CSV  = os.path.join(root_dir, 'inp_fields.csv')
 
 # logging
-LOGGING_LEVEL = logging.INFO        # set tot DEBUG for all information or INFO for only main info
+LOGGING_LEVEL = logging.DEBUG        # set tot DEBUG for all information or INFO for only main info
 if not os.path.exists(log_dir): os.mkdir(log_dir)
 strftime = datetime.strftime(datetime.now(),"%Y%m%d-%H.%M")
 logFileName = 'GeoDyn_{}.log'.format(strftime)

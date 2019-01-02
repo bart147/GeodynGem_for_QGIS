@@ -336,9 +336,9 @@ class GeodynGem:
                 return
 
             ##self.iface.messageBar().pushMessage("titel", "Start module 1", QgsMessageBar.INFO, duration=5)
-            m1.main(self.iface, sel_layers, gdb, d_velden)
+            d_K_ONTV_VAN, inp_polygon_layer = m1.main(self.iface, sel_layers, gdb, d_velden)
             ##self.iface.messageBar().pushMessage("titel", "Start module 2", QgsMessageBar.INFO, duration=5)
-            m2.main(self.iface, sel_layers, gdb, d_velden)
+            m2.main(self.iface, sel_layers, gdb, d_velden, d_K_ONTV_VAN, inp_polygon_layer)
 
             ##self.remove_result_layers(remove_all=False, delete_source=False)
 
@@ -355,9 +355,14 @@ class GeodynGem:
                 msg.setWindowTitle("Script completed")
                 msg.setText("{} warnings were encountered when running script".format(len(warnings)))
                 msg.setInformativeText("For more information see details below or view log panel")
-                msg.setDetailedText("The details are as follows:")
-                msg.setDetailedText("\n".join(warnings))
-                ##msg.setStyleSheet("QLabel{min-width: 300px;}")
+                detailedText = "The details are as follows:"
+                detailedText += "\n " + "".join(warnings)
+                detailedText += "\nlogfile: {}".format(qgis_warnings_log)
+                ##msg.setDetailedText("The details are as follows:")
+                ##msg.setDetailedText("\n".join(warnings))
+                ##msg.setDetailedText("logfile: {}".format(qgis_warnings_log))
+                msg.setDetailedText(detailedText)
+                msg.setStyleSheet("QLabel{min-width: 300px;}")
                 # for line in warnings:
                 #     msg.setDetailedText(line)
             else:

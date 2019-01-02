@@ -7,7 +7,7 @@ from PyQt4.QtCore import QVariant
 
 # custom modules
 import settings
-from utl import blokje_log, print_log, add_field_from_dict, add_field_from_dict_label, join_field, add_layer
+from utl import blokje_log, print_log, add_field_from_dict, add_field_from_dict_label, join_field, add_layer, fields_to_uppercase
 from Dijkstra import Graph, dijkstra
 
 def create_new_inp_polygon(inp_polygon):
@@ -64,6 +64,7 @@ def controleer_bemalingsgebieden(inp_polygon, inp_knooppunten):
     elif len(ids) > 1:
         print_log("{} knooppunten liggen niet in een bemalingsgebied {}".format(len(ids),ids), "w")
     inp_knooppunten.setSelectedFeatures([])
+
 
 def genereer_knooppunten(iface, inp_polygon, sel_afvoerrelaties):
     '''Genereert knooppunten op basis van afvoerrelaties (lijn-bestand) waarbij 1 knooppunt per bemalingsgebied is toegestaan.
@@ -134,6 +135,7 @@ def koppel_knooppunten_aan_bemalingsgebieden(iface, d_velden, inp_polygon, knoop
     polygon_lis.updateFields()
 
     polygon_lis = add_layer(polygon_lis)
+    fields_to_uppercase(polygon_lis)
     polygon_lis_sum = add_layer(polygon_lis_sum)
     ##QgsMapLayerRegistry.instance().addMapLayer(polygon_lis)
     ##QgsMapLayerRegistry.instance().addMapLayer(polygon_lis_sum)
@@ -183,6 +185,7 @@ def lis2graph(layer):
     # graph aanmaken
     graph = Graph()
     graph_rev = Graph()
+    d_K_ONTV_VAN = {}
 
     print_log ("netwerk opslaan als graph...","i")
     for feature in layer.getFeatures():  # .getFeatures()
@@ -211,9 +214,10 @@ def lis2graph(layer):
         layer.changeAttributeValue(feature.id(), layer.fieldNameIndex("X_OBEMAL"), len(list(d_edges)))        # X_OBEMAL = 2 (aantal onderbemalingen)
         layer.changeAttributeValue(feature.id(), layer.fieldNameIndex("X_OPPOMP"),  X_OPPOMP + 1)             # X_OPPOMP = 1 (aantal keer oppompen tot rwzi) met shortestPath ('RWZI','ZRE-4')
         layer.changeAttributeValue(feature.id(), layer.fieldNameIndex("K_KNP_EIND"), K_KNP_EIND)              # eindbemalingsgebied / overnamepunt. bepaald uit netwerk.
+        d_K_ONTV_VAN[VAN_KNOOPN] = l_onderliggende_gemalen
     layer.commitChanges()
 
-    return layer
+    return d_K_ONTV_VAN
 
 
 def controleer_spjoin(layer,fld_join_count):
@@ -318,7 +322,7 @@ def main(iface, layers, workspace, d_velden):
     # 2.) Graph vullen met LIS [LOOST_OP], onderbemaling bepalen en wegschrijven in [ONTV_VAN]
 
     blokje_log("Bepaal onderbemaling en aantal keer oppompen...","i")
-    lis2graph(polygon_lis)
+    d_K_ONTV_VAN = lis2graph(polygon_lis)
 
     # ##########################################################################
     # 3.) Controleer overlap HOOFDBEMALINGSGEBIEDEN
@@ -335,3 +339,4 @@ def main(iface, layers, workspace, d_velden):
     join_field(polygon_lis,inp_knooppunten,"K_BR_ST_M3", "BERGING_M3",  "VAN_KNOOPN", "VAN_KNOOPN")
     join_field(polygon_lis,inp_knooppunten,"K_OSH",      "LAAGSTE_OS",  "VAN_KNOOPN", "VAN_KNOOPN")
 
+    return d_K_ONTV_VAN, inp_polygon

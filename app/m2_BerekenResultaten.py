@@ -4,7 +4,7 @@ import processing
 from qgis.core import *
 from PyQt4.QtCore import QVariant
 # custom imports
-from utl import blokje_log, print_log, add_field_from_dict, add_field_from_dict_label, join_field, bereken_veld, bereken_veld_label, add_layer, update_datetime
+from utl import blokje_log, print_log, add_field_from_dict, add_field_from_dict_label, join_field, bereken_veld, bereken_veld_label, add_layer, update_datetime, fields_to_uppercase
 import settings
 
 
@@ -20,15 +20,15 @@ def controleer_spjoin_plancap(layer, fld_join_count):
         ##print_log("{} - {}".format(PLAN_ID, JOIN_COUNT), "i")
         if JOIN_COUNT >= 2:
             i_dubbel += 1
-            print_log("planid '{}' valt in {} bemalingsgebieden!".format(PLAN_ID, JOIN_COUNT), "w", g_iface)
+            print_log("planid '{}' valt in {} bemalingsgebieden!".format(PLAN_ID, int(JOIN_COUNT)), "i", g_iface)
         if JOIN_COUNT == 0:
             i_leeg += 1
     ##layer.commitChanges()
 
-    if i_dubbel == 1: print_log("{} plancap valt in meerdere hoofdbemalingsgebieden! Zie selectie in layer 'plancap overlap'".format(i_dubbel), "w")
-    if i_dubbel > 1: print_log("{} plancaps vallen in meerdere hoofdbemalingsgebieden! Zie selectie in layer 'plancap overlap'".format(i_dubbel), "w")
-    if i_leeg == 1: print_log("{} plancaps valt niet in een hoofdbemalingsgebied\n".format(i_leeg), "w")
-    if i_leeg > 1: print_log("{} plancaps vallen niet in een hoofdbemalingsgebied\n".format(i_leeg), "w")
+    if i_dubbel == 1: print_log("{} woningbouwplan valt in meerdere hoofdbemalingsgebieden! Zie selectie in layer 'plancap overlap'".format(i_dubbel), "w")
+    if i_dubbel > 1: print_log("{} woningbouwplannen vallen in meerdere hoofdbemalingsgebieden! Zie selectie in layer 'plancap overlap'".format(i_dubbel), "w")
+    if i_leeg == 1: print_log("{} woningbouwplannen valt niet in een hoofdbemalingsgebied\n".format(i_leeg), "w")
+    if i_leeg > 1: print_log("{} woningbouwplannen vallen niet in een hoofdbemalingsgebied\n".format(i_leeg), "w")
 
 
 def vervang_None_door_0_voor_velden_in_lijst(l,layer):
@@ -46,14 +46,14 @@ def vervang_None_door_0_voor_velden_in_lijst(l,layer):
     layer.commitChanges()
 
 
-def bereken_onderbemaling(layer):
+def bereken_onderbemaling(layer, d_K_ONTV_VAN):
     """bereken onderbemalingen voor SUM_WAARDE, SUM_BLA, etc..
        Maakt selectie op basis van veld [ONTV_VAN] -> VAN_KNOOPN IN ('ZRE-123424', 'ZRE-234')"""
     # sum values op basis van selectie [ONTV_VAN]
     layer.startEditing()
     for feature in layer.getFeatures():
         VAN_KNOOPN = feature["VAN_KNOOPN"]
-        ONTV_VAN = feature["K_ONTV_VAN"]
+        ONTV_VAN = d_K_ONTV_VAN.get(VAN_KNOOPN, "") #feature["K_ONTV_VAN"]
         if not str(ONTV_VAN) in ["NULL", ""," "]: # check of sprake is van onderbemaling
             print_log("K_ONTV_VAN = {}".format(ONTV_VAN),"d")
             where_clause = '"VAN_KNOOPN" IN ({})'.format(ONTV_VAN)
@@ -78,7 +78,7 @@ def bereken_onderbemaling(layer):
     print_log("Onderbemalingen succesvol berekend voor Plancap, drinkwater, woningen en ve's", "i")
 
 
-def bereken_onderbemaling2(layer):
+def bereken_onderbemaling2(layer, d_K_ONTV_VAN):
     """bereken onderbemalingen voor SUM_WAARDE, SUM_BLA, etc..
        Maakt selectie op basis van veld [ONTV_VAN] -> VAN_KNOOPN IN ('ZRE-123424', 'ZRE-234')"""
     # sum values op basis van selectie [ONTV_VAN]
@@ -86,7 +86,7 @@ def bereken_onderbemaling2(layer):
     layer.startEditing()
     for feature in layer.getFeatures():
         VAN_KNOOPN = feature["VAN_KNOOPN"]
-        ONTV_VAN = feature["K_ONTV_VAN"]
+        ONTV_VAN = d_K_ONTV_VAN.get(VAN_KNOOPN,"") #feature["K_ONTV_VAN"]
         if not str(ONTV_VAN) in ["NULL", "", " "]:  # check of sprake is van onderbemaling
             print_log("K_ONTV_VAN = {}".format(ONTV_VAN), "i")
             where_clause = '"VAN_KNOOPN" IN ({})'.format(ONTV_VAN)
@@ -106,26 +106,6 @@ def bereken_onderbemaling2(layer):
     layer.commitChanges()
     layer.setSelectedFeatures([])
     print_log("Onderbemalingen succesvol berekend voor POC ontwerp en POC beschikbaar", "i")
-
-
-    # update_fields = ["VAN_KNOOPN",  # row[0]
-    #                  "K_ONTV_VAN",  # row[1]
-    #                  "POC_B_M3_G",  # row[2]
-    #                  "POC_B_M3_O",  # row[3]
-    #                  "POC_O_M3_G",  # row[4]
-    #                  "POC_O_M3_O",  # row[5]
-    #                  ]
-    #
-    # with arcpy.da.UpdateCursor(fc, (update_fields)) as cursor:
-    #     for row in cursor:
-    #         VAN_KNOOPN, ONTV_VAN = row[0], row[1]
-    #         if not ONTV_VAN in [None,""," "]: # check of sprake is van onderbemaling
-    #             where_clause = "VAN_KNOOPN IN ({})".format(ONTV_VAN)
-    #             row[3] = sum([r[0] for r in arcpy.da.SearchCursor(fc,["POC_B_M3_G"],where_clause) if r[0] != None])    # POC_B_M3_O = sum(POC_B_M3_G)
-    #             row[5] = sum([r[0] for r in arcpy.da.SearchCursor(fc,["POC_O_M3_G"],where_clause) if r[0] != None])    # POC_O_M3_O = sum(POC_O_M3_G)
-    #             cursor.updateRow(row)
-    # del cursor, row
-    # print_log("Onderbemalingen succesvol berekend voor POC ontwerp en POC beschikbaar", "i")
 
 
 def spjoin_bronbestanden_aan_bemalingsgebieden(polygon_lis, inp_drinkwater_bag, inp_ve_belasting, inp_plancap, inp_polygon,
@@ -164,6 +144,7 @@ def spjoin_bronbestanden_aan_bemalingsgebieden(polygon_lis, inp_drinkwater_bag, 
         stats_ve = add_layer(stats_ve)
 
     return stats_drinkwater, stats_ve, stats_plancap
+
 
 def bepaal_verhard_oppervlak(polygon_lis, inp_verhard_opp, VERHARD_OPP_INTERSECT):
 
@@ -244,7 +225,7 @@ def setColumnVisibility( layer, columnName, visible ):
     layer.setAttributeTableConfig( config )
 
 
-def main(iface, layers, workspace, d_velden_):
+def main(iface, layers, workspace, d_velden_, d_K_ONTV_VAN, inp_polygon):
     """Hoofdmenu:
     1.) Kopie maken INPUT_POLYGON_LIS
     2.) Spatial joins tussen POLYGON_LIS en de externe gegevens bronnen.
@@ -259,7 +240,7 @@ def main(iface, layers, workspace, d_velden_):
     d_velden = d_velden_
     g_iface = iface
 
-    INP_SKIP_SPJOIN = True
+    INP_SKIP_SPJOIN = False
 
     # laod from settings
     gdb = workspace
@@ -267,7 +248,7 @@ def main(iface, layers, workspace, d_velden_):
     d_velden_tmp = settings.d_velden_tmp  # tijdelijke velden
 
     # layers
-    inp_knooppunten, inp_afvoerrelaties, inp_drinkwater_bag, inp_ve_belasting, inp_plancap, inp_verhard_opp, inp_polygon = layers
+    inp_knooppunten, inp_afvoerrelaties, inp_drinkwater_bag, inp_ve_belasting, inp_plancap, inp_verhard_opp, old_inp_polygon = layers
     for i, layer in enumerate(layers):
         print_log("input {}:\t{}".format(i, layer.name()), "d")
 
@@ -284,6 +265,7 @@ def main(iface, layers, workspace, d_velden_):
     EXP_VERHARD_OPP         = os.path.join(gdb, "EXP_VERHARD_OPP.shp")
     VERHARD_OPP_INTERSECT   = os.path.join(gdb, "VERHARD_OPP_INTERSECT.shp")
     STATS_VERHARD_OPP       = os.path.join(gdb, "STATS_VERHARD_OPP.shp")
+    INP_POLYGON_COPY        = os.path.join(gdb, "inp_polygon_copy.shp")
 
 
     # ##########################################################################
@@ -292,8 +274,14 @@ def main(iface, layers, workspace, d_velden_):
     if EINDRESULTAAT:
         QgsVectorFileWriter.deleteShapeFile(EINDRESULTAAT)
     QgsVectorFileWriter.writeAsVectorFormat(tussenresultaat, EINDRESULTAAT, "utf-8", tussenresultaat.crs(), "ESRI Shapefile")
+    ##QgsVectorFileWriter.writeAsVectorFormat(tussenresultaat, os.path.join(gdb,"eindresultaat"), "utf-8", tussenresultaat.crs(), "SQLite", False, None ,["SPATIALITE=YES"])
+
+    # ##########################
+    ##EINDRESULTAAT = os.path.join(gdb,'eindresultaat.sqlite')
     polygon_lis = QgsVectorLayer(EINDRESULTAAT, "eindresultaat", "ogr")
     polygon_lis = add_layer(polygon_lis)
+
+    fields_to_uppercase(polygon_lis)
 
     # ##########################################################################
     # 2.) Velden toevoegen en gegevens overnemen
@@ -340,7 +328,7 @@ def main(iface, layers, workspace, d_velden_):
     # ##########################################################################
     # 4.) Bereken onderbemaling voor DRINKWATER en PLANCAP en VE's
     blokje_log("bereken onderbemalingen voor drinkwater, plancap en ve's...","i")
-    bereken_onderbemaling(polygon_lis)
+    bereken_onderbemaling(polygon_lis, d_K_ONTV_VAN)
 
     vervang_None_door_0_voor_velden_in_lijst(l_src_None_naar_0_omzetten, polygon_lis)
 
@@ -368,7 +356,7 @@ def main(iface, layers, workspace, d_velden_):
     bereken_veld_label(polygon_lis, '08_ber', d_velden)
 
     # bepaal onderbemaling2 afhankelijk van verhard opp
-    bereken_onderbemaling2(polygon_lis)
+    bereken_onderbemaling2(polygon_lis, d_K_ONTV_VAN)
     vervang_None_door_0_voor_velden_in_lijst(
             ["POC_B_M3_O", "POC_O_M3_O","POC_B_M3_G", "POC_O_M3_G"], polygon_lis)
     bereken_veld_label(polygon_lis, '10_ber', d_velden)
