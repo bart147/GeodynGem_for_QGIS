@@ -296,17 +296,8 @@ class GeodynGem:
                 self.move_to_front(layer_polygons, "bem")[self.dlg.comboBox_7.currentIndex()],
             ]
 
-            # refresh input layers, werkt niet... voorlopig dan maar handmatig weggooien.
-            ##sel_layernames = [layer.name() for layer in sel_layers]
-            ##self.remove_result_layers(settings.l_result_layers_all)
-            ##sel_layers = []
-            ##layers = self.iface.legendInterface().layers()
-            ##for layer in layers:
-            ##    if layer.name() in sel_layernames:
-            ##        sel_layers.append(layer)
-
-            ##gdb = self.dlg.lineEdit.text() #
-            gdb = r'G:\GISDATA\QGIS\geodyn_gem\data\results' # voor developen
+            gdb = self.dlg.lineEdit.text() #
+            ##gdb = r'G:\GISDATA\QGIS\geodyn_gem\data\results' # voor developen
             if not gdb or not os.path.exists(gdb):
                 print_log("Script afgebroken! Geen geldige output map opgegeven ({}...)".format(gdb), "e", self.iface)
                 return
@@ -330,17 +321,19 @@ class GeodynGem:
                 print_log("{}\n{}".format(fld, d_velden[fld]), "d")
 
             # check for required fields
-            vl = sel_layers[1] # afvoerrelatie
+            vl = sel_layers[0] # knooppunt
+            if vl.fieldNameIndex('VAN_KNOOPN') == -1:
+                print_log("Script afgebroken! Verplicht veld 'VAN_KNOOPN' niet gevonden in kaartlaag '{}'".format(vl.name()), "e", self.iface)
+                return
+            vl = sel_layers[1]  # afvoerrelatie
             if vl.fieldNameIndex('VAN_KNOOPN') == -1:
                 print_log("Script afgebroken! Verplicht veld 'VAN_KNOOPN' niet gevonden in kaartlaag '{}'".format(vl.name()), "e", self.iface)
                 return
 
-            ##self.iface.messageBar().pushMessage("titel", "Start module 1", QgsMessageBar.INFO, duration=5)
             d_K_ONTV_VAN, inp_polygon_layer = m1.main(self.iface, sel_layers, gdb, d_velden)
-            ##self.iface.messageBar().pushMessage("titel", "Start module 2", QgsMessageBar.INFO, duration=5)
             m2.main(self.iface, sel_layers, gdb, d_velden, d_K_ONTV_VAN, inp_polygon_layer)
 
-            ##self.remove_result_layers(remove_all=False, delete_source=False)
+            self.remove_result_layers(remove_all=False, delete_source=False)
 
             ##self.iface.mainWindow().statusBar().showMessage("dit is de mainWindow")
             warnings = []
@@ -356,15 +349,10 @@ class GeodynGem:
                 msg.setText("{} warnings were encountered when running script".format(len(warnings)))
                 msg.setInformativeText("For more information see details below or view log panel")
                 detailedText = "The details are as follows:"
-                detailedText += "\n " + "".join(warnings)
-                detailedText += "\nlogfile: {}".format(qgis_warnings_log)
-                ##msg.setDetailedText("The details are as follows:")
-                ##msg.setDetailedText("\n".join(warnings))
-                ##msg.setDetailedText("logfile: {}".format(qgis_warnings_log))
+                detailedText += "\n" + "".join(warnings)
+                detailedText += "\nlogfile: {}".format(settings.logFile)
                 msg.setDetailedText(detailedText)
                 msg.setStyleSheet("QLabel{min-width: 300px;}")
-                # for line in warnings:
-                #     msg.setDetailedText(line)
             else:
                 msg.setIcon(QMessageBox.Information)
                 msg.setWindowTitle("Script completed")
