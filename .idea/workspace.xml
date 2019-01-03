@@ -1,7 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="f1facf6c-5ab9-4a81-ac6f-df3540cba4fa" name="Default" comment="" />
+    <list default="true" id="f1facf6c-5ab9-4a81-ac6f-df3540cba4fa" name="Default" comment="">
+      <change beforePath="$PROJECT_DIR$/log/GeoDyn_20180309-17.32.log" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/log/GeoDyn_20180309-17.33.log" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/log/GeoDyn_20180309-17.34.log" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/log/GeoDyn_20180309-17.36.log" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/log/GeoDyn_20180309-17.37.log" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/log/GeoDyn_20180309-17.39.log" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/log/GeoDyn_20180310-10.07.log" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/log/GeoDyn_20180310-10.10.log" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/log/GeoDyn_20180310-10.11.log" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/log/GeoDyn_20180310-10.13.log" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/log/GeoDyn_20180310-10.14.log" beforeDir="false" />
+    </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -60,7 +72,7 @@
         <entry file="file://$PROJECT_DIR$/geodyn_gem.py">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="1013">
-              <caret line="338" column="25" lean-forward="true" selection-start-line="338" selection-start-column="25" selection-end-line="338" selection-end-column="25" />
+              <caret line="338" column="25" selection-start-line="338" selection-start-column="25" selection-end-line="338" selection-end-column="25" />
               <folding>
                 <element signature="e#1118#1193#0" expanded="true" />
               </folding>
@@ -349,7 +361,6 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="-8" y="-8" width="1936" height="1056" extended-state="6" />
-    <editor active="true" />
     <layout>
       <window_info anchor="bottom" id="TODO" order="6" />
       <window_info active="true" anchor="bottom" id="Event Log" order="7" sideWeight="0.50625" side_tool="true" visible="true" weight="0.32946146" />
@@ -690,7 +701,7 @@
     <entry file="file://$PROJECT_DIR$/geodyn_gem.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="1013">
-          <caret line="338" column="25" lean-forward="true" selection-start-line="338" selection-start-column="25" selection-end-line="338" selection-end-column="25" />
+          <caret line="338" column="25" selection-start-line="338" selection-start-column="25" selection-end-line="338" selection-end-column="25" />
           <folding>
             <element signature="e#1118#1193#0" expanded="true" />
           </folding>
