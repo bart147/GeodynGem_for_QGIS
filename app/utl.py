@@ -189,7 +189,7 @@ def bereken_veld_label(fc, bereken, d_fld):
         if not "bereken" in d_fld[fld].keys(): continue
         if bereken == d_fld[fld]["bereken"]: bereken_veld(fc, fld, d_fld)
 
-def join_field(input_table, join_table, field_to_calc, field_to_copy, joinfield_input_table, joinfield_join_table):
+def join_field(input_table, join_table, field_to_calc, field_to_copy, joinfield_input_table, joinfield_join_table, inner_join=False):
     """Veld overnemen uit andere tabel o.b.v. tablejoin.
        Het veld wat gevuld moet worden (field_to_calc) moet al wel bestaan en wordt in deze functie alleen gevuld.
        Vul "pk" in bij joinfield_join_table om de primary key te laten bepalen of kies een ander veld"""
@@ -218,7 +218,17 @@ def join_field(input_table, join_table, field_to_calc, field_to_copy, joinfield_
 
         input_table.startEditing()
         idx = input_table.fieldNameIndex(field_to_calc)
-        for f in input_table.getFeatures():
+        if inner_join:
+            print_log("inner_join = True", 'd')
+            s_expr = '"{}_{}" IS NOT NULL'.format(join_table.name(),field_to_copy)
+            print_log(s_expr, 'd')
+            expr = QgsExpression(s_expr)
+            it = input_table.getFeatures(QgsFeatureRequest(expr))  # iterator object
+            input_table.setSelectedFeatures([i.id() for i in it])
+            features = input_table.selectedFeatures()
+        else:
+            features = input_table.getFeatures()
+        for f in features:
             f[idx] = e.evaluate(f)
             input_table.updateFeature(f)
         input_table.commitChanges()

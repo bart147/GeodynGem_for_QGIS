@@ -365,7 +365,7 @@ class GeodynGem:
 
             # run module 1
             d_K_ONTV_VAN, inp_polygon_layer = m1.main(self.iface, sel_layers, gdb, d_velden)
-
+            return
             # run module 2
             m2.main(self.iface, sel_layers, gdb, d_velden, d_K_ONTV_VAN, inp_polygon_layer)
 

@@ -112,7 +112,7 @@ def genereer_knooppunten(iface, inp_polygon, sel_afvoerrelaties):
     return point_layer
 
 
-def koppel_knooppunten_aan_bemalingsgebieden(iface, d_velden, inp_polygon, knooppunten):
+def koppel_knooppunten_aan_bemalingsgebieden(iface, d_velden, inp_polygon, knooppunten, inp_knooppunten):
     # knooppunten koppelen aan bemalingsgebieden / gebieden voorzien van code. (sp.join)
 
     expr = QgsExpression("\"BEGIN_EIND\" = {}".format(0))
@@ -135,7 +135,7 @@ def koppel_knooppunten_aan_bemalingsgebieden(iface, d_velden, inp_polygon, knoop
     polygon_lis.updateFields()
 
     polygon_lis = add_layer(polygon_lis)
-    fields_to_uppercase(polygon_lis)
+    ##fields_to_uppercase(polygon_lis)
     polygon_lis_sum = add_layer(polygon_lis_sum)
     ##QgsMapLayerRegistry.instance().addMapLayer(polygon_lis)
     ##QgsMapLayerRegistry.instance().addMapLayer(polygon_lis_sum)
@@ -148,7 +148,7 @@ def koppel_knooppunten_aan_bemalingsgebieden(iface, d_velden, inp_polygon, knoop
                joinfield_input_table="OBJECTID",
                joinfield_join_table="OBJECTID")
 
-    QgsMapLayerRegistry.instance().removeMapLayer(polygon_lis_sum.name())
+    ##QgsMapLayerRegistry.instance().removeMapLayer(polygon_lis_sum.name())
 
     # controleer spjoin
     ##controleer_spjoin(polygon_lis,"count")
@@ -171,6 +171,50 @@ def koppel_knooppunten_aan_bemalingsgebieden(iface, d_velden, inp_polygon, knoop
     eindknooppunten = add_layer(eindknooppunten)
     ##QgsMapLayerRegistry.instance().addMapLayer(eindknooppunten)
 
+    # bepaal alle gebieden waarop geloosd wordt (die eindknoop bevatten)
+    # output: eindknoopgebieden
+    processing.runalg("qgis:selectbylocation", polygon_lis, eindknooppunten, ['intersects'], 0, 0)
+    EINDKNOOPGEBIEDEN = os.path.join(gdb, "eindknoopgebieden.shp")
+    QgsVectorFileWriter.writeAsVectorFormat(polygon_lis, EINDKNOOPGEBIEDEN, "utf-8",
+                                            polygon_lis.crs(), "ESRI Shapefile", True)
+    eindknoopgebieden = QgsVectorLayer(EINDKNOOPGEBIEDEN, "eindknoopgebieden", "ogr")
+    add_layer(eindknoopgebieden)
+
+    # selecteer van eindgebieden alleen gebieden die niet verder lozen (rwzi)
+    # output: eindknoopgebieden_eind
+    expr = QgsExpression('"count" IS NULL')
+    it = eindknoopgebieden.getFeatures(QgsFeatureRequest(expr))  # iterator object
+    ##ids = [i.id() for i in it]
+    if True: #(ids) > 0:
+        eindknoopgebieden.setSelectedFeatures([i.id() for i in it])
+        RWZI = os.path.join(gdb, "rwzi.shp")
+        QgsVectorFileWriter.writeAsVectorFormat(eindknoopgebieden, RWZI, "utf-8",
+                                                eindknoopgebieden.crs(), "ESRI Shapefile", True)
+        rwzi = QgsVectorLayer(RWZI, "rwzi", "ogr")
+        add_layer(rwzi)
+
+        # selecteer eindknooppunten uit input bestand (originele code ophalen VAN_KNOOPN)
+        # output: inp_eindknooppunten
+        processing.runalg("qgis:selectbylocation", inp_knooppunten, eindknooppunten, ['intersects'], 1, 0)
+        INP_EINDKNOOPPUNTEN = os.path.join(gdb, "inp_eindknooppunten.shp")
+        QgsVectorFileWriter.writeAsVectorFormat(inp_knooppunten, INP_EINDKNOOPPUNTEN, "utf-8",
+                                                inp_knooppunten.crs(), "ESRI Shapefile", True)
+        inp_eindknooppunten = QgsVectorLayer(INP_EINDKNOOPPUNTEN, "inp_eindknooppunten", "ogr")
+        add_layer(inp_eindknooppunten)
+
+        # haal rwzi code op uit inp_eindknooppunten via spatial join en join_field
+        # output: rwzi
+        RWZI_CODE = os.path.join(gdb, "rwzi_code.shp")
+        processing.runalg("qgis:joinattributesbylocation", rwzi, inp_eindknooppunten, u'intersects', 0, 0, '', 1,
+                          RWZI_CODE)
+        rwzi_code = QgsVectorLayer(RWZI_CODE, "rwzi_code", "ogr")
+        add_layer(rwzi_code)
+
+        # join rwzi codes (VAN_KNOOPN) aan polygon_lis
+        join_field(polygon_lis, rwzi_code, "VAN_KNOOPN", "VAN_KNOO_1", "OBJECTID", "OBJECTID", inner_join=True)
+
+    else:
+        print_log("geen rwzi's vastgesteld in bemalingsgebieden", "w", iface=g_iface)
     # invullen veld LOOST_OP met code bemalingsgebied.
     add_field_from_dict_label(polygon_lis, "st1a", d_velden)
     join_field(polygon_lis, eindknooppunten, "K_LOOST_OP", "VAN_KNOO_1", "VAN_KNOOPN", "VAN_KNOOPN")
@@ -230,12 +274,16 @@ def controleer_spjoin(layer,fld_join_count):
         JOIN_COUNT = feature[fld_join_count] if feature[fld_join_count] else 0
         VAN_KNOOPN = feature["VAN_KNOOPN"] if feature["VAN_KNOOPN"] else None
         print_log("{} - {}".format(VAN_KNOOPN,JOIN_COUNT), "d")
+        if JOIN_COUNT == 0 and VAN_KNOOPN != None: # uitzondering: rwzi later aangevuld
+            ##feature.setAttribute("count", 1)
+            layer.changeAttributeValue(feature.id(), layer.fieldNameIndex("count"), 1)
+            JOIN_COUNT = 1
         if JOIN_COUNT >= 2:
             i_dubbel += 1
             print_log("bemalingsgebied '{}' bevat {} rioolgemalen!".format(VAN_KNOOPN,JOIN_COUNT), "i")
         if JOIN_COUNT == 0:
             i_leeg += 1
-            feature.setAttribute("VAN_KNOOPN", "LEEG-{}".format(i))
+            ##feature.setAttribute("VAN_KNOOPN", "LEEG-{}".format(i))
             layer.changeAttributeValue(feature.id(), layer.fieldNameIndex("VAN_KNOOPN"), "LEEG-{}".format(i))
     layer.commitChanges()
 
@@ -316,8 +364,9 @@ def main(iface, layers, workspace, d_velden):
     point_layer = genereer_knooppunten(iface, inp_polygon, inp_afvoerrelaties)
 
     blokje_log("Knooppunten koppelen aan bemalingsgebieden...","i")
-    polygon_lis = koppel_knooppunten_aan_bemalingsgebieden(iface, d_velden, inp_polygon, point_layer)
+    polygon_lis = koppel_knooppunten_aan_bemalingsgebieden(iface, d_velden, inp_polygon, point_layer, inp_knooppunten)
 
+    ##return None, None
     # ##########################################################################
     # 2.) Graph vullen met LIS [LOOST_OP], onderbemaling bepalen en wegschrijven in [ONTV_VAN]
 
