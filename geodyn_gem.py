@@ -34,6 +34,7 @@ from app import settings
 from app import m1_OvernemenGegevensGEM as m1
 from app import m2_BerekenResultaten as m2
 from app.utl import print_log, blokje_log, get_d_velden, get_d_velden_csv
+from app.settings import keyword_1, keyword_2, keyword_3, keyword_4, keyword_5, keyword_6, keyword_7
 
 # for backward compatibility with older QGIS versions (without QgsWKBTypes)
 try:
@@ -203,8 +204,11 @@ class GeodynGem:
         index = [l.index(i) for i in l if txt.lower() in i.name().lower()]
         if len(index) > 0:
             l.insert(0, l.pop(index[0]))
-        if txt in ["VE", "opp"]:
-            l.append(QgsVectorLayer(baseName="no data"))
+        if txt in [keyword_4, keyword_6]: # VE's en verhard opp zijn optioneel dus 'no data' toevoegen
+            if len(index) == 0:
+                l.insert(0, QgsVectorLayer(baseName="no data")) # geen keyword dus 'no data' als bovenste optie in keuzelijst
+            else:
+                l.append(QgsVectorLayer(baseName="no data")) # wel keyword dus 'no data' als laatste optie in keuzelijst
         return l
 
     def remove_result_layers(self, remove_all=False, delete_source=False):
@@ -241,6 +245,7 @@ class GeodynGem:
             print_log("Tool afgebroken! Geen layers gevonden. Voeg eerst layers toe", "e", self.iface)
             return
         layer_points, layer_lines, layer_polygons = [], [], []
+
         if b_QgsWKBTypes:
             for i, layer in enumerate(layers):
                 if hasattr(layer, "wkbType"):
@@ -253,12 +258,26 @@ class GeodynGem:
                         layer_polygons.append(layer)
                     else:
                         pass
+            layer_1 = layer_points[:] # more on slicing: https://www.afternerd.com/blog/python-copy-list/
+            layer_2 = layer_lines[:]
+            layer_3 = layer_points[:]
+            layer_4 = layer_points[:]
+            layer_5 = layer_polygons[:]
+            layer_6 = layer_polygons[:]
+            layer_7 = layer_polygons[:]
 
         else:
             print_log("ImportError for QgsWKBTypes. Kan geen geometrie herkennen voor layer inputs. \
                         Controleer of juiste layers zijn geselecteerd of upgrade QGIS.",
                 "w", self.iface)
             layer_points = layer_lines = layer_polygons = layers
+            layer_1 = layers[:]
+            layer_2 = layers[:]
+            layer_3 = layers[:]
+            layer_4 = layers[:]
+            layer_5 = layers[:]
+            layer_6 = layers[:]
+            layer_7 = layers[:]
 
         self.dlg.comboBox_1.clear()
         self.dlg.comboBox_2.clear()
@@ -267,13 +286,20 @@ class GeodynGem:
         self.dlg.comboBox_5.clear()
         self.dlg.comboBox_6.clear()
         self.dlg.comboBox_7.clear()
-        self.dlg.comboBox_1.addItems([i.name() for i in self.move_to_front(layer_points, "kikker")])  # knooppunt
-        self.dlg.comboBox_2.addItems([i.name() for i in self.move_to_front(layer_lines, "kikker")])  # afvoerrelatie
-        self.dlg.comboBox_3.addItems([i.name() for i in self.move_to_front(layer_points, "BAG")])  # drinkwater BAG
-        self.dlg.comboBox_4.addItems([i.name() for i in self.move_to_front(layer_points, "VE")])  # VE's
-        self.dlg.comboBox_5.addItems([i.name() for i in self.move_to_front(layer_polygons, "RIGO")])  # plancap
-        self.dlg.comboBox_6.addItems([i.name() for i in self.move_to_front(layer_polygons, "opp")])  # verhard opp
-        self.dlg.comboBox_7.addItems([i.name() for i in self.move_to_front(layer_polygons, "bem")])  # bemalingsgebieden
+        self.dlg.comboBox_1.addItems([i.name() for i in self.move_to_front(layer_points, keyword_1)])  # knooppunt
+        self.dlg.comboBox_2.addItems([i.name() for i in self.move_to_front(layer_lines, keyword_2)])  # afvoerrelatie
+        self.dlg.comboBox_3.addItems([i.name() for i in self.move_to_front(layer_points, keyword_3)])  # drinkwater BAG
+        self.dlg.comboBox_4.addItems([i.name() for i in self.move_to_front(layer_points, keyword_4)])  # VE's
+        self.dlg.comboBox_5.addItems([i.name() for i in self.move_to_front(layer_polygons, keyword_5)])  # plancap
+        self.dlg.comboBox_6.addItems([i.name() for i in self.move_to_front(layer_polygons, keyword_6)])  # verhard opp
+        self.dlg.comboBox_7.addItems([i.name() for i in self.move_to_front(layer_polygons, keyword_7)])  # bemalingsgebieden
+        self.dlg.comboBox_1.setToolTip("kaartlagen met '{}' in naam komen bovenaan de keuzelijst te staan".format(keyword_1))
+        self.dlg.comboBox_2.setToolTip("kaartlagen met '{}' in naam komen bovenaan de keuzelijst te staan".format(keyword_2))
+        self.dlg.comboBox_3.setToolTip("kaartlagen met '{}' in naam komen bovenaan de keuzelijst te staan".format(keyword_3))
+        self.dlg.comboBox_4.setToolTip("kaartlagen met '{}' in naam komen bovenaan de keuzelijst te staan".format(keyword_4))
+        self.dlg.comboBox_5.setToolTip("kaartlagen met '{}' in naam komen bovenaan de keuzelijst te staan".format(keyword_5))
+        self.dlg.comboBox_6.setToolTip("kaartlagen met '{}' in naam komen bovenaan de keuzelijst te staan".format(keyword_6))
+        self.dlg.comboBox_7.setToolTip("kaartlagen met '{}' in naam komen bovenaan de keuzelijst te staan".format(keyword_7))
 
         # show the dialog
         self.dlg.show()
@@ -287,17 +313,22 @@ class GeodynGem:
             ##QgsMessageLog.logMessage("layer4 = {}".format([i.name() for i in l4]), level=QgsMessageLog.INFO)
 
             sel_layers = [
-                self.move_to_front(layer_points, "kikker")[self.dlg.comboBox_1.currentIndex()],
-                self.move_to_front(layer_lines, "kikker")[self.dlg.comboBox_2.currentIndex()],
-                self.move_to_front(layer_points, "BAG")[self.dlg.comboBox_3.currentIndex()],
-                self.move_to_front(layer_points, "VE")[self.dlg.comboBox_4.currentIndex()],
-                self.move_to_front(layer_polygons, "RIGO")[self.dlg.comboBox_5.currentIndex()],
-                self.move_to_front(layer_polygons, "opp")[self.dlg.comboBox_6.currentIndex()],
-                self.move_to_front(layer_polygons, "bem")[self.dlg.comboBox_7.currentIndex()],
+                self.move_to_front(layer_1, keyword_1)[self.dlg.comboBox_1.currentIndex()],
+                self.move_to_front(layer_2, keyword_2)[self.dlg.comboBox_2.currentIndex()],
+                self.move_to_front(layer_3, keyword_3)[self.dlg.comboBox_3.currentIndex()],
+                self.move_to_front(layer_4, keyword_4)[self.dlg.comboBox_4.currentIndex()],
+                self.move_to_front(layer_5, keyword_5)[self.dlg.comboBox_5.currentIndex()],
+                self.move_to_front(layer_6, keyword_6)[self.dlg.comboBox_6.currentIndex()],
+                self.move_to_front(layer_7, keyword_7)[self.dlg.comboBox_7.currentIndex()],
             ]
 
+            for i, layer in enumerate(sel_layers):
+                print_log("input {}:\t{}".format(i, layer.name()), "i")
+            return
+
             gdb = self.dlg.lineEdit.text() #
-            ##gdb = r'G:\GISDATA\QGIS\geodyn_gem\data\results' # voor developen
+            gdb = r'G:\GISDATA\QGIS\geodyn_gem\data\results' # voor developen
+            ##gdb = r'G:\02_Werkplaatsen\04_GIS\Bart\projecten\GeodynGem_QGIS\results'
             if not gdb or not os.path.exists(gdb):
                 print_log("Script afgebroken! Geen geldige output map opgegeven ({}...)".format(gdb), "e", self.iface)
                 return
@@ -319,6 +350,7 @@ class GeodynGem:
                 d_velden = get_d_velden_csv(INP_FIELDS_CSV)
             for fld in d_velden:
                 print_log("{}\n{}".format(fld, d_velden[fld]), "d")
+            return
 
             # check for required fields
             vl = sel_layers[0] # knooppunt
@@ -330,7 +362,10 @@ class GeodynGem:
                 print_log("Script afgebroken! Verplicht veld 'VAN_KNOOPN' niet gevonden in kaartlaag '{}'".format(vl.name()), "e", self.iface)
                 return
 
+            # run module 1
             d_K_ONTV_VAN, inp_polygon_layer = m1.main(self.iface, sel_layers, gdb, d_velden)
+
+            # run module 2
             m2.main(self.iface, sel_layers, gdb, d_velden, d_K_ONTV_VAN, inp_polygon_layer)
 
             self.remove_result_layers(remove_all=False, delete_source=False)

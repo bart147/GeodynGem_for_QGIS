@@ -20,6 +20,15 @@ logging.basicConfig(filename=logFile, level=LOGGING_LEVEL)
 logging.getLogger().setLevel(LOGGING_LEVEL)
 qgis_warnings_log = os.path.join(log_dir,'qgis_warnings.log')
 
+# zoektermen voor herkennen kaartlagen
+keyword_1 = 'kikker' # knooppunten kikker
+keyword_2 = 'kikker' # afvoerrelaties kikker
+keyword_3 = 'BAG'    # BAG
+keyword_4 = 'VE'     # Belasting Vervuilingseenheden
+keyword_5 = 'RIGO'   # plancap RIGO ruimtelijke ordening
+keyword_6 = 'opp'    # verhard opp (BGT)
+keyword_7 = 'bem'    # bemalingsgebieden
+
 # set to False to keep the result after run
 l_result_layers_to_remove = [
     ("bemalingsgebieden overlap", False),
