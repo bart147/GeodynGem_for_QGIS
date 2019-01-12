@@ -239,8 +239,8 @@ def controleer_spjoin(layer,fld_join_count):
             layer.changeAttributeValue(feature.id(), layer.fieldNameIndex("VAN_KNOOPN"), "LEEG-{}".format(i))
     layer.commitChanges()
 
-    if i_dubbel == 1: print_log("{} bemalingsgebied bevat 2 of meer knooppunten".format(i_dubbel),"w")
-    if i_dubbel > 1: print_log("{} bemalingsgebieden bevatten 2 of meer knooppunten".format(i_dubbel),"w")
+    if i_dubbel == 1: print_log("{} bemalingsgebied bevat 2 of meer knooppunten, zie veld 'count' in eindresultaat".format(i_dubbel),"w")
+    if i_dubbel > 1: print_log("{} bemalingsgebieden bevatten 2 of meer knooppunten, zie veld 'count' in eindresultaat".format(i_dubbel),"w")
     if i_leeg == 1: print_log("{} bemalingsgebied is leeg\n".format(i_leeg),"w")
     if i_leeg > 1: print_log("{} bemalingsgebieden zijn leeg\n".format(i_leeg),"w")
     if i_leeg >= 1: print_log("lege bemalingsgebieden voorzien van VAN_KNOOPN-> 'LEEG-<OBJID>'","i")

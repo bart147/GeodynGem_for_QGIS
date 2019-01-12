@@ -299,7 +299,7 @@ def get_d_velden_csv(INP_FIELDS_CSV):
         fld = {}
 
         # verplichte keys
-        fld["order"] = srow["order"]
+        fld["order"] = int(srow["order"])
         fld["field_type"] = srow["type"]
         fld["field_alias"] = srow["alias"]
         fld["add_fld"] = srow["stap_toevoegen"]

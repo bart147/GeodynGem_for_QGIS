@@ -288,9 +288,9 @@ def main(iface, layers, workspace, d_velden_, d_K_ONTV_VAN, inp_polygon):
     add_field_from_dict_label(polygon_lis, "st2a", d_velden)
     # copy VAN_KNOOPN -> K_KNP_NR
     bereken_veld(polygon_lis, "K_KNP_NR", {"K_KNP_NR":{"expression":"[VAN_KNOOPN]"}})
-    # overige velden kikker toevoegen
-    join_field(polygon_lis, inp_knooppunten, "K_BERG_VL", "BERGV_KNP_", "VAN_KNOOPN", "VAN_KNOOPN") # Verloren berging stelsel (m3)
-    join_field(polygon_lis, inp_knooppunten, "K_BR_RZ_M3", "BERG_STR_M", "VAN_KNOOPN", "VAN_KNOOPN")  # Berging randvoorziening (G) (m3)
+    # overige velden kikker toevoegen (uitgegrijst omdat nog geen geschikt bronveld is gevonden in Kikker #
+    ##join_field(polygon_lis, inp_knooppunten, "K_BERG_VL", "BERGV_KNP_", "VAN_KNOOPN", "VAN_KNOOPN") # Verloren berging stelsel (m3)
+    ##join_field(polygon_lis, inp_knooppunten, "K_BR_RZ_M3", "BERG_STR_M", "VAN_KNOOPN", "VAN_KNOOPN")  # Berging randvoorziening (G) (m3)
 
     # ##########################################################################
     # 3.) Spatial joins tussen polygon_lis en de externe gegevens bronnen

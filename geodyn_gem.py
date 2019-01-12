@@ -34,7 +34,7 @@ from app import settings
 from app import m1_OvernemenGegevensGEM as m1
 from app import m2_BerekenResultaten as m2
 from app.utl import print_log, blokje_log, get_d_velden, get_d_velden_csv
-from app.settings import keyword_1, keyword_2, keyword_3, keyword_4, keyword_5, keyword_6, keyword_7
+from app.settings import keyword_1, keyword_2, keyword_3, keyword_4, keyword_5, keyword_6, keyword_7, result_dir
 
 # for backward compatibility with older QGIS versions (without QgsWKBTypes)
 try:
@@ -173,7 +173,9 @@ class GeodynGem:
 
         self.actions.append(action)
 
-        self.dlg.lineEdit.clear()
+        #self.dlg.lineEdit.clear()
+        self.dlg.lineEdit.setText(result_dir)
+        self.dlg.lineEdit.setToolTip("Om een vaste waarde in te stellen: ga naar local_settings.py in app directory van plugin.")
         self.dlg.pushButton.clicked.connect(self.select_output_folder)
 
         return action
@@ -293,13 +295,15 @@ class GeodynGem:
         self.dlg.comboBox_5.addItems([i.name() for i in self.move_to_front(layer_polygons, keyword_5)])  # plancap
         self.dlg.comboBox_6.addItems([i.name() for i in self.move_to_front(layer_polygons, keyword_6)])  # verhard opp
         self.dlg.comboBox_7.addItems([i.name() for i in self.move_to_front(layer_polygons, keyword_7)])  # bemalingsgebieden
-        self.dlg.comboBox_1.setToolTip("kaartlagen met '{}' in naam komen bovenaan de keuzelijst te staan".format(keyword_1))
-        self.dlg.comboBox_2.setToolTip("kaartlagen met '{}' in naam komen bovenaan de keuzelijst te staan".format(keyword_2))
-        self.dlg.comboBox_3.setToolTip("kaartlagen met '{}' in naam komen bovenaan de keuzelijst te staan".format(keyword_3))
-        self.dlg.comboBox_4.setToolTip("kaartlagen met '{}' in naam komen bovenaan de keuzelijst te staan".format(keyword_4))
-        self.dlg.comboBox_5.setToolTip("kaartlagen met '{}' in naam komen bovenaan de keuzelijst te staan".format(keyword_5))
-        self.dlg.comboBox_6.setToolTip("kaartlagen met '{}' in naam komen bovenaan de keuzelijst te staan".format(keyword_6))
-        self.dlg.comboBox_7.setToolTip("kaartlagen met '{}' in naam komen bovenaan de keuzelijst te staan".format(keyword_7))
+        msg_tooltip = "Kaartlagen met '{}' in naam komen bovenaan de keuzelijst te staan.\
+            \nVoor het instellen van een eigen zoekterm: ga naar local_settings.py in de app directory van de plugin."
+        self.dlg.comboBox_1.setToolTip(msg_tooltip.format(keyword_1))
+        self.dlg.comboBox_2.setToolTip(msg_tooltip.format(keyword_2))
+        self.dlg.comboBox_3.setToolTip(msg_tooltip.format(keyword_3))
+        self.dlg.comboBox_4.setToolTip(msg_tooltip.format(keyword_4))
+        self.dlg.comboBox_5.setToolTip(msg_tooltip.format(keyword_5))
+        self.dlg.comboBox_6.setToolTip(msg_tooltip.format(keyword_6))
+        self.dlg.comboBox_7.setToolTip(msg_tooltip.format(keyword_7))
 
         # show the dialog
         self.dlg.show()
@@ -324,11 +328,8 @@ class GeodynGem:
 
             for i, layer in enumerate(sel_layers):
                 print_log("input {}:\t{}".format(i, layer.name()), "i")
-            return
 
             gdb = self.dlg.lineEdit.text() #
-            gdb = r'G:\GISDATA\QGIS\geodyn_gem\data\results' # voor developen
-            ##gdb = r'G:\02_Werkplaatsen\04_GIS\Bart\projecten\GeodynGem_QGIS\results'
             if not gdb or not os.path.exists(gdb):
                 print_log("Script afgebroken! Geen geldige output map opgegeven ({}...)".format(gdb), "e", self.iface)
                 return
@@ -342,15 +343,15 @@ class GeodynGem:
             INP_FIELDS_XLS = settings.INP_FIELDS_XLS
             INP_FIELDS_CSV = settings.INP_FIELDS_CSV
             try:
+                raise ImportError # for testing csv
                 from xlrd import open_workbook
                 d_velden = get_d_velden(INP_FIELDS_XLS, 0, open_workbook)
             except ImportError:     # for compatibility with iMac
-                print_log("import error 'xlrd': inp_fields.csv wordt gebruikt als input in plaats van inp_fields.xls!",
+                print_log("import error 'xlrd': inp_fields.csv wordt gebruikt als input in plaats van inp_fields.xls",
                           "w", self.iface)
                 d_velden = get_d_velden_csv(INP_FIELDS_CSV)
             for fld in d_velden:
                 print_log("{}\n{}".format(fld, d_velden[fld]), "d")
-            return
 
             # check for required fields
             vl = sel_layers[0] # knooppunt
@@ -368,7 +369,7 @@ class GeodynGem:
             # run module 2
             m2.main(self.iface, sel_layers, gdb, d_velden, d_K_ONTV_VAN, inp_polygon_layer)
 
-            self.remove_result_layers(remove_all=False, delete_source=False)
+            ##self.remove_result_layers(remove_all=False, delete_source=False)
 
             ##self.iface.mainWindow().statusBar().showMessage("dit is de mainWindow")
             warnings = []
