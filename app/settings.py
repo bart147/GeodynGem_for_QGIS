@@ -47,6 +47,8 @@ l_result_layers_to_remove = [
     ("eindgebieden", True),
 ]
 
+b_remove_results_after_run = True  # set to False to keep results after run
+
 # dict d_velden_tmp
 # purpose: dict d_velden_tmp is een aanvulling op d_velden (d_velden wordt uit de inp_fields.xlsx gegenereerd).
 #         gebruikt in utl-functies add_field_from_dict() en bereken_veld()

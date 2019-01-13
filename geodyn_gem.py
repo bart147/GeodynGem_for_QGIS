@@ -369,7 +369,8 @@ class GeodynGem:
             # run module 2
             m2.main(self.iface, sel_layers, gdb, d_velden, d_K_ONTV_VAN, inp_polygon_layer)
 
-            self.remove_result_layers(remove_all=False, delete_source=False)
+            if settings.b_remove_results_after_run:
+                self.remove_result_layers(remove_all=False, delete_source=False)
 
             ##self.iface.mainWindow().statusBar().showMessage("dit is de mainWindow")
             warnings = []

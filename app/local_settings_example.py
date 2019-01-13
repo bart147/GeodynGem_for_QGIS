@@ -12,3 +12,7 @@ keyword_7 = 'bem'    # bemalingsgebieden
 
 # stel in als standaard resultaatmap
 result_dir = r"G:\GISDATA\QGIS\geodyn_gem\data\results"
+
+LOGGING_LEVEL = 10 # 10 = debug, 20 = info
+
+b_remove_results_after_run = True  # toggle True/False to keep results after run
