@@ -343,7 +343,7 @@ class GeodynGem:
             INP_FIELDS_XLS = settings.INP_FIELDS_XLS
             INP_FIELDS_CSV = settings.INP_FIELDS_CSV
             try:
-                raise ImportError # for testing csv
+                ##raise ImportError # for testing csv
                 from xlrd import open_workbook
                 d_velden = get_d_velden(INP_FIELDS_XLS, 0, open_workbook)
             except ImportError:     # for compatibility with iMac
@@ -365,11 +365,11 @@ class GeodynGem:
 
             # run module 1
             d_K_ONTV_VAN, inp_polygon_layer = m1.main(self.iface, sel_layers, gdb, d_velden)
-            return
+
             # run module 2
             m2.main(self.iface, sel_layers, gdb, d_velden, d_K_ONTV_VAN, inp_polygon_layer)
 
-            ##self.remove_result_layers(remove_all=False, delete_source=False)
+            self.remove_result_layers(remove_all=False, delete_source=False)
 
             ##self.iface.mainWindow().statusBar().showMessage("dit is de mainWindow")
             warnings = []

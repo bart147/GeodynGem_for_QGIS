@@ -44,10 +44,7 @@ l_result_layers_to_remove = [
     ("stats_drinkwater", True),
     ("eindresultaat", False),
     ("inp_polygon_copy", True),
-    ("rwzi_code", False),
-    ("inp_eindknooppunten", True),
-    ("rwzi", True),
-    ("eindknoopgebieden", True),
+    ("eindgebieden", True),
 ]
 
 # dict d_velden_tmp

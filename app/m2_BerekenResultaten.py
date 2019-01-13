@@ -322,7 +322,6 @@ def main(iface, layers, workspace, d_velden_, d_K_ONTV_VAN, inp_polygon):
         join_field(polygon_lis, stats_ve, "X_VE_GEB", "sumGRONDSL", "OBJECTID", "OBJECTID")
 
     # bereken drinkwater per gebied (input voor onderbemalingen) en LEDIG_U (ledigingstijd)
-    ##bereken_veld(polygon_lis, "DWR_GEBIED", d_velden)
     bereken_veld_label(polygon_lis, "02_ber", d_velden)
 
     # ##########################################################################
