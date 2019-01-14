@@ -25,10 +25,10 @@ def controleer_spjoin_plancap(layer, fld_join_count):
             i_leeg += 1
     ##layer.commitChanges()
 
-    if i_dubbel == 1: print_log("{} woningbouwplan valt in meerdere hoofdbemalingsgebieden! Zie selectie in layer 'plancap overlap'".format(i_dubbel), "w")
-    if i_dubbel > 1: print_log("{} woningbouwplannen vallen in meerdere hoofdbemalingsgebieden! Zie selectie in layer 'plancap overlap'".format(i_dubbel), "w")
-    if i_leeg == 1: print_log("{} woningbouwplannen valt niet in een hoofdbemalingsgebied\n".format(i_leeg), "w")
-    if i_leeg > 1: print_log("{} woningbouwplannen vallen niet in een hoofdbemalingsgebied\n".format(i_leeg), "w")
+    if i_dubbel == 1: print_log("{} woningbouwplan valt in meerdere hoofdbemalingsgebieden. Let op: dit woningbouwplan wordt dubbel meegeteld! Zie layer 'plancap overlap' (waar veld 'count' > 1)".format(i_dubbel), "w")
+    if i_dubbel > 1: print_log("{} woningbouwplannen vallen in meerdere hoofdbemalingsgebieden. Let op: deze woningbouwplannen worden dubbel meegeteld! Zie layer 'plancap overlap' (waar veld 'count' > 1)".format(i_dubbel), "w")
+    if i_leeg == 1: print_log("{} woningbouwplan valt niet in een hoofdbemalingsgebied\n".format(i_leeg), "i")
+    if i_leeg > 1: print_log("{} woningbouwplannen vallen buiten een hoofdbemalingsgebied\n".format(i_leeg), "i")
 
 
 def vervang_None_door_0_voor_velden_in_lijst(l,layer):

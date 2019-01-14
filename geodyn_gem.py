@@ -281,6 +281,14 @@ class GeodynGem:
             layer_6 = layers[:]
             layer_7 = layers[:]
 
+        layer_1 = self.move_to_front(layer_1, keyword_1)
+        layer_2 = self.move_to_front(layer_2, keyword_2)
+        layer_3 = self.move_to_front(layer_3, keyword_3)
+        layer_4 = self.move_to_front(layer_4, keyword_4)
+        layer_5 = self.move_to_front(layer_5, keyword_5)
+        layer_6 = self.move_to_front(layer_6, keyword_6)
+        layer_7 = self.move_to_front(layer_7, keyword_7)
+
         self.dlg.comboBox_1.clear()
         self.dlg.comboBox_2.clear()
         self.dlg.comboBox_3.clear()
@@ -288,13 +296,13 @@ class GeodynGem:
         self.dlg.comboBox_5.clear()
         self.dlg.comboBox_6.clear()
         self.dlg.comboBox_7.clear()
-        self.dlg.comboBox_1.addItems([i.name() for i in self.move_to_front(layer_points, keyword_1)])  # knooppunt
-        self.dlg.comboBox_2.addItems([i.name() for i in self.move_to_front(layer_lines, keyword_2)])  # afvoerrelatie
-        self.dlg.comboBox_3.addItems([i.name() for i in self.move_to_front(layer_points, keyword_3)])  # drinkwater BAG
-        self.dlg.comboBox_4.addItems([i.name() for i in self.move_to_front(layer_points, keyword_4)])  # VE's
-        self.dlg.comboBox_5.addItems([i.name() for i in self.move_to_front(layer_polygons, keyword_5)])  # plancap
-        self.dlg.comboBox_6.addItems([i.name() for i in self.move_to_front(layer_polygons, keyword_6)])  # verhard opp
-        self.dlg.comboBox_7.addItems([i.name() for i in self.move_to_front(layer_polygons, keyword_7)])  # bemalingsgebieden
+        self.dlg.comboBox_1.addItems([i.name() for i in layer_1])  # knooppunt
+        self.dlg.comboBox_2.addItems([i.name() for i in layer_2])  # afvoerrelatie
+        self.dlg.comboBox_3.addItems([i.name() for i in layer_3])  # drinkwater BAG
+        self.dlg.comboBox_4.addItems([i.name() for i in layer_4])  # VE's
+        self.dlg.comboBox_5.addItems([i.name() for i in layer_5])  # plancap
+        self.dlg.comboBox_6.addItems([i.name() for i in layer_6])  # verhard opp
+        self.dlg.comboBox_7.addItems([i.name() for i in layer_7])  # bemalingsgebieden
         msg_tooltip = "Kaartlagen met '{}' in naam komen bovenaan de keuzelijst te staan.\
             \nVoor het instellen van een eigen zoekterm: ga naar local_settings.py in de app directory van de plugin."
         self.dlg.comboBox_1.setToolTip(msg_tooltip.format(keyword_1))
@@ -304,6 +312,7 @@ class GeodynGem:
         self.dlg.comboBox_5.setToolTip(msg_tooltip.format(keyword_5))
         self.dlg.comboBox_6.setToolTip(msg_tooltip.format(keyword_6))
         self.dlg.comboBox_7.setToolTip(msg_tooltip.format(keyword_7))
+
 
         # show the dialog
         self.dlg.show()
@@ -317,17 +326,17 @@ class GeodynGem:
             ##QgsMessageLog.logMessage("layer4 = {}".format([i.name() for i in l4]), level=QgsMessageLog.INFO)
 
             sel_layers = [
-                self.move_to_front(layer_1, keyword_1)[self.dlg.comboBox_1.currentIndex()],
-                self.move_to_front(layer_2, keyword_2)[self.dlg.comboBox_2.currentIndex()],
-                self.move_to_front(layer_3, keyword_3)[self.dlg.comboBox_3.currentIndex()],
-                self.move_to_front(layer_4, keyword_4)[self.dlg.comboBox_4.currentIndex()],
-                self.move_to_front(layer_5, keyword_5)[self.dlg.comboBox_5.currentIndex()],
-                self.move_to_front(layer_6, keyword_6)[self.dlg.comboBox_6.currentIndex()],
-                self.move_to_front(layer_7, keyword_7)[self.dlg.comboBox_7.currentIndex()],
+                layer_1[self.dlg.comboBox_1.currentIndex()],
+                layer_2[self.dlg.comboBox_2.currentIndex()],
+                layer_3[self.dlg.comboBox_3.currentIndex()],
+                layer_4[self.dlg.comboBox_4.currentIndex()],
+                layer_5[self.dlg.comboBox_5.currentIndex()],
+                layer_6[self.dlg.comboBox_6.currentIndex()],
+                layer_7[self.dlg.comboBox_7.currentIndex()],
             ]
 
             for i, layer in enumerate(sel_layers):
-                print_log("input {}:\t{}".format(i, layer.name()), "i")
+                print_log("input {}:\t{}".format(i+1, layer.name()), "i")
 
             gdb = self.dlg.lineEdit.text() #
             if not gdb or not os.path.exists(gdb):
