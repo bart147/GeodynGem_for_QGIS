@@ -61,9 +61,9 @@ def controleer_bemalingsgebieden(inp_polygon, inp_knooppunten):
     for feature in inp_knooppunten.selectedFeatures():
         ids.append(feature[field])
     if len(ids) == 1:
-        print_log("1 knooppunt ligt niet in een bemalingsgebied {}".format(ids), "w")
+        print_log("1 rioolgemaal ligt niet in een bemalingsgebied {}".format(ids), "w")
     elif len(ids) > 1:
-        print_log("{} knooppunten liggen niet in een bemalingsgebied {}".format(len(ids),ids), "w")
+        print_log("{} rioolgemalen liggen niet in een bemalingsgebied {}".format(len(ids),ids), "w")
     inp_knooppunten.setSelectedFeatures([])
 
 
@@ -272,8 +272,8 @@ def controleer_spjoin(layer,fld_join_count):
             layer.changeAttributeValue(feature.id(), layer.fieldNameIndex("VAN_KNOOPN"), "LEEG-{}".format(i))
     layer.commitChanges()
 
-    if i_dubbel == 1: print_log("{} bemalingsgebied bevat 2 of meer knooppunten, zie veld 'count' in eindresultaat".format(i_dubbel),"w")
-    if i_dubbel > 1: print_log("{} bemalingsgebieden bevatten 2 of meer knooppunten, zie veld 'count' in eindresultaat".format(i_dubbel),"w")
+    if i_dubbel == 1: print_log("{} bemalingsgebied bevat 2 of meer rioolgemalen, zie veld 'count' in eindresultaat".format(i_dubbel),"w")
+    if i_dubbel > 1: print_log("{} bemalingsgebieden bevatten 2 of meer rioolgemalen, zie veld 'count' in eindresultaat".format(i_dubbel),"w")
     if i_leeg == 1: print_log("{} bemalingsgebied is leeg\n".format(i_leeg),"w")
     if i_leeg > 1: print_log("{} bemalingsgebieden zijn leeg\n".format(i_leeg),"w")
     if i_leeg >= 1: print_log("lege bemalingsgebieden voorzien van VAN_KNOOPN-> 'LEEG-<OBJID>'","i")
