@@ -55,14 +55,14 @@ def bereken_onderbemaling(layer, d_K_ONTV_VAN):
         VAN_KNOOPN = feature["VAN_KNOOPN"]
         ONTV_VAN = d_K_ONTV_VAN.get(VAN_KNOOPN, "") #feature["K_ONTV_VAN"]
         if not str(ONTV_VAN) in ["NULL", ""," "]: # check of sprake is van onderbemaling
-            print_log("K_ONTV_VAN = {}".format(ONTV_VAN),"d")
+            print_log("VAN_KNOOPN {} ontvangt van {}".format(VAN_KNOOPN,ONTV_VAN),"d")
             where_clause = '"VAN_KNOOPN" IN ({})'.format(ONTV_VAN)
             ##where_clause = '"VAN_KNOOPN" = '+"'MERG10'"
             print_log("where_clause = {}".format(where_clause), "d")
             expr = QgsExpression(where_clause)
             it = layer.getFeatures(QgsFeatureRequest(expr))  # iterator object
             layer.setSelectedFeatures([i.id() for i in it])
-            print_log("sel = {}".format([i.id() for i in it]),"d")
+            ##print_log("sel = {}".format([i.id() for i in it]),"d")
             AW_15_24_O  = sum([float(f["AW_15_24_G"]) for f in layer.selectedFeatures() if str(f["AW_15_24_G"]) not in ["NULL","nan",""," "]])
             AW_25_50_O  = sum([float(f["AW_25_50_G"]) for f in layer.selectedFeatures() if str(f["AW_25_50_G"]) not in ["NULL","nan",""," "]])
             DWR_ONBG    = sum([float(f["DWR_GEBIED"]) for f in layer.selectedFeatures() if str(f["DWR_GEBIED"]) not in ["NULL","nan",""," "]])
@@ -78,26 +78,25 @@ def bereken_onderbemaling(layer, d_K_ONTV_VAN):
     print_log("Onderbemalingen succesvol berekend voor Plancap, drinkwater, woningen en ve's", "i")
 
 
-def bereken_onderbemaling2(layer, d_K_ONTV_VAN):
-    """bereken onderbemalingen voor SUM_WAARDE, SUM_BLA, etc..
-       Maakt selectie op basis van veld [ONTV_VAN] -> VAN_KNOOPN IN ('ZRE-123424', 'ZRE-234')"""
-    # sum values op basis van selectie [ONTV_VAN]
+def bereken_onderbemaling2(layer, d_K_ONTV_VAN_n1):
+    """bereken onderbemalingen voor SUM_WAARDE..
+       Maakt selectie op basis van dict ONTV_VAN 1 niveau diep -> VAN_KNOOPN IN ('ZRE-123424', 'ZRE-234')"""
 
     layer.startEditing()
     for feature in layer.getFeatures():
         VAN_KNOOPN = feature["VAN_KNOOPN"]
-        ONTV_VAN = d_K_ONTV_VAN.get(VAN_KNOOPN,"") #feature["K_ONTV_VAN"]
+        ONTV_VAN = d_K_ONTV_VAN_n1.get(VAN_KNOOPN,"") #feature["K_ONTV_VAN"]
         if not str(ONTV_VAN) in ["NULL", "", " "]:  # check of sprake is van onderbemaling
-            print_log("K_ONTV_VAN = {}".format(ONTV_VAN), "i")
+            print_log("VAN_KNOOPN = {} ontvangt van {}".format(VAN_KNOOPN, ONTV_VAN), "i")
             where_clause = '"VAN_KNOOPN" IN ({})'.format(ONTV_VAN)
             ##where_clause = '"VAN_KNOOPN" = '+"'MERG10'"
             print_log("where_clause = {}".format(where_clause), "i")
             expr = QgsExpression(where_clause)
             it = layer.getFeatures(QgsFeatureRequest(expr))  # iterator object
             layer.setSelectedFeatures([i.id() for i in it])
-            print_log("sel = {}".format([i.id() for i in it]), "i")
-            POC_B_M3_O = sum([float(f["POC_B_M3_G"]) for f in layer.selectedFeatures() if
-                              str(f["POC_B_M3_G"]) not in ["NULL", "nan", "", " "]])    # POC_B_M3_O = sum(POC_B_M3_G)
+            ##print_log("sel = {}".format([i.id() for i in it]), "i")
+            POC_B_M3_O = sum([float(f["K_INST_TOT"]) for f in layer.selectedFeatures() if
+                              str(f["K_INST_TOT"]) not in ["NULL", "nan", "", " "]])    # POC_B_M3_O = sum(POC_B_M3_G)
             POC_O_M3_O = sum([float(f["POC_O_M3_G"]) for f in layer.selectedFeatures() if
                               str(f["POC_O_M3_G"]) not in ["NULL", "nan", "", " "]])    # POC_O_M3_O = sum(POC_O_M3_G)
 
@@ -225,7 +224,7 @@ def setColumnVisibility( layer, columnName, visible ):
     layer.setAttributeTableConfig( config )
 
 
-def main(iface, layers, workspace, d_velden_, d_K_ONTV_VAN, inp_polygon):
+def main(iface, layers, workspace, d_velden_, l_K_ONTV_VAN, inp_polygon):
     """Hoofdmenu:
     1.) Kopie maken INPUT_POLYGON_LIS
     2.) Spatial joins tussen POLYGON_LIS en de externe gegevens bronnen.
@@ -327,7 +326,7 @@ def main(iface, layers, workspace, d_velden_, d_K_ONTV_VAN, inp_polygon):
     # ##########################################################################
     # 4.) Bereken onderbemaling voor DRINKWATER en PLANCAP en VE's
     blokje_log("bereken onderbemalingen voor drinkwater, plancap en ve's...","i")
-    bereken_onderbemaling(polygon_lis, d_K_ONTV_VAN)
+    bereken_onderbemaling(polygon_lis, l_K_ONTV_VAN[0])
 
     vervang_None_door_0_voor_velden_in_lijst(l_src_None_naar_0_omzetten, polygon_lis)
 
@@ -355,7 +354,8 @@ def main(iface, layers, workspace, d_velden_, d_K_ONTV_VAN, inp_polygon):
     bereken_veld_label(polygon_lis, '08_ber', d_velden)
 
     # bepaal onderbemaling2 afhankelijk van verhard opp
-    bereken_onderbemaling2(polygon_lis, d_K_ONTV_VAN)
+    blokje_log("bereken onderbemalingen voor pompovercapaciteit ontwerp en berekend...", "i")
+    bereken_onderbemaling2(polygon_lis, l_K_ONTV_VAN[1])
     vervang_None_door_0_voor_velden_in_lijst(
             ["POC_B_M3_O", "POC_O_M3_O","POC_B_M3_G", "POC_O_M3_G"], polygon_lis)
     bereken_veld_label(polygon_lis, '10_ber', d_velden)

@@ -373,10 +373,10 @@ class GeodynGem:
                 return
 
             # run module 1
-            d_K_ONTV_VAN, inp_polygon_layer = m1.main(self.iface, sel_layers, gdb, d_velden)
+            l_K_ONTV_VAN, inp_polygon_layer = m1.main(self.iface, sel_layers, gdb, d_velden)
 
             # run module 2
-            m2.main(self.iface, sel_layers, gdb, d_velden, d_K_ONTV_VAN, inp_polygon_layer)
+            m2.main(self.iface, sel_layers, gdb, d_velden, l_K_ONTV_VAN, inp_polygon_layer)
 
             if settings.b_remove_results_after_run:
                 self.remove_result_layers(remove_all=False, delete_source=False)
