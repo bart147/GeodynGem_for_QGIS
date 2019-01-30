@@ -44,6 +44,13 @@ help/
 arcgis/
 log/
 *.pyc
+doc/plugin_builder_help.txt
+.idea/workspace.xml
+HELP.html
+HELP.txt
+icon_ori.png
+icon_1.png
+*.log
 
 # Directories potentially created on remote AFP share
 .AppleDB
@@ -51,12 +58,6 @@ log/
 Network Trash Folder
 Temporary Items
 .apdisk
-doc/plugin_builder_help.txt
-.idea/workspace.xml
-HELP.html
-HELP.txt
-icon_ori.png
-icon_1.png
-.idea/workspace.xml
-*.log
-*.log
+
+
+app/local_settings.py

@@ -5,20 +5,22 @@ from datetime import datetime
 # settings
 root_dir        = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 log_dir         = os.path.join(root_dir, 'log')
-##gdb             = r"G:\GISDATA\QGIS\geodyn_gem\data\results"
+result_dir      = ""
 INP_FIELDS_XLS  = os.path.join(root_dir, 'inp_fields.xls') ##, 'fields$')
 INP_FIELDS_XLS_SHEET    = "fields"
 INP_FIELDS_CSV  = os.path.join(root_dir, 'inp_fields.csv')
 
-# logging
+# logging level
 LOGGING_LEVEL = logging.INFO        # set tot DEBUG for all information or INFO for only main info
-if not os.path.exists(log_dir): os.mkdir(log_dir)
-strftime = datetime.strftime(datetime.now(),"%Y%m%d-%H.%M")
-logFileName = 'GeoDyn_{}.log'.format(strftime)
-logFile = os.path.join(log_dir,logFileName)
-logging.basicConfig(filename=logFile, level=LOGGING_LEVEL)
-logging.getLogger().setLevel(LOGGING_LEVEL)
-qgis_warnings_log = os.path.join(log_dir,'qgis_warnings.log')
+
+# zoektermen voor herkennen kaartlagen
+keyword_1 = 'kikker' # knooppunten kikker
+keyword_2 = 'kikker' # afvoerrelaties kikker
+keyword_3 = 'BAG'    # BAG
+keyword_4 = 'VE'     # Belasting Vervuilingseenheden
+keyword_5 = 'RIGO'   # plancap RIGO ruimtelijke ordening
+keyword_6 = 'opp'    # verhard opp (BGT)
+keyword_7 = 'bem'    # bemalingsgebieden
 
 # set to False to keep the result after run
 l_result_layers_to_remove = [
@@ -29,6 +31,7 @@ l_result_layers_to_remove = [
     ("knooppunten_sel2", True),
     ("knooppunten_sel1", True),
     ("knooppunten", False),
+    ("stats_verh_opp_VGS", True),
     ("stats_verh_opp_OBK", True),
     ("stats_verh_opp_NAG", True),
     ("stats_verh_opp_HWA", True),
@@ -40,7 +43,11 @@ l_result_layers_to_remove = [
     ("plancap_overlap", False),
     ("stats_drinkwater", True),
     ("eindresultaat", False),
+    ("inp_polygon_copy", True),
+    ("eindgebieden", True),
 ]
+
+b_remove_results_after_run = True  # set to False to keep results after run
 
 # dict d_velden_tmp
 # purpose: dict d_velden_tmp is een aanvulling op d_velden (d_velden wordt uit de inp_fields.xlsx gegenereerd).
@@ -61,4 +68,17 @@ l_fld_None_naar_0_omzetten = [
     ##"AWA_HD_TOT", "AWA_HD_DWA", "AWA_HD_POC", "AWA_TK_TOT", "AWA_TK_DWA", "AWA_TK_POC", # deze op Null laten
     ]
 
+try:
+    from local_settings import *
+except:
+    pass
+
+# logging
+if not os.path.exists(log_dir): os.mkdir(log_dir)
+strftime = datetime.strftime(datetime.now(),"%Y%m%d-%H.%M")
+logFileName = 'GeoDyn_{}.log'.format(strftime)
+logFile = os.path.join(log_dir,logFileName)
+logging.basicConfig(filename=logFile, level=LOGGING_LEVEL)
+logging.getLogger().setLevel(LOGGING_LEVEL)
+qgis_warnings_log = os.path.join(log_dir,'qgis_warnings.log')
 

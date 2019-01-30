@@ -34,6 +34,7 @@ from app import settings
 from app import m1_OvernemenGegevensGEM as m1
 from app import m2_BerekenResultaten as m2
 from app.utl import print_log, blokje_log, get_d_velden, get_d_velden_csv
+from app.settings import keyword_1, keyword_2, keyword_3, keyword_4, keyword_5, keyword_6, keyword_7, result_dir
 
 # for backward compatibility with older QGIS versions (without QgsWKBTypes)
 try:
@@ -172,7 +173,9 @@ class GeodynGem:
 
         self.actions.append(action)
 
-        self.dlg.lineEdit.clear()
+        #self.dlg.lineEdit.clear()
+        self.dlg.lineEdit.setText(result_dir)
+        self.dlg.lineEdit.setToolTip("Om een vaste waarde in te stellen: ga naar local_settings.py in app directory van plugin.")
         self.dlg.pushButton.clicked.connect(self.select_output_folder)
 
         return action
@@ -203,8 +206,11 @@ class GeodynGem:
         index = [l.index(i) for i in l if txt.lower() in i.name().lower()]
         if len(index) > 0:
             l.insert(0, l.pop(index[0]))
-        if txt in ["VE", "opp"]:
-            l.append(QgsVectorLayer(baseName="no data"))
+        if txt in [keyword_4, keyword_6]: # VE's en verhard opp zijn optioneel dus 'no data' toevoegen
+            if len(index) == 0:
+                l.insert(0, QgsVectorLayer(baseName="no data")) # geen keyword dus 'no data' als bovenste optie in keuzelijst
+            else:
+                l.append(QgsVectorLayer(baseName="no data")) # wel keyword dus 'no data' als laatste optie in keuzelijst
         return l
 
     def remove_result_layers(self, remove_all=False, delete_source=False):
@@ -241,6 +247,7 @@ class GeodynGem:
             print_log("Tool afgebroken! Geen layers gevonden. Voeg eerst layers toe", "e", self.iface)
             return
         layer_points, layer_lines, layer_polygons = [], [], []
+
         if b_QgsWKBTypes:
             for i, layer in enumerate(layers):
                 if hasattr(layer, "wkbType"):
@@ -253,12 +260,34 @@ class GeodynGem:
                         layer_polygons.append(layer)
                     else:
                         pass
+            layer_1 = layer_points[:] # more on slicing: https://www.afternerd.com/blog/python-copy-list/
+            layer_2 = layer_lines[:]
+            layer_3 = layer_points[:]
+            layer_4 = layer_points[:]
+            layer_5 = layer_polygons[:]
+            layer_6 = layer_polygons[:]
+            layer_7 = layer_polygons[:]
 
         else:
             print_log("ImportError for QgsWKBTypes. Kan geen geometrie herkennen voor layer inputs. \
                         Controleer of juiste layers zijn geselecteerd of upgrade QGIS.",
                 "w", self.iface)
             layer_points = layer_lines = layer_polygons = layers
+            layer_1 = layers[:]
+            layer_2 = layers[:]
+            layer_3 = layers[:]
+            layer_4 = layers[:]
+            layer_5 = layers[:]
+            layer_6 = layers[:]
+            layer_7 = layers[:]
+
+        layer_1 = self.move_to_front(layer_1, keyword_1)
+        layer_2 = self.move_to_front(layer_2, keyword_2)
+        layer_3 = self.move_to_front(layer_3, keyword_3)
+        layer_4 = self.move_to_front(layer_4, keyword_4)
+        layer_5 = self.move_to_front(layer_5, keyword_5)
+        layer_6 = self.move_to_front(layer_6, keyword_6)
+        layer_7 = self.move_to_front(layer_7, keyword_7)
 
         self.dlg.comboBox_1.clear()
         self.dlg.comboBox_2.clear()
@@ -267,13 +296,23 @@ class GeodynGem:
         self.dlg.comboBox_5.clear()
         self.dlg.comboBox_6.clear()
         self.dlg.comboBox_7.clear()
-        self.dlg.comboBox_1.addItems([i.name() for i in self.move_to_front(layer_points, "punt")])  # knooppunt
-        self.dlg.comboBox_2.addItems([i.name() for i in self.move_to_front(layer_lines, "lijn")])  # afvoerrelatie
-        self.dlg.comboBox_3.addItems([i.name() for i in self.move_to_front(layer_points, "BAG")])  # drinkwater BAG
-        self.dlg.comboBox_4.addItems([i.name() for i in self.move_to_front(layer_points, "VE")])  # VE's
-        self.dlg.comboBox_5.addItems([i.name() for i in self.move_to_front(layer_polygons, "RIGO")])  # plancap
-        self.dlg.comboBox_6.addItems([i.name() for i in self.move_to_front(layer_polygons, "opp")])  # verhard opp
-        self.dlg.comboBox_7.addItems([i.name() for i in self.move_to_front(layer_polygons, "bemaling")])  # bemalingsgebieden
+        self.dlg.comboBox_1.addItems([i.name() for i in layer_1])  # knooppunt
+        self.dlg.comboBox_2.addItems([i.name() for i in layer_2])  # afvoerrelatie
+        self.dlg.comboBox_3.addItems([i.name() for i in layer_3])  # drinkwater BAG
+        self.dlg.comboBox_4.addItems([i.name() for i in layer_4])  # VE's
+        self.dlg.comboBox_5.addItems([i.name() for i in layer_5])  # plancap
+        self.dlg.comboBox_6.addItems([i.name() for i in layer_6])  # verhard opp
+        self.dlg.comboBox_7.addItems([i.name() for i in layer_7])  # bemalingsgebieden
+        msg_tooltip = "Kaartlagen met '{}' in naam komen bovenaan de keuzelijst te staan.\
+            \nVoor het instellen van een eigen zoekterm: ga naar local_settings.py in de app directory van de plugin."
+        self.dlg.comboBox_1.setToolTip(msg_tooltip.format(keyword_1))
+        self.dlg.comboBox_2.setToolTip(msg_tooltip.format(keyword_2))
+        self.dlg.comboBox_3.setToolTip(msg_tooltip.format(keyword_3))
+        self.dlg.comboBox_4.setToolTip(msg_tooltip.format(keyword_4))
+        self.dlg.comboBox_5.setToolTip(msg_tooltip.format(keyword_5))
+        self.dlg.comboBox_6.setToolTip(msg_tooltip.format(keyword_6))
+        self.dlg.comboBox_7.setToolTip(msg_tooltip.format(keyword_7))
+
 
         # show the dialog
         self.dlg.show()
@@ -287,25 +326,19 @@ class GeodynGem:
             ##QgsMessageLog.logMessage("layer4 = {}".format([i.name() for i in l4]), level=QgsMessageLog.INFO)
 
             sel_layers = [
-                self.move_to_front(layer_points, "punt")[self.dlg.comboBox_1.currentIndex()],
-                self.move_to_front(layer_lines, "lijn")[self.dlg.comboBox_2.currentIndex()],
-                self.move_to_front(layer_points, "BAG")[self.dlg.comboBox_3.currentIndex()],
-                self.move_to_front(layer_points, "VE")[self.dlg.comboBox_4.currentIndex()],
-                self.move_to_front(layer_polygons, "RIGO")[self.dlg.comboBox_5.currentIndex()],
-                self.move_to_front(layer_polygons, "opp")[self.dlg.comboBox_6.currentIndex()],
-                self.move_to_front(layer_polygons, "bemaling")[self.dlg.comboBox_7.currentIndex()],
+                layer_1[self.dlg.comboBox_1.currentIndex()],
+                layer_2[self.dlg.comboBox_2.currentIndex()],
+                layer_3[self.dlg.comboBox_3.currentIndex()],
+                layer_4[self.dlg.comboBox_4.currentIndex()],
+                layer_5[self.dlg.comboBox_5.currentIndex()],
+                layer_6[self.dlg.comboBox_6.currentIndex()],
+                layer_7[self.dlg.comboBox_7.currentIndex()],
             ]
 
-            # refresh input layers, werkt niet... voorlopig dan maar handmatig weggooien.
-            ##sel_layernames = [layer.name() for layer in sel_layers]
-            ##self.remove_result_layers(settings.l_result_layers_all)
-            ##sel_layers = []
-            ##layers = self.iface.legendInterface().layers()
-            ##for layer in layers:
-            ##    if layer.name() in sel_layernames:
-            ##        sel_layers.append(layer)
+            for i, layer in enumerate(sel_layers):
+                print_log("input {}:\t{}".format(i+1, layer.name()), "i")
 
-            gdb = self.dlg.lineEdit.text()
+            gdb = self.dlg.lineEdit.text() #
             if not gdb or not os.path.exists(gdb):
                 print_log("Script afgebroken! Geen geldige output map opgegeven ({}...)".format(gdb), "e", self.iface)
                 return
@@ -319,21 +352,34 @@ class GeodynGem:
             INP_FIELDS_XLS = settings.INP_FIELDS_XLS
             INP_FIELDS_CSV = settings.INP_FIELDS_CSV
             try:
+                ##raise ImportError # for testing csv
                 from xlrd import open_workbook
                 d_velden = get_d_velden(INP_FIELDS_XLS, 0, open_workbook)
             except ImportError:     # for compatibility with iMac
-                print_log("import error 'xlrd': inp_fields.csv wordt gebruikt als input in plaats van inp_fields.xls!",
+                print_log("import error 'xlrd': inp_fields.csv wordt gebruikt als input in plaats van inp_fields.xls",
                           "w", self.iface)
                 d_velden = get_d_velden_csv(INP_FIELDS_CSV)
             for fld in d_velden:
                 print_log("{}\n{}".format(fld, d_velden[fld]), "d")
 
-            ##self.iface.messageBar().pushMessage("titel", "Start module 1", QgsMessageBar.INFO, duration=5)
-            m1.main(self.iface, sel_layers, gdb, d_velden)
-            ##self.iface.messageBar().pushMessage("titel", "Start module 2", QgsMessageBar.INFO, duration=5)
-            m2.main(self.iface, sel_layers, gdb, d_velden)
+            # check for required fields
+            vl = sel_layers[0] # knooppunt
+            if vl.fieldNameIndex('VAN_KNOOPN') == -1:
+                print_log("Script afgebroken! Verplicht veld 'VAN_KNOOPN' niet gevonden in kaartlaag '{}'".format(vl.name()), "e", self.iface)
+                return
+            vl = sel_layers[1]  # afvoerrelatie
+            if vl.fieldNameIndex('VAN_KNOOPN') == -1:
+                print_log("Script afgebroken! Verplicht veld 'VAN_KNOOPN' niet gevonden in kaartlaag '{}'".format(vl.name()), "e", self.iface)
+                return
 
-            self.remove_result_layers(remove_all=False, delete_source=False)
+            # run module 1
+            d_K_ONTV_VAN, inp_polygon_layer = m1.main(self.iface, sel_layers, gdb, d_velden)
+
+            # run module 2
+            m2.main(self.iface, sel_layers, gdb, d_velden, d_K_ONTV_VAN, inp_polygon_layer)
+
+            if settings.b_remove_results_after_run:
+                self.remove_result_layers(remove_all=False, delete_source=False)
 
             ##self.iface.mainWindow().statusBar().showMessage("dit is de mainWindow")
             warnings = []
@@ -348,10 +394,11 @@ class GeodynGem:
                 msg.setWindowTitle("Script completed")
                 msg.setText("{} warnings were encountered when running script".format(len(warnings)))
                 msg.setInformativeText("For more information see details below or view log panel")
-                msg.setDetailedText("The details are as follows:")
-                msg.setDetailedText("\n".join(warnings))
-                # for line in warnings:
-                #     msg.setDetailedText(line)
+                detailedText = "The details are as follows:"
+                detailedText += "\n" + "".join(warnings)
+                detailedText += "\nlogfile: {}".format(settings.logFile)
+                msg.setDetailedText(detailedText)
+                msg.setStyleSheet("QLabel{min-width: 300px;}")
             else:
                 msg.setIcon(QMessageBox.Information)
                 msg.setWindowTitle("Script completed")

@@ -87,16 +87,14 @@ def print_log(message, logType="i", iface=False, **kwargs):
         ##iface.messageBar().pushMessage("Error", txt, level=QgsMessageBar.CRITICAL)
 
 
-def get_count(fc):
-    result = arcpy.GetCount_management(fc)
-    return int(result.getOutput(0))
-
-def fld_exists(fc,fld_name):
-    """return True if field exists"""
-    if len(arcpy.ListFields(fc,fld_name)) > 0:
-        return True
-    else:
-        return False
+def fields_to_uppercase(layer):
+    '''rename fields to uppercase'''
+    return
+    layer.startEditing()
+    for idx, field in enumerate(layer.pendingFields()):
+        if field.name().upper() != field.name():
+            layer.renameAttribute(idx, field.name().upper())
+    layer.commitChanges()
 
 def add_field_from_dict(fc, fld_name, d_fld):
     """add field. dict must be like
@@ -191,7 +189,7 @@ def bereken_veld_label(fc, bereken, d_fld):
         if not "bereken" in d_fld[fld].keys(): continue
         if bereken == d_fld[fld]["bereken"]: bereken_veld(fc, fld, d_fld)
 
-def join_field(input_table, join_table, field_to_calc, field_to_copy, joinfield_input_table, joinfield_join_table):
+def join_field(input_table, join_table, field_to_calc, field_to_copy, joinfield_input_table, joinfield_join_table, inner_join=False):
     """Veld overnemen uit andere tabel o.b.v. tablejoin.
        Het veld wat gevuld moet worden (field_to_calc) moet al wel bestaan en wordt in deze functie alleen gevuld.
        Vul "pk" in bij joinfield_join_table om de primary key te laten bepalen of kies een ander veld"""
@@ -213,9 +211,24 @@ def join_field(input_table, join_table, field_to_calc, field_to_copy, joinfield_
         e.prepare(input_table.pendingFields())
         print_log("expression = {}".format('"{}_{}"'.format(join_table.name(),field_to_copy)), "d")
 
+        check = input_table.fieldNameIndex('{}_{}'.format(join_table.name(),field_to_copy))
+        print_log("fieldindex = {}".format(check), "d")
+        if check == -1:
+            print_log("[{}] is leeg omdat [{}] ontbreekt in kaartlaag '{}'.".format(field_to_calc, field_to_copy, join_table.name()), "w")
+
         input_table.startEditing()
         idx = input_table.fieldNameIndex(field_to_calc)
-        for f in input_table.getFeatures():
+        if inner_join:
+            print_log("inner_join = True", 'd')
+            s_expr = '"{}_{}" IS NOT NULL'.format(join_table.name(),field_to_copy)
+            print_log(s_expr, 'd')
+            expr = QgsExpression(s_expr)
+            it = input_table.getFeatures(QgsFeatureRequest(expr))  # iterator object
+            input_table.setSelectedFeatures([i.id() for i in it])
+            features = input_table.selectedFeatures()
+        else:
+            features = input_table.getFeatures()
+        for f in features:
             f[idx] = e.evaluate(f)
             input_table.updateFeature(f)
         input_table.commitChanges()
@@ -251,6 +264,7 @@ def parse_xlsx(INP_FIELDS_XLS, SHEETNR, open_workbook):
     for row_idx in xrange(1, num_rows):
         row_cell = [active_sheet.cell_value(row_idx, col_idx) for col_idx in range(num_cols)]
         yield dict(zip(header, row_cell))
+
 
 def get_d_velden(INP_FIELDS_XLS, SHEETNR, open_workbook):
     """dictionary field-info ophalen uit excel zonder pandas met xlrd"""
@@ -295,7 +309,7 @@ def get_d_velden_csv(INP_FIELDS_CSV):
         fld = {}
 
         # verplichte keys
-        fld["order"] = srow["order"]
+        fld["order"] = int(srow["order"])
         fld["field_type"] = srow["type"]
         fld["field_alias"] = srow["alias"]
         fld["add_fld"] = srow["stap_toevoegen"]
