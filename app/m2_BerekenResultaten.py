@@ -25,8 +25,8 @@ def controleer_spjoin_plancap(layer, fld_join_count):
             i_leeg += 1
     ##layer.commitChanges()
 
-    if i_dubbel == 1: print_log("{} woningbouwplan valt in meerdere hoofdbemalingsgebieden. Let op: dit woningbouwplan wordt dubbel meegeteld! Zie layer 'plancap overlap' (waar veld 'count' > 1)".format(i_dubbel), "w")
-    if i_dubbel > 1: print_log("{} woningbouwplannen vallen in meerdere hoofdbemalingsgebieden. Let op: deze woningbouwplannen worden dubbel meegeteld! Zie layer 'plancap overlap' (waar veld 'count' > 1)".format(i_dubbel), "w")
+    if i_dubbel == 1: print_log("{} woningbouwplan valt in meerdere hoofdbemalingsgebieden. Let op: dit woningbouwplan wordt dubbel meegeteld! Zie layer 'plancap overlap' (waar veld \"count\" > 1)".format(i_dubbel), "w")
+    if i_dubbel > 1: print_log("{} woningbouwplannen vallen in meerdere hoofdbemalingsgebieden. Let op: deze woningbouwplannen worden dubbel meegeteld! Zie layer 'plancap overlap' (waar veld \"count\" > 1)".format(i_dubbel), "w")
     if i_leeg == 1: print_log("{} woningbouwplan valt niet in een hoofdbemalingsgebied\n".format(i_leeg), "i")
     if i_leeg > 1: print_log("{} woningbouwplannen vallen buiten een hoofdbemalingsgebied\n".format(i_leeg), "i")
 
@@ -94,13 +94,12 @@ def bereken_onderbemaling2(layer, d_K_ONTV_VAN_n1):
             expr = QgsExpression(where_clause)
             it = layer.getFeatures(QgsFeatureRequest(expr))  # iterator object
             layer.setSelectedFeatures([i.id() for i in it])
-            ##print_log("sel = {}".format([i.id() for i in it]), "i")
-            POC_B_M3_O = sum([float(f["K_INST_TOT"]) for f in layer.selectedFeatures() if
-                              str(f["K_INST_TOT"]) not in ["NULL", "nan", "", " "]])    # POC_B_M3_O = sum(POC_B_M3_G)
+            K_INST_TOT_O = sum([float(f["K_INST_TOT"]) for f in layer.selectedFeatures() if
+                              str(f["K_INST_TOT"]) not in ["NULL", "nan", "", " "]])    # K_INST_TOT_O = sum(K_INST_TOT)
             POC_O_M3_O = sum([float(f["POC_O_M3_G"]) for f in layer.selectedFeatures() if
                               str(f["POC_O_M3_G"]) not in ["NULL", "nan", "", " "]])    # POC_O_M3_O = sum(POC_O_M3_G)
-
-            layer.changeAttributeValue(feature.id(), layer.fieldNameIndex("POC_B_M3_O"), POC_B_M3_O)
+            print_log("sum IN_DWA_POC = {}".format(K_INST_TOT_O), "d")
+            layer.changeAttributeValue(feature.id(), layer.fieldNameIndex("IN_DWA_POC"), K_INST_TOT_O)
             layer.changeAttributeValue(feature.id(), layer.fieldNameIndex("POC_O_M3_O"), POC_O_M3_O)
     layer.commitChanges()
     layer.setSelectedFeatures([])
@@ -356,18 +355,29 @@ def main(iface, layers, workspace, d_velden_, l_K_ONTV_VAN, inp_polygon):
     # bepaal onderbemaling2 afhankelijk van verhard opp
     blokje_log("bereken onderbemalingen voor pompovercapaciteit ontwerp en berekend...", "i")
     bereken_onderbemaling2(polygon_lis, l_K_ONTV_VAN[1])
+
     vervang_None_door_0_voor_velden_in_lijst(
-            ["POC_B_M3_O", "POC_O_M3_O","POC_B_M3_G", "POC_O_M3_G"], polygon_lis)
+            ##["POC_B_M3_O", "POC_O_M3_O","POC_B_M3_G", "POC_O_M3_G"], polygon_lis)
     bereken_veld_label(polygon_lis, '10_ber', d_velden)
     bereken_veld_label(polygon_lis, '11_ber', d_velden)
 
     # update_datetime UPDATED
     update_datetime(polygon_lis, "UPDATED")
 
+    # delete fields
+    del_fld_names = ['BEGIN_EIND', 'VAN_KNOOPN', 'count']
+    del_fld_index = [polygon_lis.fieldNameIndex(fld) for fld in del_fld_names if polygon_lis.fieldNameIndex(fld) != -1]
+    print_log("deleting fields {} with index {}".format(del_fld_names, del_fld_index))
+    polygon_lis.dataProvider().deleteAttributes(del_fld_index)
+    polygon_lis.updateFields()
+
     # add field aliasses
     for fld in d_velden:
         index = polygon_lis.fieldNameIndex(fld)
         if index != -1:
-            ##print_log("update {} with alias '{}'".format(fld, d_velden[fld]["field_alias"]), "i")
+            try:
+                print_log("update {} with alias '{}'".format(fld, d_velden[fld]["field_alias"]), "d")
+            except Exception as e:
+                print_log(e, "d")  # UnicodeEncodeError?...
             polygon_lis.addAttributeAlias(index, d_velden[fld]["field_alias"])
 

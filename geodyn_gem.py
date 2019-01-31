@@ -352,7 +352,7 @@ class GeodynGem:
             INP_FIELDS_XLS = settings.INP_FIELDS_XLS
             INP_FIELDS_CSV = settings.INP_FIELDS_CSV
             try:
-                ##raise ImportError # for testing csv
+                raise ImportError # for testing csv
                 from xlrd import open_workbook
                 d_velden = get_d_velden(INP_FIELDS_XLS, 0, open_workbook)
             except ImportError:     # for compatibility with iMac
