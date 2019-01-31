@@ -4,10 +4,6 @@
     <list default="true" id="f1facf6c-5ab9-4a81-ac6f-df3540cba4fa" name="Default" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/m2_BerekenResultaten.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/m2_BerekenResultaten.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/geodyn_gem.py" beforeDir="false" afterPath="$PROJECT_DIR$/geodyn_gem.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/inp_fields.csv" beforeDir="false" afterPath="$PROJECT_DIR$/inp_fields.csv" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/inp_fields.xls" beforeDir="false" afterPath="$PROJECT_DIR$/inp_fields.xls" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/metadata.txt" beforeDir="false" afterPath="$PROJECT_DIR$/metadata.txt" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -26,7 +22,7 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="m2_BerekenResultaten.py" pinned="false" current-in-tab="false">
+      <file leaf-file-name="m2_BerekenResultaten.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/app/m2_BerekenResultaten.py">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="520">
@@ -104,9 +100,11 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="metadata.txt" pinned="false" current-in-tab="true">
+      <file leaf-file-name="metadata.txt" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/metadata.txt">
           <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="544">
+              <caret line="35" column="65" selection-start-line="35" selection-start-column="65" selection-end-line="35" selection-end-column="65" />
             </state>
           </provider>
         </entry>
@@ -667,6 +665,13 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/metadata.txt">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="544">
+          <caret line="35" column="65" selection-start-line="35" selection-start-column="65" selection-end-line="35" selection-end-column="65" />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/app/m2_BerekenResultaten.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="520">
@@ -674,11 +679,6 @@
           <folding>
             <element signature="e#0#9#0" expanded="true" />
           </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/metadata.txt">
-      <provider selected="true" editor-type-id="text-editor">
         </state>
       </provider>
     </entry>

@@ -358,6 +358,7 @@ def main(iface, layers, workspace, d_velden_, l_K_ONTV_VAN, inp_polygon):
 
     vervang_None_door_0_voor_velden_in_lijst(
             ##["POC_B_M3_O", "POC_O_M3_O","POC_B_M3_G", "POC_O_M3_G"], polygon_lis)
+            ["POC_O_M3_O", "POC_O_M3_G", "IN_DWA_POC"], polygon_lis)
     bereken_veld_label(polygon_lis, '10_ber', d_velden)
     bereken_veld_label(polygon_lis, '11_ber', d_velden)
 
