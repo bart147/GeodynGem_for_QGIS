@@ -25,3 +25,6 @@ https://github.com/bart147/GeodynGem_for_QGIS/blob/master/test_shapefiles/test_s
 
 Add the shapefiles to your QGIS project and open the plugin. 
 The right layer for each input should be recognized by the tool interface based on elements in the layer name. For example: "BAG". 
+
+# Manual
+https://github.com/bart147/GeodynGem_for_QGIS/blob/master/doc/HandleidingGeoDynGem.pdf
