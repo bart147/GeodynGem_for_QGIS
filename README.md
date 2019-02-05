@@ -15,16 +15,17 @@ This tool is based on GeoDynWaterschap. GeoDynWaterschap is an ArcGIS 10
 toolbox for the Dutch Water Authorities. GeoDynWaterschap is develop by BKGIS, for
 the water Authority HHNK and designed by Mark Lamers.
 
+# Manual
+https://github.com/bart147/GeodynGem_for_QGIS/blob/master/doc/HandleidingGeoDynGem.pdf
+
 # Installation
 - Install the plugin with Plugin Manager in QGIS or download here https://plugins.qgis.org/plugins/GeodynGem/
 - Requires QGIS 2.x
 
-# Test
+# Test data
 Some imaginary data for testing can be downloaded from the repo:
 https://github.com/bart147/GeodynGem_for_QGIS/blob/master/test_shapefiles/test_shapefiles.zip
 
 Add the shapefiles to your QGIS project and open the plugin. 
 The right layer for each input should be recognized by the tool interface based on elements in the layer name. For example: "BAG". 
 
-# Manual
-https://github.com/bart147/GeodynGem_for_QGIS/blob/master/doc/HandleidingGeoDynGem.pdf
