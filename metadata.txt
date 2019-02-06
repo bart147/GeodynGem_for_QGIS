@@ -11,6 +11,7 @@ name=GeoDyn Gemeente
 qgisMinimumVersion=2.8
 description=Wastewater prognosis tool for municipal sewage systems
     Geografisch Dynamisch afvalwater prognosetool voor gemeente
+version=0.17
 author=BKGIS
 email=b.kropf@bkgis.nl
 
@@ -29,6 +30,7 @@ repository=https://github.com/bart147/GeodynGem_for_QGIS
 
 # Uncomment the following line and add your changelog:
 changelog:
+    v0.17   (2019-02-06) bugfix calculation 'POC_O_M3_O', improved inp_field descriptions, b_raise_xlrd_import_error added to settings
     v0.16   (2019-01-31) improved calculations for pump overcapacity, several changes in inp_fields.xls/.csv
     v0.15   (2019-01-24) issue 34: warning message improvement
     v0.14   (2019-01-14) geodyn_gem.py updated
