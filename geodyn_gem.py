@@ -352,7 +352,9 @@ class GeodynGem:
             INP_FIELDS_XLS = settings.INP_FIELDS_XLS
             INP_FIELDS_CSV = settings.INP_FIELDS_CSV
             try:
-                ##raise ImportError # for testing csv
+                if settings.b_raise_xlrd_import_error:
+                    print_log("b_raise_xlrd_import_error = True (zie local_settings.py)", "w", self.iface)
+                    raise ImportError # for testing csv
                 from xlrd import open_workbook
                 d_velden = get_d_velden(INP_FIELDS_XLS, 0, open_workbook)
             except ImportError:     # for compatibility with iMac
@@ -373,10 +375,10 @@ class GeodynGem:
                 return
 
             # run module 1
-            d_K_ONTV_VAN, inp_polygon_layer = m1.main(self.iface, sel_layers, gdb, d_velden)
+            l_K_ONTV_VAN, inp_polygon_layer = m1.main(self.iface, sel_layers, gdb, d_velden)
 
             # run module 2
-            m2.main(self.iface, sel_layers, gdb, d_velden, d_K_ONTV_VAN, inp_polygon_layer)
+            m2.main(self.iface, sel_layers, gdb, d_velden, l_K_ONTV_VAN, inp_polygon_layer)
 
             if settings.b_remove_results_after_run:
                 self.remove_result_layers(remove_all=False, delete_source=False)

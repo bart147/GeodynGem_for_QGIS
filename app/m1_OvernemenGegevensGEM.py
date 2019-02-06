@@ -214,7 +214,9 @@ def lis2graph(layer):
     # graph aanmaken
     graph = Graph()
     graph_rev = Graph()
-    d_K_ONTV_VAN = {}
+    d_K_ONTV_VAN = {}    # alle onderliggende gemalen
+    d_K_ONTV_VAN_n1 = {} # alle onderliggende gemalen op 1 niveau diep ivm optellen overcapaciteit
+
 
     print_log ("netwerk opslaan als graph...","i")
     for feature in layer.getFeatures():  # .getFeatures()
@@ -225,6 +227,7 @@ def lis2graph(layer):
         if LOOST_OP != None:
             graph.add_edge(VAN_KNOOPN, LOOST_OP, 1)  # richting behouden voor bovenliggende gebied
             graph_rev.add_edge(LOOST_OP, VAN_KNOOPN, 1)  # richting omdraaien voor onderliggende gebied
+    edges_as_tuple = list(graph.distances)  # lijst met tuples: [('A', 'B'), ('C', 'B')]
 
     print_log("onderbemaling bepalen voor rioolgemalen en zuiveringen...", "i")
     where_clause = "Join_Count > 0"
@@ -244,9 +247,13 @@ def lis2graph(layer):
         layer.changeAttributeValue(feature.id(), layer.fieldNameIndex("X_OPPOMP"),  X_OPPOMP + 1)             # X_OPPOMP = 1 (aantal keer oppompen tot rwzi) met shortestPath ('RWZI','ZRE-4')
         layer.changeAttributeValue(feature.id(), layer.fieldNameIndex("K_KNP_EIND"), K_KNP_EIND)              # eindbemalingsgebied / overnamepunt. bepaald uit netwerk.
         d_K_ONTV_VAN[VAN_KNOOPN] = l_onderliggende_gemalen
+
+        # onderbemalingen 1 niveau diep
+        l_onderliggende_gemalen_n1 = [start for start, end in edges_as_tuple if end == VAN_KNOOPN]  # dus start['A', 'C'] uit tuples[('A', 'B'),('C', 'B')] als end == 'B'
+        d_K_ONTV_VAN_n1[VAN_KNOOPN] =  str(l_onderliggende_gemalen_n1).replace("u'", "'").replace("[", "").replace("]", "") # naar str() en verwijder u'tjes en haken
     layer.commitChanges()
 
-    return d_K_ONTV_VAN
+    return [d_K_ONTV_VAN, d_K_ONTV_VAN_n1]
 
 
 def controleer_spjoin(layer,fld_join_count):
@@ -356,7 +363,7 @@ def main(iface, layers, workspace, d_velden):
     # 2.) Graph vullen met LIS [LOOST_OP], onderbemaling bepalen en wegschrijven in [ONTV_VAN]
 
     blokje_log("Bepaal onderbemaling en aantal keer oppompen...","i")
-    d_K_ONTV_VAN = lis2graph(polygon_lis)
+    l_K_ONTV_VAN = lis2graph(polygon_lis)
 
     # ##########################################################################
     # 3.) Controleer overlap HOOFDBEMALINGSGEBIEDEN
@@ -373,4 +380,4 @@ def main(iface, layers, workspace, d_velden):
     join_field(polygon_lis,inp_knooppunten,"K_BR_ST_M3", "BERGING_M3",  "VAN_KNOOPN", "VAN_KNOOPN")
     join_field(polygon_lis,inp_knooppunten,"K_OSH",      "LAAGSTE_OS",  "VAN_KNOOPN", "VAN_KNOOPN")
 
-    return d_K_ONTV_VAN, inp_polygon
+    return l_K_ONTV_VAN, inp_polygon
