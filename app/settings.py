@@ -47,6 +47,7 @@ l_result_layers_to_remove = [
     ("eindgebieden", True),
 ]
 
+b_raise_xlrd_import_error = False  # raise xlrd import error to test csv file.
 b_remove_results_after_run = True  # set to False to keep results after run
 
 # dict d_velden_tmp

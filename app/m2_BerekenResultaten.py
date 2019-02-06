@@ -78,17 +78,32 @@ def bereken_onderbemaling(layer, d_K_ONTV_VAN):
     print_log("Onderbemalingen succesvol berekend voor Plancap, drinkwater, woningen en ve's", "i")
 
 
-def bereken_onderbemaling2(layer, d_K_ONTV_VAN_n1):
+def bereken_onderbemaling2(layer, l_K_ONTV_VAN):
     """bereken onderbemalingen voor SUM_WAARDE..
        Maakt selectie op basis van dict ONTV_VAN 1 niveau diep -> VAN_KNOOPN IN ('ZRE-123424', 'ZRE-234')"""
 
+    d_K_ONTV_VAN, d_K_ONTV_VAN_n1 = l_K_ONTV_VAN
     layer.startEditing()
     for feature in layer.getFeatures():
         VAN_KNOOPN = feature["VAN_KNOOPN"]
-        ONTV_VAN = d_K_ONTV_VAN_n1.get(VAN_KNOOPN,"") #feature["K_ONTV_VAN"]
+        # onderbemaling alle niveau's
+        ONTV_VAN = d_K_ONTV_VAN.get(VAN_KNOOPN,"") # was feature["K_ONTV_VAN"]
         if not str(ONTV_VAN) in ["NULL", "", " "]:  # check of sprake is van onderbemaling
             print_log("VAN_KNOOPN = {} ontvangt van {}".format(VAN_KNOOPN, ONTV_VAN), "i")
             where_clause = '"VAN_KNOOPN" IN ({})'.format(ONTV_VAN)
+            print_log("where_clause = {}".format(where_clause), "i")
+            expr = QgsExpression(where_clause)
+            it = layer.getFeatures(QgsFeatureRequest(expr))  # iterator object
+            layer.setSelectedFeatures([i.id() for i in it])
+            POC_O_M3_O = sum([float(f["POC_O_M3_G"]) for f in layer.selectedFeatures() if
+                              str(f["POC_O_M3_G"]) not in ["NULL", "nan", "", " "]])    # POC_O_M3_O = sum(POC_O_M3_G)
+            print_log("sum POC_O_M3_O = {}".format(POC_O_M3_O), "d")
+            layer.changeAttributeValue(feature.id(), layer.fieldNameIndex("POC_O_M3_O"), POC_O_M3_O)
+        # onderbemaling 1 niveau
+        ONTV_VAN_1n = d_K_ONTV_VAN_n1.get(VAN_KNOOPN, "")
+        if not str(ONTV_VAN_1n) in ["NULL", "", " "]:  # check of sprake is van onderbemaling
+            print_log("VAN_KNOOPN = {} ontvangt van {}".format(VAN_KNOOPN, ONTV_VAN_1n), "i")
+            where_clause = '"VAN_KNOOPN" IN ({})'.format(ONTV_VAN_1n)
             ##where_clause = '"VAN_KNOOPN" = '+"'MERG10'"
             print_log("where_clause = {}".format(where_clause), "i")
             expr = QgsExpression(where_clause)
@@ -96,11 +111,9 @@ def bereken_onderbemaling2(layer, d_K_ONTV_VAN_n1):
             layer.setSelectedFeatures([i.id() for i in it])
             K_INST_TOT_O = sum([float(f["K_INST_TOT"]) for f in layer.selectedFeatures() if
                               str(f["K_INST_TOT"]) not in ["NULL", "nan", "", " "]])    # K_INST_TOT_O = sum(K_INST_TOT)
-            POC_O_M3_O = sum([float(f["POC_O_M3_G"]) for f in layer.selectedFeatures() if
-                              str(f["POC_O_M3_G"]) not in ["NULL", "nan", "", " "]])    # POC_O_M3_O = sum(POC_O_M3_G)
             print_log("sum IN_DWA_POC = {}".format(K_INST_TOT_O), "d")
             layer.changeAttributeValue(feature.id(), layer.fieldNameIndex("IN_DWA_POC"), K_INST_TOT_O)
-            layer.changeAttributeValue(feature.id(), layer.fieldNameIndex("POC_O_M3_O"), POC_O_M3_O)
+
     layer.commitChanges()
     layer.setSelectedFeatures([])
     print_log("Onderbemalingen succesvol berekend voor POC ontwerp en POC beschikbaar", "i")
@@ -354,7 +367,7 @@ def main(iface, layers, workspace, d_velden_, l_K_ONTV_VAN, inp_polygon):
 
     # bepaal onderbemaling2 afhankelijk van verhard opp
     blokje_log("bereken onderbemalingen voor pompovercapaciteit ontwerp en berekend...", "i")
-    bereken_onderbemaling2(polygon_lis, l_K_ONTV_VAN[1])
+    bereken_onderbemaling2(polygon_lis, l_K_ONTV_VAN)
 
     vervang_None_door_0_voor_velden_in_lijst(
             ##["POC_B_M3_O", "POC_O_M3_O","POC_B_M3_G", "POC_O_M3_G"], polygon_lis)

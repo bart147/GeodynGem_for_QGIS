@@ -16,3 +16,5 @@ result_dir = r"G:\GISDATA\QGIS\geodyn_gem\data\results"
 LOGGING_LEVEL = 10 # 10 = debug, 20 = info
 
 b_remove_results_after_run = True  # toggle True/False to keep results after run
+
+b_raise_xlrd_import_error = False  # raise xlrd (excel read) import error to test csv file.
